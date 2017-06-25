@@ -20,11 +20,16 @@ const bot = new TelegramBot(token, {
 bot.on('message', (msg) => {
 	const chatId = msg.chat.id;
 
-	if (msg.text.startsWith('thanks roborugi')) {
-		let catchphrases = ['I\'ll try my best', 'I don\'t know anyone by that name.', '( ´ ∀ `)'];
-		bot.sendMessage(chatId, catchphrases[Math.floor(Math.random() * catchphrases.length)]);
-	} else if (msg.text.startsWith('roborugi source code')) {
-		bot.sendMessage(chatId, 'https://github.com/au5ton/Roboragi');
+	try {
+		if (msg.text.startsWith('thanks roborugi')) {
+			let catchphrases = ['I\'ll try my best', 'I don\'t know anyone by that name.', '( ´ ∀ `)'];
+			bot.sendMessage(chatId, catchphrases[Math.floor(Math.random() * catchphrases.length)]);
+		} else if (msg.text.startsWith('roborugi source code')) {
+			bot.sendMessage(chatId, 'https://github.com/au5ton/Roboragi');
+		}
+	}
+	catch(err) {
+		// ¯\_(ツ)_/¯ 
 	}
 	/*check if message is a query
 	a messages is a query if:
@@ -145,7 +150,7 @@ bot.on('message', (msg) => {
 
 });
 
-const star_char = '\u2B51';
+const star_char = '\u272A';
 
 function buildAnimeChatMessage(anime, options) {
 	options = options || {};
