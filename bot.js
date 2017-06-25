@@ -38,7 +38,7 @@ bot.on('message', (msg) => {
 
 	i feel like this could be refractored so please feel free to shit on my code
 	*/
-	let brace_l_cnt = brace_r_cnt = less_l_cnt = less_r_cnt = brack_l_cnt = brack_r_cnt = 0;
+	let brace_l_cnt = brace_r_cnt = less_l_cnt = less_r_cnt = brack_l_cnt = brack_r_cnt = pipe_cnt = 0;
 
 	for (let i = 0; i < msg.text.length; i++) {
 		//Correctly tally the braces
@@ -55,19 +55,26 @@ bot.on('message', (msg) => {
 			brack_l_cnt++;
 		else if (next === ']')
 			brack_r_cnt++;
+		else if (next === '|')
+			pipe_cnt++;
 
 	}
 	if (brace_l_cnt === 1 && brace_r_cnt === 1) {
-		//perhaps an attempt to search {anime}
+		//perhaps an attempt to search {anime TV}
 
 		let attempt = msg.text.match(/\{([^)]+)\}/);
 		if (attempt !== null) {
 			MAL.searchAnimes(attempt[1]).then((animes) => {
 				if (animes[0] !== null) {
-					bot.sendMessage(chatId, buildAnimeChatMessage(animes[0]), {
-						parse_mode: 'html',
-						disable_web_page_preview: true
-					});
+					for(let i = 0; i < animes.length; i++) {
+						if(animes[i]['type'] === 'TV') {
+							bot.sendMessage(chatId, buildAnimeChatMessage(animes[i]), {
+								parse_mode: 'html',
+								disable_web_page_preview: true
+							});
+							break;
+						}
+					}
 				}
 			}).catch((r) => {
 				//well that sucks
@@ -76,17 +83,41 @@ bot.on('message', (msg) => {
 		}
 	}
 	if (brack_l_cnt === 1 && brack_r_cnt === 1) {
-		//perhaps an attempt to search [anime]
+		//perhaps an attempt to search [anime OVA+Movie]
 		let attempt = msg.text.match(/\[([^)]+)\]/);
 		if (attempt !== null) {
 			MAL.searchAnimes(attempt[1]).then((animes) => {
 				if (animes[0] !== null) {
-					bot.sendMessage(chatId, buildAnimeChatMessage(animes[0], {
-						alt: true
-					}), {
-						parse_mode: 'html',
-						disable_web_page_preview: true
-					});
+					for(let i = 0; i < animes.length; i++) {
+						if(animes[i]['type'] === 'OVA' || animes[i]['type'] === 'Movie') {
+							bot.sendMessage(chatId, buildAnimeChatMessage(animes[i]), {
+								parse_mode: 'html',
+								disable_web_page_preview: true
+							});
+							break;
+						}
+					}
+				}
+			}).catch((r) => {
+				//well that sucks
+				logger.error('failed to search mal: ', r);
+			});
+		}
+	}
+	if (pipe_cnt === 2 ) {
+		//perhaps an attempt to search |anime exact title|
+		let attempt = msg.text.match(/\|([^)]+)\|/);
+		if (attempt !== null) {
+			MAL.searchAnimes(attempt[1]).then((animes) => {
+				if (animes[0] !== null) {
+					for(let i = 0; i < animes.length; i++) {
+						if(attempt[1].toLowerCase() === animes[i]['title'].toLowerCase() || attempt[1].toLowerCase() === animes[i]['english'].toLowerCase()) {
+							bot.sendMessage(chatId, buildAnimeChatMessage(animes[i]), {
+								parse_mode: 'html',
+								disable_web_page_preview: true
+							});
+						}
+					}
 				}
 			}).catch((r) => {
 				//well that sucks
@@ -126,9 +157,12 @@ function buildAnimeChatMessage(anime, options) {
 	}
 	message += ' (<a href=\"https://myanimelist.net/anime/' + anime['id'] + '\">MAL</a>)\n';
 	message += anime['score'] + star_char + ' | ' + anime['type'] + ' | Status: ' + anime['status'] + ' | Episodes: ' + anime['episodes'];
-	if (options.alt) {
-		message += '\n' + anime['synopsis'].split('\n')[0];
+
+	var firstParagraph = anime['synopsis'].split('\n')[0];
+	if(firstParagraph.length > 250) {
+		firstParagraph = firstParagraph.substring(0,247)+'...';
 	}
+	message += '\n' + firstParagraph;
 	return message;
 }
 
