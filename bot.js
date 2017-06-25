@@ -9,7 +9,7 @@ const MAL = popura(process.env.MAL_USER, process.env.MAL_PASSWORD);
 const token = process.env.TELEGRAM_BOT_TOKEN;
 
 // Create a bot that uses 'polling' to fetch new updates
-const bot = new TelegramBot(token, {polling: true});
+const bot = new TelegramBot(token, {polling: {autoStart: false}});
 
 // Listen for any kind of message. There are different kinds of
 // messages.
@@ -63,4 +63,27 @@ bot.on('message', (msg) => {
   //bot.sendMessage(chatId, 'Received your message');
 });
 
-logger.log('Bot active.');
+logger.log('Bot active. Performing startup checks.');
+
+logger.warn('Is our Telegram token valid?');
+bot.getMe().then((r) => {
+    //doesn't matter who we are, we're good
+    logger.success('Telegram token is valid.');
+    bot.startPolling().then((r) => {
+        logger.success('Telegram bot polling started.');
+    }).catch((r) => {
+        logger.error('Telegram bot failed to start polling. ', r);
+        process.exit();
+    })
+}).catch((r) => {
+    logger.error('Telegram bot invalid token: ', r.code, ' ', r.body);
+    process.exit();
+});
+
+logger.warn('Is out MAL authentication valid?');
+MAL.verifyAuth().then((r) => {
+    logger.success('MAL authenticated. ');
+}).catch((r) => {
+    logger.error('MAL failed to authenticate: ', r.message);
+    process.exit();
+});
