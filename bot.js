@@ -2,6 +2,8 @@ require('dotenv').config(); //get the environment variables described in .env
 const TelegramBot = require('node-telegram-bot-api');
 const logger = require('au5ton-logger');
 const util = require('util');
+const popura = require('popura');
+const MAL = popura(process.env.MAL_USER, process.env.MAL_PASSWORD);
 
 // replace the value below with the Telegram token you receive from @BotFather
 const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -19,29 +21,41 @@ bot.on('message', (msg) => {
   - there is exactly 1 `{` per message
   - there is exactly 1 `}` per message
   - the message matches the regex: \{([^)]+)\}
+  OR
+  - there is exactly 1 `<` per message
+  - there is exactly 1 `>` per message
+  - the message matches the regex: \<([^)]+)\>
 
   i feel like this could be refractored so please feel free to shit on my code
   */
-  let l_cnt = 0;
-  let r_cnt = 0;
+  let brace_l_cnt = brace_r_cnt = less_l_cnt = less_r_cnt = 0;
+
   for(let i = 0; i < msg.text.length; i++) {
       //Correctly tally the braces
-      if(msg.text.charAt(i) === '{') {
-          l_cnt++;
-      }
-      else if(msg.text.charAt(i) === '}') {
-          r_cnt++;
-      }
-
-      //breaking condition
-      if(l_cnt > 1 || r_cnt > 1) {
-          break;
-      }
+      let next = msg.text.charAt(i);
+      if(next === '{')
+          brace_l_cnt++;
+      else if(next === '}')
+          brace_r_cnt++;
+      else if(next === '<')
+          less_l_cnt++;
+      else if(next === '>')
+          less_r_cnt++;
   }
-  if(l_cnt === 1 && r_cnt === 1) {
+  if(brace_l_cnt === 1 && brace_r_cnt === 1) {
+      //perhaps an attempt to search {anime}
+
       let attempt = msg.text.match(/\{([^)]+)\}/);
       if(attempt !== null) {
-          bot.sendMessage(chatId, util.inspect(attempt));
+          bot.sendMessage(chatId, 'Anime: '+attempt[1]);
+      }
+  }
+  if(less_l_cnt === 1 && less_r_cnt === 1) {
+      //perhaps an attempt to search {anime}
+
+      let attempt = msg.text.match(/\<([^)]+)\>/);
+      if(attempt !== null) {
+          bot.sendMessage(chatId, 'Manga: '+attempt[1]);
       }
   }
 
