@@ -1,4 +1,4 @@
-![https://i.imgbox.com/nB2EGCUL.png](roborugi-kouhai)
+![roborugi-kouhai](img/roborugi.png)
 
 # Roborugi
 Roborugi is a Telegram bot (based off of [/u/Roboragi](https://www.reddit.com/user/Roboragi/)) which creates anime and manga links from MAL when requested. Some of the code may be plagiarized from the original project, as this is ultimately a crude port. To reflect that, this project is a fork of the original and is prominently visible.
