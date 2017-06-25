@@ -159,8 +159,9 @@ function buildAnimeChatMessage(anime, options) {
 	message += anime['score'] + star_char + ' | ' + anime['type'] + ' | Status: ' + anime['status'] + ' | Episodes: ' + anime['episodes'];
 
 	var firstParagraph = anime['synopsis'].split('\n')[0];
-	if(firstParagraph.length > 250) {
-		firstParagraph = firstParagraph.substring(0,247)+'...';
+	var txtLimit = 180;
+	if(firstParagraph.length > txtLimit) {
+		firstParagraph = firstParagraph.substring(0,txtLimit-3)+'...';
 	}
 	message += '\n' + firstParagraph;
 	return message;
