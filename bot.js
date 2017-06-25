@@ -27,8 +27,7 @@ bot.on('message', (msg) => {
 		} else if (msg.text.startsWith('roborugi source code')) {
 			bot.sendMessage(chatId, 'https://github.com/au5ton/Roboragi');
 		}
-	}
-	catch(err) {
+	} catch (err) {
 		// ¯\_(ツ)_/¯
 	}
 	/*check if message is a query
@@ -45,7 +44,7 @@ bot.on('message', (msg) => {
 	*/
 	let brace_l_cnt = brace_r_cnt = less_l_cnt = less_r_cnt = brack_l_cnt = brack_r_cnt = pipe_cnt = 0;
 
-	if(msg.text) {
+	if (msg.text) {
 		for (let i = 0; i < msg.text.length; i++) {
 			//Correctly tally the braces
 			let next = msg.text.charAt(i);
@@ -73,8 +72,8 @@ bot.on('message', (msg) => {
 		if (attempt !== null) {
 			MAL.searchAnimes(attempt[1]).then((animes) => {
 				if (animes[0] !== null) {
-					for(let i = 0; i < animes.length; i++) {
-						if(animes[i]['type'] === 'TV') {
+					for (let i = 0; i < animes.length; i++) {
+						if (animes[i]['type'] === 'TV') {
 							bot.sendMessage(chatId, buildAnimeChatMessage(animes[i]), {
 								parse_mode: 'html',
 								disable_web_page_preview: true
@@ -95,8 +94,8 @@ bot.on('message', (msg) => {
 		if (attempt !== null) {
 			MAL.searchAnimes(attempt[1]).then((animes) => {
 				if (animes[0] !== null) {
-					for(let i = 0; i < animes.length; i++) {
-						if(animes[i]['type'] === 'OVA' || animes[i]['type'] === 'Movie') {
+					for (let i = 0; i < animes.length; i++) {
+						if (animes[i]['type'] === 'OVA' || animes[i]['type'] === 'Movie') {
 							bot.sendMessage(chatId, buildAnimeChatMessage(animes[i]), {
 								parse_mode: 'html',
 								disable_web_page_preview: true
@@ -111,14 +110,14 @@ bot.on('message', (msg) => {
 			});
 		}
 	}
-	if (pipe_cnt === 2 ) {
+	if (pipe_cnt === 2) {
 		//perhaps an attempt to search |anime exact title|
 		let attempt = msg.text.match(/\|([^)]+)\|/);
 		if (attempt !== null) {
 			MAL.searchAnimes(attempt[1]).then((animes) => {
 				if (animes[0] !== null) {
-					for(let i = 0; i < animes.length; i++) {
-						if(attempt[1].toLowerCase() === animes[i]['title'].toLowerCase() || attempt[1].toLowerCase() === animes[i]['english'].toLowerCase()) {
+					for (let i = 0; i < animes.length; i++) {
+						if (attempt[1].toLowerCase() === animes[i]['title'].toLowerCase() || attempt[1].toLowerCase() === animes[i]['english'].toLowerCase()) {
 							bot.sendMessage(chatId, buildAnimeChatMessage(animes[i]), {
 								parse_mode: 'html',
 								disable_web_page_preview: true
@@ -167,8 +166,8 @@ function buildAnimeChatMessage(anime, options) {
 
 	var firstParagraph = anime['synopsis'].split('\n')[0];
 	var txtLimit = 180;
-	if(firstParagraph.length > txtLimit) {
-		firstParagraph = firstParagraph.substring(0,txtLimit-3)+'...';
+	if (firstParagraph.length > txtLimit) {
+		firstParagraph = firstParagraph.substring(0, txtLimit - 3) + '...';
 	}
 	message += '\n' + firstParagraph;
 	return message;
