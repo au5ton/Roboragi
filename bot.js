@@ -29,7 +29,7 @@ bot.on('message', (msg) => {
 		}
 	}
 	catch(err) {
-		// ¯\_(ツ)_/¯ 
+		// ¯\_(ツ)_/¯
 	}
 	/*check if message is a query
 	a messages is a query if:
@@ -45,24 +45,26 @@ bot.on('message', (msg) => {
 	*/
 	let brace_l_cnt = brace_r_cnt = less_l_cnt = less_r_cnt = brack_l_cnt = brack_r_cnt = pipe_cnt = 0;
 
-	for (let i = 0; i < msg.text.length; i++) {
-		//Correctly tally the braces
-		let next = msg.text.charAt(i);
-		if (next === '{')
-			brace_l_cnt++;
-		else if (next === '}')
-			brace_r_cnt++;
-		else if (next === '<')
-			less_l_cnt++;
-		else if (next === '>')
-			less_r_cnt++;
-		else if (next === '[')
-			brack_l_cnt++;
-		else if (next === ']')
-			brack_r_cnt++;
-		else if (next === '|')
-			pipe_cnt++;
+	if(msg.text) {
+		for (let i = 0; i < msg.text.length; i++) {
+			//Correctly tally the braces
+			let next = msg.text.charAt(i);
+			if (next === '{')
+				brace_l_cnt++;
+			else if (next === '}')
+				brace_r_cnt++;
+			else if (next === '<')
+				less_l_cnt++;
+			else if (next === '>')
+				less_r_cnt++;
+			else if (next === '[')
+				brack_l_cnt++;
+			else if (next === ']')
+				brack_r_cnt++;
+			else if (next === '|')
+				pipe_cnt++;
 
+		}
 	}
 	if (brace_l_cnt === 1 && brace_r_cnt === 1) {
 		//perhaps an attempt to search {anime TV}
