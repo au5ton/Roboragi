@@ -20,13 +20,12 @@ const bot = new TelegramBot(token, {
 bot.on('message', (msg) => {
 	const chatId = msg.chat.id;
 
-    if(msg.text.startsWith('thanks roborugi')) {
-        let catchphrases = ['I\'ll try my best', 'I don\'t know anyone by that name.', '( ´ ∀ `)'];
-        bot.sendMessage(chatId, catchphrases[Math.floor(Math.random()*catchphrases.length)]);
-    }
-    else if(msg.text.startsWith('roborugi source code')) {
-        bot.sendMessage(chatId, 'https://github.com/au5ton/Roboragi');
-    }
+	if (msg.text.startsWith('thanks roborugi')) {
+		let catchphrases = ['I\'ll try my best', 'I don\'t know anyone by that name.', '( ´ ∀ `)'];
+		bot.sendMessage(chatId, catchphrases[Math.floor(Math.random() * catchphrases.length)]);
+	} else if (msg.text.startsWith('roborugi source code')) {
+		bot.sendMessage(chatId, 'https://github.com/au5ton/Roboragi');
+	}
 	/*check if message is a query
 	a messages is a query if:
 	- there is exactly 1 `{` per message
@@ -51,11 +50,11 @@ bot.on('message', (msg) => {
 		else if (next === '<')
 			less_l_cnt++;
 		else if (next === '>')
-            less_r_cnt++;
+			less_r_cnt++;
 		else if (next === '[')
-            brack_l_cnt++;
-        else if (next === ']')
-            brack_r_cnt++;
+			brack_l_cnt++;
+		else if (next === ']')
+			brack_r_cnt++;
 
 	}
 	if (brace_l_cnt === 1 && brace_r_cnt === 1) {
@@ -65,25 +64,33 @@ bot.on('message', (msg) => {
 		if (attempt !== null) {
 			MAL.searchAnimes(attempt[1]).then((animes) => {
 				if (animes[0] !== null) {
-					bot.sendMessage(chatId, buildAnimeChatMessage(animes[0]), {parse_mode: 'html', disable_web_page_preview: true});
+					bot.sendMessage(chatId, buildAnimeChatMessage(animes[0]), {
+						parse_mode: 'html',
+						disable_web_page_preview: true
+					});
 				}
 			}).catch((r) => {
 				//well that sucks
-                logger.error('failed to search mal: ', r);
+				logger.error('failed to search mal: ', r);
 			});
 		}
 	}
-    if (brack_l_cnt === 1 && brack_r_cnt === 1) {
+	if (brack_l_cnt === 1 && brack_r_cnt === 1) {
 		//perhaps an attempt to search [anime]
 		let attempt = msg.text.match(/\[([^)]+)\]/);
 		if (attempt !== null) {
 			MAL.searchAnimes(attempt[1]).then((animes) => {
 				if (animes[0] !== null) {
-					bot.sendMessage(chatId, buildAnimeChatMessage(animes[0], {alt: true}), {parse_mode: 'html', disable_web_page_preview: true});
+					bot.sendMessage(chatId, buildAnimeChatMessage(animes[0], {
+						alt: true
+					}), {
+						parse_mode: 'html',
+						disable_web_page_preview: true
+					});
 				}
 			}).catch((r) => {
 				//well that sucks
-                logger.error('failed to search mal: ', r);
+				logger.error('failed to search mal: ', r);
 			});
 		}
 	}
@@ -93,11 +100,14 @@ bot.on('message', (msg) => {
 		if (attempt !== null) {
 			MAL.searchMangas(attempt[1]).then((mangas) => {
 				if (mangas[0] !== null) {
-					bot.sendMessage(chatId, buildMangaChatMessage(mangas[0]), {parse_mode: 'html', disable_web_page_preview: true});
+					bot.sendMessage(chatId, buildMangaChatMessage(mangas[0]), {
+						parse_mode: 'html',
+						disable_web_page_preview: true
+					});
 				}
 			}).catch((r) => {
 				//well that sucks
-                logger.error('failed to search mal: ', r);
+				logger.error('failed to search mal: ', r);
 			});
 		}
 	}
@@ -105,34 +115,33 @@ bot.on('message', (msg) => {
 });
 
 const star_char = '\u2B51';
+
 function buildAnimeChatMessage(anime, options) {
-    options = options || {};
-    let message = '';
-	if(anime['english'] !== null && anime['english'] !== '') {
-        message += '<b>'+anime['english']+'</b>';
-    }
-    else {
-        message += '<b>'+anime['title']+'</b>';
-    }
-    message += ' (<a href=\"https://myanimelist.net/anime/'+anime['id']+'\">MAL</a>)\n';
-    message += anime['score'] + star_char + ' | ' + anime['type'] + ' | Status: ' + anime['status'] + ' | Episodes: ' + anime['episodes'];
-    if(options.alt) {
-        message += '\n'+anime['synopsis'].split('\n')[0];
-    }
-    return message;
+	options = options || {};
+	let message = '';
+	if (anime['english'] !== null && anime['english'] !== '') {
+		message += '<b>' + anime['english'] + '</b>';
+	} else {
+		message += '<b>' + anime['title'] + '</b>';
+	}
+	message += ' (<a href=\"https://myanimelist.net/anime/' + anime['id'] + '\">MAL</a>)\n';
+	message += anime['score'] + star_char + ' | ' + anime['type'] + ' | Status: ' + anime['status'] + ' | Episodes: ' + anime['episodes'];
+	if (options.alt) {
+		message += '\n' + anime['synopsis'].split('\n')[0];
+	}
+	return message;
 }
 
 function buildMangaChatMessage(manga) {
-    let message = '';
-	if(manga['english'] !== null && manga['english'] !== '') {
-        message += '<b>'+manga['english']+'</b>';
-    }
-    else {
-        message += '<b>'+manga['title']+'</b>';
-    }
-    message += ' (<a href=\"https://myanimelist.net/manga/'+manga['id']+'\">MAL</a>)\n';
-    message += manga['score'] + star_char + ' | ' + manga['type'] + ' | Status: ' + manga['status'] + ' | Volumes: ' + manga['volumes'];
-    return message;
+	let message = '';
+	if (manga['english'] !== null && manga['english'] !== '') {
+		message += '<b>' + manga['english'] + '</b>';
+	} else {
+		message += '<b>' + manga['title'] + '</b>';
+	}
+	message += ' (<a href=\"https://myanimelist.net/manga/' + manga['id'] + '\">MAL</a>)\n';
+	message += manga['score'] + star_char + ' | ' + manga['type'] + ' | Status: ' + manga['status'] + ' | Volumes: ' + manga['volumes'];
+	return message;
 }
 
 logger.log('Bot active. Performing startup checks.');
