@@ -7,5 +7,11 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "GNU"
+  "license": "GNU",
+  "dependencies": {
+    "au5ton-logger": "^1.1.2",
+    "dotenv": "^4.0.0",
+    "node-telegram-bot-api": "^0.27.1",
+    "popura": "^1.2.5"
+  }
 }
