@@ -9,81 +9,167 @@ const MAL = popura(process.env.MAL_USER, process.env.MAL_PASSWORD);
 const token = process.env.TELEGRAM_BOT_TOKEN;
 
 // Create a bot that uses 'polling' to fetch new updates
-const bot = new TelegramBot(token, {polling: {autoStart: false}});
+const bot = new TelegramBot(token, {
+	polling: {
+		autoStart: false
+	}
+});
 
 // Listen for any kind of message. There are different kinds of
 // messages.
 bot.on('message', (msg) => {
-  const chatId = msg.chat.id;
+	const chatId = msg.chat.id;
 
-  /*check if message is a query
-  a messages is a query if:
-  - there is exactly 1 `{` per message
-  - there is exactly 1 `}` per message
-  - the message matches the regex: \{([^)]+)\}
-  OR
-  - there is exactly 1 `<` per message
-  - there is exactly 1 `>` per message
-  - the message matches the regex: \<([^)]+)\>
+    if(msg.text.startsWith('echo')) {
+        bot.sendMessage(chatId, '<b>bold</b>, <strong>bold</strong><i>italic</i>, <em>italic</em> <a href=\"http://www.example.com/\">inline URL</a> <code>inline fixed-width code</code> <pre>pre-formatted fixed-width code block</pre>',
+         {parse_mode: 'html'});
+        return;
+    }
+	/*check if message is a query
+	a messages is a query if:
+	- there is exactly 1 `{` per message
+	- there is exactly 1 `}` per message
+	- the message matches the regex: \{([^)]+)\}
+	OR
+	- there is exactly 1 `<` per message
+	- there is exactly 1 `>` per message
+	- the message matches the regex: \<([^)]+)\>
 
-  i feel like this could be refractored so please feel free to shit on my code
-  */
-  let brace_l_cnt = brace_r_cnt = less_l_cnt = less_r_cnt = 0;
+	i feel like this could be refractored so please feel free to shit on my code
+	*/
+	let brace_l_cnt = brace_r_cnt = less_l_cnt = less_r_cnt = brack_l_cnt = brack_r_cnt = 0;
 
-  for(let i = 0; i < msg.text.length; i++) {
-      //Correctly tally the braces
-      let next = msg.text.charAt(i);
-      if(next === '{')
-          brace_l_cnt++;
-      else if(next === '}')
-          brace_r_cnt++;
-      else if(next === '<')
-          less_l_cnt++;
-      else if(next === '>')
-          less_r_cnt++;
-  }
-  if(brace_l_cnt === 1 && brace_r_cnt === 1) {
-      //perhaps an attempt to search {anime}
+	for (let i = 0; i < msg.text.length; i++) {
+		//Correctly tally the braces
+		let next = msg.text.charAt(i);
+		if (next === '{')
+			brace_l_cnt++;
+		else if (next === '}')
+			brace_r_cnt++;
+		else if (next === '<')
+			less_l_cnt++;
+		else if (next === '>')
+            less_r_cnt++;
+		else if (next === '[')
+            brack_l_cnt++;
+        else if (next === ']')
+            brack_r_cnt++;
 
-      let attempt = msg.text.match(/\{([^)]+)\}/);
-      if(attempt !== null) {
-          bot.sendMessage(chatId, 'Anime: '+attempt[1]);
-      }
-  }
-  if(less_l_cnt === 1 && less_r_cnt === 1) {
-      //perhaps an attempt to search {anime}
+	}
+	if (brace_l_cnt === 1 && brace_r_cnt === 1) {
+		//perhaps an attempt to search {anime}
 
-      let attempt = msg.text.match(/\<([^)]+)\>/);
-      if(attempt !== null) {
-          bot.sendMessage(chatId, 'Manga: '+attempt[1]);
-      }
-  }
+		let attempt = msg.text.match(/\{([^)]+)\}/);
+		if (attempt !== null) {
+			MAL.searchAnimes(attempt[1]).then((animes) => {
+				if (animes[0] !== null) {
+					bot.sendMessage(chatId, buildAnimeChatMessage(animes[0]), {parse_mode: 'html', disable_web_page_preview: true});
+					// for (let i = 0; i < animes.length; i++) {
+					// 	logger.log(i, ' | ', animes[i]['title'], '\n    Guess url: https://myanimelist.net/anime/' + animes[i]['id']);
+					// }
+                    logger.log(animes[0]);
+				}
+			}).catch((r) => {
+				//well that sucks
+                logger.error('failed to search mal: ', r);
+			});
+		}
+	}
+    if (brack_l_cnt === 1 && brack_r_cnt === 1) {
+		//perhaps an attempt to search [anime]
 
-  // send a message to the chat acknowledging receipt of their message
-  //bot.sendMessage(chatId, 'Received your message');
+		let attempt = msg.text.match(/\[([^)]+)\]/);
+		if (attempt !== null) {
+			MAL.searchAnimes(attempt[1]).then((animes) => {
+				if (animes[0] !== null) {
+					bot.sendMessage(chatId, buildAnimeChatMessage(animes[0], {brief: true}), {parse_mode: 'html', disable_web_page_preview: true});
+					// for (let i = 0; i < animes.length; i++) {
+					// 	logger.log(i, ' | ', animes[i]['title'], '\n    Guess url: https://myanimelist.net/manga/' + animes[i]['id']);
+					// }
+                    logger.log(animes[0]);
+				}
+			}).catch((r) => {
+				//well that sucks
+                logger.error('failed to search mal: ', r);
+			});
+
+		}
+	}
+	if (less_l_cnt === 1 && less_r_cnt === 1) {
+		//perhaps an attempt to search <manga>
+
+		let attempt = msg.text.match(/\<([^)]+)\>/);
+		if (attempt !== null) {
+			MAL.searchMangas(attempt[1]).then((mangas) => {
+				if (mangas[0] !== null) {
+					bot.sendMessage(chatId, buildMangaChatMessage(mangas[0]), {parse_mode: 'html', disable_web_page_preview: true});
+					// for (let i = 0; i < animes.length; i++) {
+					// 	logger.log(i, ' | ', animes[i]['title'], '\n    Guess url: https://myanimelist.net/manga/' + animes[i]['id']);
+					// }
+                    logger.log(mangas[0]);
+				}
+			}).catch((r) => {
+				//well that sucks
+                logger.error('failed to search mal: ', r);
+			});
+
+		}
+	}
+
 });
+
+const star_char = '\u2B51';
+function buildAnimeChatMessage(anime, options) {
+    options = options || {};
+    let message = '';
+	if(anime['english'] !== null && anime['english'] !== '') {
+        message += '<b>'+anime['english']+'</b>';
+    }
+    else {
+        message += '<b>'+anime['title']+'</b>';
+    }
+    message += ' (<a href=\"https://myanimelist.net/anime/'+anime['id']+'\">MAL</a>)\n';
+    if(options.brief) {
+        return message;
+    }
+    message += anime['score'] + star_char + ' | ' + anime['type'] + ' | Status: ' + anime['status'] + ' | Episodes: ' + anime['episodes'];
+    return message;
+}
+
+function buildMangaChatMessage(manga) {
+    let message = '';
+	if(manga['english'] !== null && manga['english'] !== '') {
+        message += '<b>'+manga['english']+'</b>';
+    }
+    else {
+        message += '<b>'+manga['title']+'</b>';
+    }
+    message += ' (<a href=\"https://myanimelist.net/manga/'+manga['id']+'\">MAL</a>)\n';
+    message += manga['score'] + star_char + ' | ' + manga['type'] + ' | Status: ' + manga['status'] + ' | Volumes: ' + manga['volumes'];
+    return message;
+}
 
 logger.log('Bot active. Performing startup checks.');
 
 logger.warn('Is our Telegram token valid?');
 bot.getMe().then((r) => {
-    //doesn't matter who we are, we're good
-    logger.success('Telegram token is valid.');
-    bot.startPolling().then((r) => {
-        logger.success('Telegram bot polling started.');
-    }).catch((r) => {
-        logger.error('Telegram bot failed to start polling. ', r);
-        process.exit();
-    })
+	//doesn't matter who we are, we're good
+	logger.success('Telegram token is valid.');
+	bot.startPolling().then((r) => {
+		logger.success('Telegram bot polling started.');
+	}).catch((r) => {
+		logger.error('Telegram bot failed to start polling. ', r);
+		process.exit();
+	})
 }).catch((r) => {
-    logger.error('Telegram bot invalid token: ', r.code, ' ', r.body);
-    process.exit();
+	logger.error('Telegram bot invalid token: ', r.code, ' ', r.body);
+	process.exit();
 });
 
 logger.warn('Is out MAL authentication valid?');
 MAL.verifyAuth().then((r) => {
-    logger.success('MAL authenticated. ');
+	logger.success('MAL authenticated. ');
 }).catch((r) => {
-    logger.error('MAL failed to authenticate: ', r.message);
-    process.exit();
+	logger.error('MAL failed to authenticate: ', r.message);
+	process.exit();
 });
