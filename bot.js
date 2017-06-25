@@ -20,10 +20,12 @@ const bot = new TelegramBot(token, {
 bot.on('message', (msg) => {
 	const chatId = msg.chat.id;
 
-    if(msg.text.startsWith('echo')) {
-        bot.sendMessage(chatId, '<b>bold</b>, <strong>bold</strong><i>italic</i>, <em>italic</em> <a href=\"http://www.example.com/\">inline URL</a> <code>inline fixed-width code</code> <pre>pre-formatted fixed-width code block</pre>',
-         {parse_mode: 'html'});
-        return;
+    if(msg.text.startsWith('thanks roborugi')) {
+        let catchphrases = ['I\'ll try my best', 'I don\'t know anyone by that name.', '( ´ ∀ `)'];
+        bot.sendMessage(chatId, catchphrases[Math.floor(Math.random()*catchphrases.length)]);
+    }
+    else if(msg.text.startsWith('roborugi source code')) {
+        bot.sendMessage(chatId, 'https://github.com/au5ton/Roboragi');
     }
 	/*check if message is a query
 	a messages is a query if:
@@ -64,10 +66,6 @@ bot.on('message', (msg) => {
 			MAL.searchAnimes(attempt[1]).then((animes) => {
 				if (animes[0] !== null) {
 					bot.sendMessage(chatId, buildAnimeChatMessage(animes[0]), {parse_mode: 'html', disable_web_page_preview: true});
-					// for (let i = 0; i < animes.length; i++) {
-					// 	logger.log(i, ' | ', animes[i]['title'], '\n    Guess url: https://myanimelist.net/anime/' + animes[i]['id']);
-					// }
-                    logger.log(animes[0]);
 				}
 			}).catch((r) => {
 				//well that sucks
@@ -77,42 +75,30 @@ bot.on('message', (msg) => {
 	}
     if (brack_l_cnt === 1 && brack_r_cnt === 1) {
 		//perhaps an attempt to search [anime]
-
 		let attempt = msg.text.match(/\[([^)]+)\]/);
 		if (attempt !== null) {
 			MAL.searchAnimes(attempt[1]).then((animes) => {
 				if (animes[0] !== null) {
-					bot.sendMessage(chatId, buildAnimeChatMessage(animes[0], {brief: true}), {parse_mode: 'html', disable_web_page_preview: true});
-					// for (let i = 0; i < animes.length; i++) {
-					// 	logger.log(i, ' | ', animes[i]['title'], '\n    Guess url: https://myanimelist.net/manga/' + animes[i]['id']);
-					// }
-                    logger.log(animes[0]);
+					bot.sendMessage(chatId, buildAnimeChatMessage(animes[0], {alt: true}), {parse_mode: 'html', disable_web_page_preview: true});
 				}
 			}).catch((r) => {
 				//well that sucks
                 logger.error('failed to search mal: ', r);
 			});
-
 		}
 	}
 	if (less_l_cnt === 1 && less_r_cnt === 1) {
 		//perhaps an attempt to search <manga>
-
 		let attempt = msg.text.match(/\<([^)]+)\>/);
 		if (attempt !== null) {
 			MAL.searchMangas(attempt[1]).then((mangas) => {
 				if (mangas[0] !== null) {
 					bot.sendMessage(chatId, buildMangaChatMessage(mangas[0]), {parse_mode: 'html', disable_web_page_preview: true});
-					// for (let i = 0; i < animes.length; i++) {
-					// 	logger.log(i, ' | ', animes[i]['title'], '\n    Guess url: https://myanimelist.net/manga/' + animes[i]['id']);
-					// }
-                    logger.log(mangas[0]);
 				}
 			}).catch((r) => {
 				//well that sucks
                 logger.error('failed to search mal: ', r);
 			});
-
 		}
 	}
 
@@ -129,10 +115,10 @@ function buildAnimeChatMessage(anime, options) {
         message += '<b>'+anime['title']+'</b>';
     }
     message += ' (<a href=\"https://myanimelist.net/anime/'+anime['id']+'\">MAL</a>)\n';
-    if(options.brief) {
-        return message;
-    }
     message += anime['score'] + star_char + ' | ' + anime['type'] + ' | Status: ' + anime['status'] + ' | Episodes: ' + anime['episodes'];
+    if(options.alt) {
+        message += '\n'+anime['synopsis'].split('\n')[0];
+    }
     return message;
 }
 
