@@ -5,6 +5,7 @@ logger.setOption('prefix_date',true);
 const util = require('util');
 const popura = require('popura');
 const MAL = popura(process.env.MAL_USER, process.env.MAL_PASSWORD);
+const fs = require('fs');
 
 // replace the value below with the Telegram token you receive from @BotFather
 const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -50,19 +51,19 @@ bot.on('message', (msg) => {
 			//Correctly tally the braces
 			let next = msg.text.charAt(i);
 			if (next === '{')
-				brace_l_cnt++;
+			brace_l_cnt++;
 			else if (next === '}')
-				brace_r_cnt++;
+			brace_r_cnt++;
 			else if (next === '<')
-				less_l_cnt++;
+			less_l_cnt++;
 			else if (next === '>')
-				less_r_cnt++;
+			less_r_cnt++;
 			else if (next === '[')
-				brack_l_cnt++;
+			brack_l_cnt++;
 			else if (next === ']')
-				brack_r_cnt++;
+			brack_r_cnt++;
 			else if (next === '|')
-				pipe_cnt++;
+			pipe_cnt++;
 
 		}
 	}
@@ -78,12 +79,23 @@ bot.on('message', (msg) => {
 								parse_mode: 'html',
 								disable_web_page_preview: true
 							});
+							recordQuery({
+								cmd: 'braces',
+								query: attempt[1],
+								result_id: animes[i]['id'],
+								chat_id: chatId
+							});
 							break;
 						}
 					}
 				}
 				else {
-					//empty results
+					//couldn't find an anime with that name
+					recordQuery({
+						cmd: 'braces',
+						query: attempt[1],
+						chat_id: chatId
+					});
 				}
 			}).catch((r) => {
 				//well that sucks
@@ -103,9 +115,23 @@ bot.on('message', (msg) => {
 								parse_mode: 'html',
 								disable_web_page_preview: true
 							});
+							recordQuery({
+								cmd: 'brackets',
+								query: attempt[1],
+								result_id: animes[i]['id'],
+								chat_id: chatId
+							});
 							break;
 						}
 					}
+				}
+				else {
+					//couldn't find an anime with that name
+					recordQuery({
+						cmd: 'brackets',
+						query: attempt[1],
+						chat_id: chatId
+					});
 				}
 			}).catch((r) => {
 				//well that sucks
@@ -125,8 +151,22 @@ bot.on('message', (msg) => {
 								parse_mode: 'html',
 								disable_web_page_preview: true
 							});
+							recordQuery({
+								cmd: 'pipes',
+								query: attempt[1],
+								result_id: animes[i]['id'],
+								chat_id: chatId
+							});
 						}
 					}
+				}
+				else {
+					//couldn't find an anime with that name
+					recordQuery({
+						cmd: 'pipes',
+						query: attempt[1],
+						chat_id: chatId
+					});
 				}
 			}).catch((r) => {
 				//well that sucks
@@ -143,6 +183,20 @@ bot.on('message', (msg) => {
 					bot.sendMessage(chatId, buildMangaChatMessage(mangas[0]), {
 						parse_mode: 'html',
 						disable_web_page_preview: true
+					});
+					recordQuery({
+						cmd: 'ltgt',
+						query: attempt[1],
+						result_id: mangas[0]['id'],
+						chat_id: chatId
+					});
+				}
+				else {
+					//couldn't find a manga with that name
+					recordQuery({
+						cmd: 'ltgt',
+						query: attempt[1],
+						chat_id: chatId
 					});
 				}
 			}).catch((r) => {
@@ -188,10 +242,22 @@ function buildMangaChatMessage(manga) {
 	return message;
 }
 
-function recordQuery() {
-	/*
-	logge
-	*/
+function recordQuery(record) {
+	//queries will be logged as one JSON object per line
+	//ideally: {"date":"2017-06-25T23:07:29.772Z","cmd":"braces","result_id":11111,"query":"Another"}
+	let entry = {};
+	//copy data over to new Object, because hardcoding fields is bad and
+	//some things might need to log more info in the future
+	for(let k in record) {
+		entry[k]=record[k];
+	}
+	//Sets default values
+	entry['result_id'] = entry.result_id || -1;
+	entry['date'] = new Date().toISOString();
+	//asynchronous append because order doesn't matter if we timestamp it, we want performance.
+	fs.appendFile('command_history.json', JSON.stringify(entry)+'\n', (err) => {
+		if (err) throw err;
+	});
 }
 
 logger.log('Bot active. Performing startup checks.');
