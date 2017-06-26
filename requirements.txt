@@ -1,3 +1,4 @@
 git+git://github.com/Nihilate/Acerola.git
 python-dotenv
 pyTelegramBotAPI
+colorama
