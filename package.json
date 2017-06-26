@@ -11,6 +11,7 @@
   "dependencies": {
     "au5ton-logger": "^1.2.0",
     "dotenv": "^4.0.0",
+    "git-last-commit": "^0.3.0",
     "node-telegram-bot-api": "^0.27.1",
     "popura": "^1.2.5"
   }

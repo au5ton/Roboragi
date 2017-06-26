@@ -6,6 +6,7 @@ const util = require('util');
 const popura = require('popura');
 const MAL = popura(process.env.MAL_USER, process.env.MAL_PASSWORD);
 const fs = require('fs');
+const git = require('git-last-commit');
 
 const history_analyzer = require('./history_analyzer');
 
@@ -52,6 +53,21 @@ bot.on('message', (msg) => {
 					}, time*1000*60);
 				}
 			}
+			else if (msg.chat.type === 'private'){
+				//when the bot is being talked to one-on-one
+
+				if(msg.text.startsWith('roborugi version')) {
+					git.getLastCommit(function(err, commit) {
+						// read commit object properties
+						bot.sendMessage(chatId, 'commit '+commit['shortHash']+', last updated on '+new Date(parseInt(commit['authoredOn'])*1000).toDateString());
+					});
+
+				}
+				else if(msg.text.startsWith('roborugi commit')) {
+					let revision = require('child_process').execSync('git rev-parse HEAD').toString().trim();
+					bot.sendMessage(chatId, 'https://github.com/au5ton/Roboragi/tree/'+revision);
+				}
+			}
 
 			if (msg.text.startsWith('roborugi ping')) {
 				bot.sendMessage(chatId, 'pong');
@@ -80,198 +96,198 @@ bot.on('message', (msg) => {
 					});
 				}
 				/*if(msg.text.match(/^roborugi get top queries [0-9]*$/) !== null) {
-					let count = parseInt(msg.text.split(' ')[4]);
-					history_analyzer.getTopAnime(count, (queries) => {
-						let response = 'I';
-						for(let i = 0; i < queries.length; i++) {
-							rep
-						}
-						bot.sendMessage(chatId, response, {
+				let count = parseInt(msg.text.split(' ')[4]);
+				history_analyzer.getTopAnime(count, (queries) => {
+				let response = 'I';
+				for(let i = 0; i < queries.length; i++) {
+				rep
+			}
+			bot.sendMessage(chatId, response, {
+			parse_mode: 'html',
+			disable_web_page_preview: true
+		});
+	});
+}*/
+}
+}
+
+} catch (err) {
+	// ¯\_(ツ)_/¯
+	logger.log(err);
+}
+/*check if message is a query
+a messages is a query if:
+- there is exactly 1 `{` per message
+- there is exactly 1 `}` per message
+- the message matches the regex: \{([^)]+)\}
+OR
+- there is exactly 1 `<` per message
+- there is exactly 1 `>` per message
+- the message matches the regex: \<([^)]+)\>
+
+i feel like this could be refractored so please feel free to shit on my code
+*/
+let brace_l_cnt = brace_r_cnt = less_l_cnt = less_r_cnt = brack_l_cnt = brack_r_cnt = pipe_cnt = 0;
+
+if (msg.text) {
+	for (let i = 0; i < msg.text.length; i++) {
+		//Correctly tally the braces
+		let next = msg.text.charAt(i);
+		if (next === '{')
+		brace_l_cnt++;
+		else if (next === '}')
+		brace_r_cnt++;
+		else if (next === '<')
+		less_l_cnt++;
+		else if (next === '>')
+		less_r_cnt++;
+		else if (next === '[')
+		brack_l_cnt++;
+		else if (next === ']')
+		brack_r_cnt++;
+		else if (next === '|')
+		pipe_cnt++;
+
+	}
+}
+if (brace_l_cnt === 1 && brace_r_cnt === 1) {
+	//perhaps an attempt to search {anime TV}
+	let attempt = msg.text.match(/\{([^)]+)\}/);
+	if (attempt !== null) {
+		MAL.searchAnimes(attempt[1]).then((animes) => {
+			if (animes[0] !== null) {
+				for (let i = 0; i < animes.length; i++) {
+					if (animes[i]['type'] === 'TV') {
+						bot.sendMessage(chatId, buildAnimeChatMessage(animes[i]), {
 							parse_mode: 'html',
 							disable_web_page_preview: true
 						});
-					});
-				}*/
+						recordQuery({
+							cmd: 'braces',
+							query: attempt[1],
+							result_id: animes[i]['id'],
+							chat_id: chatId
+						});
+						break;
+					}
+				}
 			}
-		}
-
-	} catch (err) {
-		// ¯\_(ツ)_/¯
-		logger.log(err);
+			else {
+				//couldn't find an anime with that name
+				recordQuery({
+					cmd: 'braces',
+					query: attempt[1],
+					chat_id: chatId
+				});
+			}
+		}).catch((r) => {
+			//well that sucks
+			logger.error('failed to search mal: ', r);
+		});
 	}
-	/*check if message is a query
-	a messages is a query if:
-	- there is exactly 1 `{` per message
-	- there is exactly 1 `}` per message
-	- the message matches the regex: \{([^)]+)\}
-	OR
-	- there is exactly 1 `<` per message
-	- there is exactly 1 `>` per message
-	- the message matches the regex: \<([^)]+)\>
-
-	i feel like this could be refractored so please feel free to shit on my code
-	*/
-	let brace_l_cnt = brace_r_cnt = less_l_cnt = less_r_cnt = brack_l_cnt = brack_r_cnt = pipe_cnt = 0;
-
-	if (msg.text) {
-		for (let i = 0; i < msg.text.length; i++) {
-			//Correctly tally the braces
-			let next = msg.text.charAt(i);
-			if (next === '{')
-			brace_l_cnt++;
-			else if (next === '}')
-			brace_r_cnt++;
-			else if (next === '<')
-			less_l_cnt++;
-			else if (next === '>')
-			less_r_cnt++;
-			else if (next === '[')
-			brack_l_cnt++;
-			else if (next === ']')
-			brack_r_cnt++;
-			else if (next === '|')
-			pipe_cnt++;
-
-		}
-	}
-	if (brace_l_cnt === 1 && brace_r_cnt === 1) {
-		//perhaps an attempt to search {anime TV}
-		let attempt = msg.text.match(/\{([^)]+)\}/);
-		if (attempt !== null) {
-			MAL.searchAnimes(attempt[1]).then((animes) => {
-				if (animes[0] !== null) {
-					for (let i = 0; i < animes.length; i++) {
-						if (animes[i]['type'] === 'TV') {
-							bot.sendMessage(chatId, buildAnimeChatMessage(animes[i]), {
-								parse_mode: 'html',
-								disable_web_page_preview: true
-							});
-							recordQuery({
-								cmd: 'braces',
-								query: attempt[1],
-								result_id: animes[i]['id'],
-								chat_id: chatId
-							});
-							break;
-						}
+}
+if (brack_l_cnt === 1 && brack_r_cnt === 1) {
+	//perhaps an attempt to search [anime OVA+Movie]
+	let attempt = msg.text.match(/\[([^)]+)\]/);
+	if (attempt !== null) {
+		MAL.searchAnimes(attempt[1]).then((animes) => {
+			if (animes[0] !== null) {
+				for (let i = 0; i < animes.length; i++) {
+					if (animes[i]['type'] === 'OVA' || animes[i]['type'] === 'Movie') {
+						bot.sendMessage(chatId, buildAnimeChatMessage(animes[i]), {
+							parse_mode: 'html',
+							disable_web_page_preview: true
+						});
+						recordQuery({
+							cmd: 'brackets',
+							query: attempt[1],
+							result_id: animes[i]['id'],
+							chat_id: chatId
+						});
+						break;
 					}
 				}
-				else {
-					//couldn't find an anime with that name
-					recordQuery({
-						cmd: 'braces',
-						query: attempt[1],
-						chat_id: chatId
-					});
-				}
-			}).catch((r) => {
-				//well that sucks
-				logger.error('failed to search mal: ', r);
-			});
-		}
+			}
+			else {
+				//couldn't find an anime with that name
+				recordQuery({
+					cmd: 'brackets',
+					query: attempt[1],
+					chat_id: chatId
+				});
+			}
+		}).catch((r) => {
+			//well that sucks
+			logger.error('failed to search mal: ', r);
+		});
 	}
-	if (brack_l_cnt === 1 && brack_r_cnt === 1) {
-		//perhaps an attempt to search [anime OVA+Movie]
-		let attempt = msg.text.match(/\[([^)]+)\]/);
-		if (attempt !== null) {
-			MAL.searchAnimes(attempt[1]).then((animes) => {
-				if (animes[0] !== null) {
-					for (let i = 0; i < animes.length; i++) {
-						if (animes[i]['type'] === 'OVA' || animes[i]['type'] === 'Movie') {
-							bot.sendMessage(chatId, buildAnimeChatMessage(animes[i]), {
-								parse_mode: 'html',
-								disable_web_page_preview: true
-							});
-							recordQuery({
-								cmd: 'brackets',
-								query: attempt[1],
-								result_id: animes[i]['id'],
-								chat_id: chatId
-							});
-							break;
-						}
+}
+if (pipe_cnt === 2) {
+	//perhaps an attempt to search |anime exact title|
+	let attempt = msg.text.match(/\|([^)]+)\|/);
+	if (attempt !== null) {
+		MAL.searchAnimes(attempt[1]).then((animes) => {
+			if (animes[0] !== null) {
+				for (let i = 0; i < animes.length; i++) {
+					if (attempt[1].toLowerCase() === animes[i]['title'].toLowerCase() || attempt[1].toLowerCase() === animes[i]['english'].toLowerCase()) {
+						bot.sendMessage(chatId, buildAnimeChatMessage(animes[i]), {
+							parse_mode: 'html',
+							disable_web_page_preview: true
+						});
+						recordQuery({
+							cmd: 'pipes',
+							query: attempt[1],
+							result_id: animes[i]['id'],
+							chat_id: chatId
+						});
 					}
 				}
-				else {
-					//couldn't find an anime with that name
-					recordQuery({
-						cmd: 'brackets',
-						query: attempt[1],
-						chat_id: chatId
-					});
-				}
-			}).catch((r) => {
-				//well that sucks
-				logger.error('failed to search mal: ', r);
-			});
-		}
+			}
+			else {
+				//couldn't find an anime with that name
+				recordQuery({
+					cmd: 'pipes',
+					query: attempt[1],
+					chat_id: chatId
+				});
+			}
+		}).catch((r) => {
+			//well that sucks
+			logger.error('failed to search mal: ', r);
+		});
 	}
-	if (pipe_cnt === 2) {
-		//perhaps an attempt to search |anime exact title|
-		let attempt = msg.text.match(/\|([^)]+)\|/);
-		if (attempt !== null) {
-			MAL.searchAnimes(attempt[1]).then((animes) => {
-				if (animes[0] !== null) {
-					for (let i = 0; i < animes.length; i++) {
-						if (attempt[1].toLowerCase() === animes[i]['title'].toLowerCase() || attempt[1].toLowerCase() === animes[i]['english'].toLowerCase()) {
-							bot.sendMessage(chatId, buildAnimeChatMessage(animes[i]), {
-								parse_mode: 'html',
-								disable_web_page_preview: true
-							});
-							recordQuery({
-								cmd: 'pipes',
-								query: attempt[1],
-								result_id: animes[i]['id'],
-								chat_id: chatId
-							});
-						}
-					}
-				}
-				else {
-					//couldn't find an anime with that name
-					recordQuery({
-						cmd: 'pipes',
-						query: attempt[1],
-						chat_id: chatId
-					});
-				}
-			}).catch((r) => {
-				//well that sucks
-				logger.error('failed to search mal: ', r);
-			});
-		}
+}
+if (less_l_cnt === 1 && less_r_cnt === 1) {
+	//perhaps an attempt to search <manga>
+	let attempt = msg.text.match(/\<([^)]+)\>/);
+	if (attempt !== null) {
+		MAL.searchMangas(attempt[1]).then((mangas) => {
+			if (mangas[0] !== null) {
+				bot.sendMessage(chatId, buildMangaChatMessage(mangas[0]), {
+					parse_mode: 'html',
+					disable_web_page_preview: true
+				});
+				recordQuery({
+					cmd: 'ltgt',
+					query: attempt[1],
+					result_id: mangas[0]['id'],
+					chat_id: chatId
+				});
+			}
+			else {
+				//couldn't find a manga with that name
+				recordQuery({
+					cmd: 'ltgt',
+					query: attempt[1],
+					chat_id: chatId
+				});
+			}
+		}).catch((r) => {
+			//well that sucks
+			logger.error('failed to search mal: ', r);
+		});
 	}
-	if (less_l_cnt === 1 && less_r_cnt === 1) {
-		//perhaps an attempt to search <manga>
-		let attempt = msg.text.match(/\<([^)]+)\>/);
-		if (attempt !== null) {
-			MAL.searchMangas(attempt[1]).then((mangas) => {
-				if (mangas[0] !== null) {
-					bot.sendMessage(chatId, buildMangaChatMessage(mangas[0]), {
-						parse_mode: 'html',
-						disable_web_page_preview: true
-					});
-					recordQuery({
-						cmd: 'ltgt',
-						query: attempt[1],
-						result_id: mangas[0]['id'],
-						chat_id: chatId
-					});
-				}
-				else {
-					//couldn't find a manga with that name
-					recordQuery({
-						cmd: 'ltgt',
-						query: attempt[1],
-						chat_id: chatId
-					});
-				}
-			}).catch((r) => {
-				//well that sucks
-				logger.error('failed to search mal: ', r);
-			});
-		}
-	}
+}
 
 });
 
