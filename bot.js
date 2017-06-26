@@ -21,6 +21,7 @@ const bot = new TelegramBot(token, {
 
 const GL = {};
 GL.muted = []; //charIds that have muted the bot
+const DEV_TELEGRAM_ID = parseInt(process.env.DEV_TELEGRAM_ID) || 0;
 
 // Listen for any kind of message. There are different kinds of
 // messages.
@@ -34,6 +35,7 @@ bot.on('message', (msg) => {
 			if(msg.chat.type === 'group' || msg.chat.type === 'supergroup') {
 				//if this group has decided to mute roborugi or not
 				if(GL.muted.indexOf(msg.chat.id) >= 0) {
+					logger.log('Roborugi silences her tongue.');
 					return; //intentionally do nothing else
 				}
 
@@ -53,9 +55,7 @@ bot.on('message', (msg) => {
 
 			if (msg.text.startsWith('roborugi ping')) {
 				bot.sendMessage(chatId, 'pong');
-				logger.log('ping-pong: ', msg);
 			}
-
 
 			if (msg.text.startsWith('thanks roborugi')) {
 				let catchphrases = ['I\'ll try my best', 'I don\'t know anyone by that name.', '( ´ ∀ `)'];
@@ -65,11 +65,33 @@ bot.on('message', (msg) => {
 			}
 
 			//developer tools
-			if(process.env.DEV_TELEGRAM_ID !== undefined && msg.from.id === process.env.DEV_TELEGRAM_ID) {
-				
+			if(msg.from.id === DEV_TELEGRAM_ID) {
 				if (msg.text.startsWith('roborugi debug')) {
 					logger.warn('[DEBUG]\nmsg: ', msg, '\nGL:', GL);
 				}
+				if(msg.text.startsWith('roborugi get earliest entry')) {
+					history_analyzer.getEarliestEntryDate((date) => {
+						bot.sendMessage(chatId, 'The earliest query I can remember was '+date);
+					});
+				}
+				if(msg.text.startsWith('roborugi get entry count')) {
+					history_analyzer.getEntryCount((count) => {
+						bot.sendMessage(chatId, 'I have recorded '+count+' queries.');
+					});
+				}
+				/*if(msg.text.match(/^roborugi get top queries [0-9]*$/) !== null) {
+					let count = parseInt(msg.text.split(' ')[4]);
+					history_analyzer.getTopAnime(count, (queries) => {
+						let response = 'I';
+						for(let i = 0; i < queries.length; i++) {
+							rep
+						}
+						bot.sendMessage(chatId, response, {
+							parse_mode: 'html',
+							disable_web_page_preview: true
+						});
+					});
+				}*/
 			}
 		}
 
