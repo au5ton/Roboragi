@@ -7,6 +7,8 @@ const popura = require('popura');
 const MAL = popura(process.env.MAL_USER, process.env.MAL_PASSWORD);
 const fs = require('fs');
 
+const history_analyzer = require('./history_analyzer');
+
 // replace the value below with the Telegram token you receive from @BotFather
 const token = process.env.TELEGRAM_BOT_TOKEN;
 
@@ -17,20 +19,63 @@ const bot = new TelegramBot(token, {
 	}
 });
 
+const GL = {};
+GL.muted = []; //charIds that have muted the bot
+
 // Listen for any kind of message. There are different kinds of
 // messages.
 bot.on('message', (msg) => {
 	const chatId = msg.chat.id;
 
 	try {
-		if (msg.text.startsWith('thanks roborugi')) {
-			let catchphrases = ['I\'ll try my best', 'I don\'t know anyone by that name.', '( ´ ∀ `)'];
-			bot.sendMessage(chatId, catchphrases[Math.floor(Math.random() * catchphrases.length)]);
-		} else if (msg.text.startsWith('roborugi source code')) {
-			bot.sendMessage(chatId, 'https://github.com/au5ton/Roboragi');
+
+		if(msg.text) {
+			//group commands
+			if(msg.chat.type === 'group' || msg.chat.type === 'supergroup') {
+				//if this group has decided to mute roborugi or not
+				if(GL.muted.indexOf(msg.chat.id) >= 0) {
+					return; //intentionally do nothing else
+				}
+
+				//if message is `roborugi mute n`
+				if(msg.text.match(/^roborugi mute [0-9]*$/) !== null) {
+					let time = parseInt(msg.text.split(' ')[2]);
+					let groupId = msg.chat.id;
+					bot.sendMessage(chatId, 'Gomennasai, back in '+time+' minutes.');
+					GL.muted.push(groupId);
+					logger.log('Muted for group '+groupId+' for '+time+' minutes.');
+					setTimeout(() => {
+						GL.muted.splice(GL.muted.indexOf(groupId), 1);
+						logger.log('Mute has expired, unmuted group '+groupId);
+					}, time*1000*60);
+				}
+			}
+
+			if (msg.text.startsWith('roborugi ping')) {
+				bot.sendMessage(chatId, 'pong');
+				logger.log('ping-pong: ', msg);
+			}
+
+
+			if (msg.text.startsWith('thanks roborugi')) {
+				let catchphrases = ['I\'ll try my best', 'I don\'t know anyone by that name.', '( ´ ∀ `)'];
+				bot.sendMessage(chatId, catchphrases[Math.floor(Math.random() * catchphrases.length)]);
+			} else if (msg.text.startsWith('roborugi source code')) {
+				bot.sendMessage(chatId, 'https://github.com/au5ton/Roboragi');
+			}
+
+			//developer tools
+			if(process.env.DEV_TELEGRAM_ID !== undefined && msg.from.id === process.env.DEV_TELEGRAM_ID) {
+				
+				if (msg.text.startsWith('roborugi debug')) {
+					logger.warn('[DEBUG]\nmsg: ', msg, '\nGL:', GL);
+				}
+			}
 		}
+
 	} catch (err) {
 		// ¯\_(ツ)_/¯
+		logger.log(err);
 	}
 	/*check if message is a query
 	a messages is a query if:

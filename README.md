@@ -10,7 +10,8 @@ Roborugi is written in node.js. To get started:
 - `npm install`
 - `cp .env.example .env`
 - `nano .env`
-- enter your MAL username, password, and telegram bot token
+- enter your MAL username, password, and telegram bot token.
+- (Optional) add your Telegram ID so you can perform administrator tasks by talking to the bot (not documented yet).
 - `screen -S my_bot`
 - `node bot.js`
 - your bot is running persistently
