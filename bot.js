@@ -188,6 +188,12 @@ function buildMangaChatMessage(manga) {
 	return message;
 }
 
+function recordQuery() {
+	/*
+	logge
+	*/
+}
+
 logger.log('Bot active. Performing startup checks.');
 
 logger.warn('Is our Telegram token valid?');
