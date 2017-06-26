@@ -1,6 +1,7 @@
 require('dotenv').config(); //get the environment variables described in .env
 const TelegramBot = require('node-telegram-bot-api');
 const logger = require('au5ton-logger');
+logger.setOption('prefix_date',true);
 const util = require('util');
 const popura = require('popura');
 const MAL = popura(process.env.MAL_USER, process.env.MAL_PASSWORD);
@@ -67,7 +68,6 @@ bot.on('message', (msg) => {
 	}
 	if (brace_l_cnt === 1 && brace_r_cnt === 1) {
 		//perhaps an attempt to search {anime TV}
-
 		let attempt = msg.text.match(/\{([^)]+)\}/);
 		if (attempt !== null) {
 			MAL.searchAnimes(attempt[1]).then((animes) => {
@@ -81,6 +81,9 @@ bot.on('message', (msg) => {
 							break;
 						}
 					}
+				}
+				else {
+					//empty results
 				}
 			}).catch((r) => {
 				//well that sucks
@@ -202,7 +205,7 @@ bot.getMe().then((r) => {
 	process.exit();
 });
 
-logger.warn('Is out MAL authentication valid?');
+logger.warn('Is our MAL authentication valid?');
 MAL.verifyAuth().then((r) => {
 	logger.success('MAL authenticated. ');
 }).catch((r) => {

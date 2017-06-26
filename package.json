@@ -4,12 +4,12 @@
   "description": "telegram bot for myanimelist",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node bot.js >> stdout.txt 2>>stderr.txt"
   },
   "author": "",
   "license": "GNU",
   "dependencies": {
-    "au5ton-logger": "^1.1.2",
+    "au5ton-logger": "^1.2.0",
     "dotenv": "^4.0.0",
     "node-telegram-bot-api": "^0.27.1",
     "popura": "^1.2.5"
