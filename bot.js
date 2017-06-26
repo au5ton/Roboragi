@@ -64,8 +64,10 @@ bot.on('message', (msg) => {
 
 				}
 				else if(msg.text.startsWith('roborugi commit')) {
-					let revision = require('child_process').execSync('git rev-parse HEAD').toString().trim();
-					bot.sendMessage(chatId, 'https://github.com/au5ton/Roboragi/tree/'+revision);
+					git.getLastCommit(function(err, commit) {
+						// read commit object properties
+						bot.sendMessage(chatId, 'https://github.com/au5ton/Roboragi/tree/'+commit['hash']);
+					});
 				}
 			}
 
