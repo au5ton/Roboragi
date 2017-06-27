@@ -85,14 +85,56 @@ except Exception:
 Generates chat messages based on the provided anime objects
 """
 def build_anime_chat_message(results, options=None):
+    """
+    anime datasource enum:
+    DataSource.KITSU
+    DataSource.ANILIST
+    DataSource.MAL
+    DataSource.ANIMEPLANET
+    DataSource.ANIDB
+
+    ideal chat message:
+    OreImo (MAL, A-P, AL, ADB)
+    7.43✪ | TV | Status: Finished Airing | Episodes: 12
+    Genres: Comedy, Slice of Life
+    Kirino Kousaka embodies the ideal student with equally entrancing looks.
+
+    ideal chat message requires:
+    - English title, preferably from MAL
+    - MAL score
+    - media type (TV, OVA, etc)
+    - status
+    - episode count
+    - MAL synopsis
+    """
     message = ''
-    for source_type, entry in results.items():
-        if entry:
-            if message == '':
-                message += '<b>'+entry.title_romaji+'</b> (<a href=\"'+entry.urls[source_type]+'\">link</a>) [NYI]'
-    return message
+    title = None
+    synopsis = None
+    synopsis_limit = 180
+    if DataSource.MAL in results.keys():
+        if hasattr(results[DataSource.MAL],'title_english'):
+            title = results[DataSource.MAL].title_english
+        else:
+            title = results[DataSource.MAL].title_romaji
+        if hasattr(results[DataSource.MAL],'description'):
+            if len(results[DataSource.MAL].description) > synopsis_limit:
+                synopsis = results[DataSource.MAL].description[:synopsis_limit-3]+'...'
+            else:
+                synopsis = results[DataSource.MAL].description
+    #for source_type, entry in results.items():
+    #    if entry:
+
+    return title+'\n'+synopsis
 
 def build_manga_chat_message(results, options=None):
+    """
+    manga datasource enum:
+    DataSource.KITSU
+    DataSource.ANILIST
+    DataSource.MAL
+    DataSource.ANIMEPLANET
+    DataSource.MANGAUPDATES
+    """
     message = ''
     for source_type, entry in results.items():
         if entry:
@@ -101,6 +143,14 @@ def build_manga_chat_message(results, options=None):
     return message
 
 def build_light_novel_chat_message(results, options=None):
+    """
+    light_novel datasource enum:
+    DataSource.KITSU
+    DataSource.ANILIST
+    DataSource.MAL
+    DataSource.ANIMEPLANET
+    DataSource.MANGAUPDATES
+    """
     message = ''
     for source_type, entry in results.items():
         if entry:

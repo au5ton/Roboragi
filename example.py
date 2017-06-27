@@ -28,6 +28,8 @@ acerola.light_novel.add_source(DataSource.KITSU,
 def get_anime(term):
     results = acerola.anime.search_closest(term)
     for source_type, anime in results.items():
+        if DataSource.MAL in results.keys():
+            print('title from MAL, specifically: '+results[DataSource.MAL].title_romaji)
         if anime:
             print(str(source_type) + ': ' + (anime.title_romaji if anime.title_romaji else anime.title_english) + ', ' + anime.urls[source_type])
         else:
@@ -58,4 +60,6 @@ def get_light_novel(term):
     print(acerola.light_novel.consolidate(results))
 
 
-get_anime('Fate/Zero')
+#get_anime('Fate/Zero')
+results = acerola.anime.search_closest('Eromanga sensei')
+print(results[DataSource.MAL].score)
