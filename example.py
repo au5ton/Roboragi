@@ -39,7 +39,7 @@ def get_anime(term):
 
 def get_score(term):
     print('term: '+str(term))
-    results = acerola.light_novel.search_closest(term)
+    results = acerola.manga.search_closest(term)
     for source_type, anime in results.items():
         if anime and hasattr(results[source_type], 'title_romaji'):
             print(str(source_type) + ': ' + str(type(anime.title_romaji))+' '+str(anime.title_romaji))
@@ -77,4 +77,4 @@ def get_light_novel(term):
 # print(results[DataSource.MAL].score)
 # print(type(results[DataSource.ANILIST].score))
 # print(results[DataSource.ANILIST].score)
-get_score('eromanga-sensei')
+get_score('fuuka')

@@ -134,6 +134,10 @@ def build_anime_chat_message(results, options=None):
             because you're wrong. only put stuff in here that
             you want to be preferential to MAL over other sites.
             """
+            if title == None and hasattr(results[DataSource.MAL],'title_english') and results[DataSource.MAL].title_english != None:
+                title = results[DataSource.MAL].title_english
+            elif title == None and hasattr(results[DataSource.MAL],'title_romaji') and results[DataSource.MAL].title_romaji != None:
+                title = results[DataSource.MAL].title_romaji
             if hasattr(results[DataSource.MAL],'description') and results[DataSource.MAL].description != None:
                 if len(results[DataSource.MAL].description) > synopsis_limit:
                     synopsis = results[DataSource.MAL].description[:synopsis_limit-3]+'...'
@@ -212,7 +216,7 @@ def build_anime_chat_message(results, options=None):
                     genres = genres | (entry.genres - genres)
 
                 # populate synopsis
-                if synopsis == None and hasattr(entry, 'description'):
+                if synopsis == None and hasattr(entry, 'description')  and entry.description != None:
                     if len(entry.description) > synopsis_limit:
                         synopsis = entry.description[:synopsis_limit-3]+'...'
                     else:
@@ -224,6 +228,7 @@ def build_anime_chat_message(results, options=None):
 
         # actually construct the message
         urls = urls[:-1] # remove the trailing comma
+        genres = set(filter(None, list(genres))) # removes Nones and empty strings
         for item in list(genres)[:-1]: # iterates over genres, except the last one
             genres_str += str(item)+', ' # appends each one with a comma
         genres_str += list(genres)[-1] # appends the last one
@@ -232,15 +237,15 @@ def build_anime_chat_message(results, options=None):
         at this point in the code, everything should be populated
         with a string, and `messages` should be an empty string.
         """
-        message += '<b>'+title+'</b> ('+urls+')\n'
+        message += '<b>'+str(title)+'</b> ('+urls+')\n'
         message += str(score)+STAR_CHAR+' | '+str(media_type)+' | Status: '+str(status)+' | Episodes: '+str(series_count)+'\n'
         message += 'Genres: '+genres_str+'\n'
         message += synopsis
 
         return message
     except Exception:
+        print(traceback.format_exc())
         return 'I had an error looking for that'
-        traceback.print_stack()
 
 def build_manga_chat_message(results, options=None):
     """
@@ -279,6 +284,10 @@ def build_manga_chat_message(results, options=None):
             because you're wrong. only put stuff in here that
             you want to be prefer wential to MAL over other sites.
             """
+            if title == None and hasattr(results[DataSource.MAL],'title_english') and results[DataSource.MAL].title_english != None:
+                title = results[DataSource.MAL].title_english
+            elif title == None and hasattr(results[DataSource.MAL],'title_romaji') and results[DataSource.MAL].title_romaji != None:
+                title = results[DataSource.MAL].title_romaji
             if hasattr(results[DataSource.MAL],'description') and results[DataSource.MAL].description != None:
                 if len(results[DataSource.MAL].description) > synopsis_limit:
                     synopsis = results[DataSource.MAL].description[:synopsis_limit-3]+'...'
@@ -295,6 +304,7 @@ def build_manga_chat_message(results, options=None):
         # so the code is messy
         for source_type, entry in results.items():
             if entry:
+                print(entry)
                 # sets the title to the first non-mal entry
                 if title == None and hasattr(entry,'title_english') and entry.title_english != None:
                     title = entry.title_english
@@ -368,7 +378,7 @@ def build_manga_chat_message(results, options=None):
                     genres = genres | (entry.genres - genres)
 
                 # populate synopsis
-                if synopsis == None and hasattr(entry, 'description'):
+                if synopsis == None and hasattr(entry, 'description') and entry.description != None:
                     if len(entry.description) > synopsis_limit:
                         synopsis = entry.description[:synopsis_limit-3]+'...'
                     else:
@@ -388,7 +398,7 @@ def build_manga_chat_message(results, options=None):
         at this point in the code, everything should be populated
         with a string, and `messages` should be an empty string.
         """
-        message += '<b>'+title+'</b> ('+urls+')\n'
+        message += '<b>'+str(title)+'</b> ('+urls+')\n'
         message += str(score)+STAR_CHAR+' | '+str(media_type)+' | Status: '+str(status)+'\n'
         message += 'Volumes: '+str(volume_count)+' | Chapters: '+str(chapter_count)+'\n'
         message += 'Genres: '+genres_str+'\n'
@@ -396,8 +406,8 @@ def build_manga_chat_message(results, options=None):
 
         return message
     except Exception:
+        print(traceback.format_exc())
         return 'I had an error looking for that.'
-        traceback.print_stack()
 
 def build_light_novel_chat_message(results, options=None):
     """
@@ -436,6 +446,10 @@ def build_light_novel_chat_message(results, options=None):
             because you're wrong. only put stuff in here that
             you want to be prefer wential to MAL over other sites.
             """
+            if title == None and hasattr(results[DataSource.MAL],'title_english') and results[DataSource.MAL].title_english != None:
+                title = results[DataSource.MAL].title_english
+            elif title == None and hasattr(results[DataSource.MAL],'title_romaji') and results[DataSource.MAL].title_romaji != None:
+                title = results[DataSource.MAL].title_romaji
             if hasattr(results[DataSource.MAL],'description') and results[DataSource.MAL].description != None:
                 if len(results[DataSource.MAL].description) > synopsis_limit:
                     synopsis = results[DataSource.MAL].description[:synopsis_limit-3]+'...'
@@ -452,6 +466,7 @@ def build_light_novel_chat_message(results, options=None):
         # so the code is messy
         for source_type, entry in results.items():
             if entry:
+                print(entry)
                 # sets the title to the first non-mal entry
                 if title == None and hasattr(entry,'title_english') and entry.title_english != None:
                     title = entry.title_english
@@ -525,7 +540,7 @@ def build_light_novel_chat_message(results, options=None):
                     genres = genres | (entry.genres - genres)
 
                 # populate synopsis
-                if synopsis == None and hasattr(entry, 'description'):
+                if synopsis == None and hasattr(entry, 'description') and entry.description != None:
                     if len(entry.description) > synopsis_limit:
                         synopsis = entry.description[:synopsis_limit-3]+'...'
                     else:
@@ -545,7 +560,7 @@ def build_light_novel_chat_message(results, options=None):
         at this point in the code, everything should be populated
         with a string, and `messages` should be an empty string.
         """
-        message += '<b>'+title+'</b> ('+urls+')\n'
+        message += '<b>'+str(title)+'</b> ('+urls+')\n'
         message += str(score)+STAR_CHAR+' | '+str(media_type)+' | Status: '+str(status)+'\n'
         message += 'Volumes: '+str(volume_count)+' | Chapters: '+str(chapter_count)+'\n'
         message += 'Genres: '+genres_str+'\n'
@@ -553,8 +568,8 @@ def build_light_novel_chat_message(results, options=None):
 
         return message
     except Exception:
+        print(traceback.format_exc())
         return 'I had an error looking for that'
-        traceback.print_stack()
 
 """
 Bot code for Telegram interactivity
