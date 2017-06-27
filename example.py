@@ -37,6 +37,15 @@ def get_anime(term):
 
     print(acerola.anime.consolidate(results))
 
+def get_score(term):
+    results = acerola.anime.search_closest(term)
+    for source_type, anime in results.items():
+        if anime and hasattr(results[source_type], 'status'):
+            print(str(source_type) + ': ' + str(type(anime.status))+' '+str(anime.status))
+        else:
+            print('Nothing found for ' + str(source_type))
+
+    #print(acerola.anime.consolidate(results))
 
 def get_manga(term):
     results = acerola.manga.search_closest(term)
@@ -61,5 +70,9 @@ def get_light_novel(term):
 
 
 #get_anime('Fate/Zero')
-results = acerola.anime.search_closest('Eromanga sensei')
-print(results[DataSource.MAL].score)
+# results = acerola.anime.search_closest('Eromanga sensei')
+# print(type(results[DataSource.MAL].score))
+# print(results[DataSource.MAL].score)
+# print(type(results[DataSource.ANILIST].score))
+# print(results[DataSource.ANILIST].score)
+get_score('Oreimo')
