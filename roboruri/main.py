@@ -70,7 +70,6 @@ print(STYLE['WARN']+'Is our Acerola configuration good?')
 print(STYLE['WARN']+'    Query: \'KonoSuba\'')
 try:
     results = acerola.anime.consolidate(acerola.anime.search_closest('KonoSuba'))
-    print(STYLE['SUCCESS'])
     print(STYLE['SUCCESS']+'Acerola successfully retrieved sample anime.')
     if hasattr(results, 'title_romaji'):
         print(STYLE['SUCCESS']+'    Romanji: '+results.title_romaji)
@@ -82,6 +81,32 @@ except Exception:
     print(STYLE['ERROR']+'Acerola configration has problems:', sys.exc_info()[0])
     exit()
 
+"""
+Generates chat messages based on the provided anime objects
+"""
+def build_anime_chat_message(results, options=None):
+    message = ''
+    for source_type, entry in results.items():
+        if entry:
+            if message == '':
+                message += '<b>'+entry.title_romaji+'</b> (<a href=\"'+entry.urls[source_type]+'\">link</a>) [NYI]'
+    return message
+
+def build_manga_chat_message(results, options=None):
+    message = ''
+    for source_type, entry in results.items():
+        if entry:
+            if message == '':
+                message += '<b>'+entry.title_romaji+'</b> (<a href=\"'+entry.urls[source_type]+'\">link</a>) [NYI]'
+    return message
+
+def build_light_novel_chat_message(results, options=None):
+    message = ''
+    for source_type, entry in results.items():
+        if entry:
+            if message == '':
+                message += '<b>'+entry.title_romaji+'</b> (<a href=\"'+entry.urls[source_type]+'\">link</a>) [NYI]'
+    return message
 
 """
 Bot code for Telegram interactivity
@@ -104,25 +129,49 @@ def on_text_message(msg):
 
     # process summons
     pat = {}
-    pat['braces'] = re.compile('\{([^)]+)\}')
-    pat['brackets'] = re.compile('\[([^)]+)\]')
-    pat['ltgt'] = re.compile('\<([^)]+)\>')
-    pat['pipes'] = re.compile('\|([^)]+)\|')
+    pat['braces'] = re.compile('\{([^)]+)\}') # anime
+    pat['brackets'] = re.compile('\]([^)]+)\[') # light novels
+    pat['ltgt'] = re.compile('\<([^)]+)\>') # manga
+    pat['pipes'] = re.compile('\|([^)]+)\|') # not sure what to do with this anymore
 
     if pat['braces'].search(msg.text) and msg.text.count('{') == 1 and msg.text.count('}') == 1:
         # probably a {brace} summon
         attempt = pat['braces'].search(msg.text)
-        bot.reply_to(msg, 'braces: '+attempt[1])
-
-    if pat['brackets'].search(msg.text) and msg.text.count('[') == 1 and msg.text.count(']') == 1:
-        # probably a [bracket] summon
-        attempt = pat['brackets'].search(msg.text)
-        bot.reply_to(msg, 'brackets: '+attempt[1])
+        results = acerola.anime.search_closest(attempt[1])
+        sufficient_results = False
+        for source_type, anime in results.items():
+            if anime:
+                sufficient_results = True
+        # if you have a least one instance of the show across these sites,
+        # that should (hopefully) be enough
+        if sufficient_results:
+            bot.reply_to(msg, build_anime_chat_message(results), parse_mode='html', disable_web_page_preview=True)
 
     if pat['ltgt'].search(msg.text) and msg.text.count('<') == 1 and msg.text.count('>') == 1:
         # probably a <ltgt> summon
         attempt = pat['ltgt'].search(msg.text)
-        bot.reply_to(msg, 'ltgt: '+attempt[1])
+        results = acerola.manga.search_closest(attempt[1])
+        sufficient_results = False
+        for source_type, anime in results.items():
+            if anime:
+                sufficient_results = True
+        # if you have a least one instance of the show across these sites,
+        # that should (hopefully) be enough
+        if sufficient_results:
+            bot.reply_to(msg, build_manga_chat_message(results), parse_mode='html', disable_web_page_preview=True)
+
+    if pat['brackets'].search(msg.text) and msg.text.count('[') == 1 and msg.text.count(']') == 1:
+        # probably a ]bracket[ summon
+        attempt = pat['brackets'].search(msg.text)
+        results = acerola.light_novel.search_closest(attempt[1])
+        sufficient_results = False
+        for source_type, anime in results.items():
+            if anime:
+                sufficient_results = True
+        # if you have a least one instance of the show across these sites,
+        # that should (hopefully) be enough
+        if sufficient_results:
+            bot.reply_to(msg, build_light_novel_chat_message(results), parse_mode='html', disable_web_page_preview=True)
 
     if pat['pipes'].search(msg.text) and msg.text.count('|') == 2:
         # probably a |pipes| summon
@@ -134,4 +183,5 @@ Tell the bot to start accepting messages.
 Synchronous pyTelegramBotAPI will halt right here until it received SIGINT.
 (I think)
 """
+print(STYLE['SUCCESS']+'Telegram bot is polling.')
 bot.polling()

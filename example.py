@@ -3,7 +3,7 @@ from Acerola import Acerola, DataSource
 from configparser import ConfigParser
 
 config = ConfigParser()
-config.read('acerola.ini')
+config.read('config.ini')
 
 acerola = Acerola(config)
 acerola.anime.add_source(DataSource.KITSU,
