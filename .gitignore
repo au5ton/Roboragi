@@ -100,3 +100,4 @@ ENV/
 
 # roboruri stuff
 config.ini
+insufficient_results.dat

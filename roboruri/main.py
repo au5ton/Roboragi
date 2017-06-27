@@ -9,6 +9,7 @@ import math
 import re
 import colorama
 import json
+import traceback
 
 from Acerola import Acerola, DataSource
 from Acerola.enums import Type, Status
@@ -21,6 +22,9 @@ from configparser import ConfigParser
 
 # define constants
 STAR_CHAR = '\u272A'
+
+# log unrecognized queries to a file for analytics
+QUERIES_LOG=open('insufficient_results.dat', 'a')
 
 # load config.ini
 config = ConfigParser()
@@ -111,131 +115,132 @@ def build_anime_chat_message(results, options=None):
     - episode count
     - MAL synopsis
     """
-    message = ''
-    title = None
-    score = None
-    media_type = None
-    status = None
-    genres = None
-    genres_str = ''
-    series_count = None
-    synopsis = None
-    synopsis_limit = 180
-    urls = ''
-    if DataSource.MAL in results.keys():
-        """
-        don't put anything in here that happens to be MAL and
-        think 'oh i can just put that in here ahead of time'
-        because you're wrong. only put stuff in here that
-        you want to be preferential to MAL over other sites.
-        """
-        if hasattr(results[DataSource.MAL],'title_english'):
-            title = results[DataSource.MAL].title_english
-        else:
-            # assumes that there's always a romanji title
-            title = results[DataSource.MAL].title_romaji
-        if hasattr(results[DataSource.MAL],'description'):
-            if len(results[DataSource.MAL].description) > synopsis_limit:
-                synopsis = results[DataSource.MAL].description[:synopsis_limit-3]+'...'
-            else:
-                synopsis = results[DataSource.MAL].description
-        if hasattr(results[DataSource.MAL],'score'):
-            score = results[DataSource.MAL].score
-    # attempts to populate all things in one interation for performance...
-    # so the code is messy
-    for source_type, entry in results.items():
-        if entry:
-            # sets the title to the first non-mal entry
-            if title == None and hasattr(entry,'title_english'):
-                title = entry.title_english
-            elif title == None:
-                # assumes that there's always a romanji title
-                # i mean, if there's an entry, there's gonna be
-                # a title, right?
-                title = entry.title_romaji
-
-            # populate urls
-            if DataSource.MAL == source_type:
-                urls += '<a href=\"'+entry.urls[source_type]+'\">MAL</a>,'
-            if DataSource.KITSU == source_type:
-                urls += '<a href=\"'+entry.urls[source_type]+'\">KT</a>,'
-            if DataSource.ANILIST == source_type:
-                urls += '<a href=\"'+entry.urls[source_type]+'\">AL</a>,'
-            if DataSource.ANIMEPLANET == source_type:
-                urls += '<a href=\"'+entry.urls[source_type]+'\">A-P</a>,'
-            if DataSource.ANIDB == source_type:
-                urls += '<a href=\"'+entry.urls[source_type]+'\">ADB</a>,'
-
-            # populate media_type
-            if media_type == None and hasattr(entry, 'type'):
-                if entry.type == Type.TV:
-                    media_type = 'TV'
-                elif entry.type == Type.MOVIE:
-                    media_type = 'Movie'
-                elif entry.type == Type.OVA:
-                    media_type = 'OVA'
-                elif entry.type == Type.ONA:
-                    media_type = 'ONA'
-                elif entry.type == Type.SPECIAL:
-                    media_type = 'Special'
-
-            # populate status
-            if status == None and hasattr(entry, 'status'):
-                if entry.status == Status.UNKNOWN:
-                    status = 'Unknown'
-                elif entry.status == Status.FINISHED:
-                    status = 'Finished'
-                elif entry.status == Status.ONGOING:
-                    status = 'Currently Airing'
-                elif entry.status == Status.UPCOMING:
-                    status = 'Upcoming'
-                elif entry.status == Status.CANCELLED:
-                    status = 'Cancelled'
-
-            # populate series_count
-            if series_count == None and hasattr(entry, 'episode_count'):
-                series_count = entry.episode_count
-
-            # in_second_but_not_in_first = in_second - in_first
-            # populate genres
-            if genres == None and hasattr(entry, 'genres'):
-                genres = entry.genres
-            elif genres != None and hasattr(entry, 'genres'):
-                # python sets() are neat
-                # this appends to the end of genres...
-                # ...what set items are in entry.genres...
-                # ...but NOT in genres
-                # it's basically adding the difference
-                # cool, huh?
-                genres = genres | (entry.genres - genres)
-
-            # populate synopsis
-            if synopsis == None and hasattr(entry, 'description'):
-                if len(entry.description) > synopsis_limit:
-                    synopsis = entry.description[:synopsis_limit-3]+'...'
+    try:
+        message = ''
+        title = None
+        score = None
+        media_type = None
+        status = None
+        genres = None
+        genres_str = ''
+        series_count = None
+        synopsis = None
+        synopsis_limit = 180
+        urls = ''
+        if DataSource.MAL in results.keys():
+            """
+            don't put anything in here that happens to be MAL and
+            think 'oh i can just put that in here ahead of time'
+            because you're wrong. only put stuff in here that
+            you want to be preferential to MAL over other sites.
+            """
+            if hasattr(results[DataSource.MAL],'description') and results[DataSource.MAL].description != None:
+                if len(results[DataSource.MAL].description) > synopsis_limit:
+                    synopsis = results[DataSource.MAL].description[:synopsis_limit-3]+'...'
                 else:
-                    synopsis = entry.description
+                    synopsis = results[DataSource.MAL].description
+            if hasattr(results[DataSource.MAL],'score'):
+                score = results[DataSource.MAL].score
+        # attempts to populate all things in one interation for performance...
+        # so the code is messy
+        for source_type, entry in results.items():
+            if entry:
+                # sets the title to the first non-mal entry
+                if title == None and hasattr(entry,'title_english') and entry.title_english != None:
+                    title = entry.title_english
+                elif title == None and hasattr(entry,'title_romaji') and entry.title_romaji != None:
+                    title = entry.title_romaji
+                elif title == None and hasattr(entry, 'title_japanese') and entry.title_japanese != None:
+                    # assumes that there's always a japanese title
+                    title = entry.title_japanese
 
-            # everything is populated
-        # end out if(entry)
-    # end of for-loop
+                # populate urls
+                if DataSource.MAL == source_type:
+                    urls += '<a href=\"'+entry.urls[source_type]+'\">MAL</a>,'
+                if DataSource.KITSU == source_type:
+                    urls += '<a href=\"'+entry.urls[source_type]+'\">KT</a>,'
+                if DataSource.ANILIST == source_type:
+                    urls += '<a href=\"'+entry.urls[source_type]+'\">AL</a>,'
+                if DataSource.ANIMEPLANET == source_type:
+                    urls += '<a href=\"'+entry.urls[source_type]+'\">A-P</a>,'
+                if DataSource.ANIDB == source_type:
+                    urls += '<a href=\"'+entry.urls[source_type]+'\">ADB</a>,'
 
-    # actually construct the message
-    urls = urls[:-1] # remove the trailing comma
-    for item in list(genres)[:-1]: # iterates over genres, except the last one
-        genres_str += str(item)+', ' # appends each one with a comma
-    genres_str += list(genres)[-1] # appends the last one
+                # populate media_type
+                if media_type == None and hasattr(entry, 'type'):
+                    if entry.type == Type.TV:
+                        media_type = 'TV'
+                    elif entry.type == Type.MOVIE:
+                        media_type = 'Movie'
+                    elif entry.type == Type.OVA:
+                        media_type = 'OVA'
+                    elif entry.type == Type.ONA:
+                        media_type = 'ONA'
+                    elif entry.type == Type.SPECIAL:
+                        media_type = 'Special'
+                    elif entry.type == Type.OTHER:
+                        media_type = 'Other'
 
-    """
-    at this point in the code, everything should be populated
-    with a string, and `messages` should be an empty string.
-    """
-    message += '<b>'+title+'</b> ('+urls+')\n'
-    message += str(score)+STAR_CHAR+' | '+str(media_type)+' | Status: '+str(status)+' | Episodes: '+str(series_count)+'\n'
-    message += 'Genres: '+genres_str+'\n'
-    message += synopsis
+                # populate status
+                if status == None and hasattr(entry, 'status'):
+                    if entry.status == Status.UNKNOWN:
+                        status = 'Unknown'
+                    elif entry.status == Status.FINISHED:
+                        status = 'Finished Airing'
+                    elif entry.status == Status.ONGOING:
+                        status = 'Currently Airing'
+                    elif entry.status == Status.UPCOMING:
+                        status = 'Upcoming'
+                    elif entry.status == Status.CANCELLED:
+                        status = 'Cancelled'
 
-    return message
+                # populate series_count
+                if series_count == None and hasattr(entry, 'episode_count'):
+                    series_count = entry.episode_count
+
+                # in_second_but_not_in_first = in_second - in_first
+                # populate genres
+                if genres == None and hasattr(entry, 'genres'):
+                    genres = entry.genres
+                elif genres != None and hasattr(entry, 'genres'):
+                    # python sets() are neat
+                    # this appends to the end of genres...
+                    # ...what set items are in entry.genres...
+                    # ...but NOT in genres
+                    # it's basically adding the difference
+                    # cool, huh?
+                    genres = genres | (entry.genres - genres)
+
+                # populate synopsis
+                if synopsis == None and hasattr(entry, 'description'):
+                    if len(entry.description) > synopsis_limit:
+                        synopsis = entry.description[:synopsis_limit-3]+'...'
+                    else:
+                        synopsis = entry.description
+
+                # everything is populated
+            # end out if(entry)
+        # end of for-loop
+
+        # actually construct the message
+        urls = urls[:-1] # remove the trailing comma
+        for item in list(genres)[:-1]: # iterates over genres, except the last one
+            genres_str += str(item)+', ' # appends each one with a comma
+        genres_str += list(genres)[-1] # appends the last one
+
+        """
+        at this point in the code, everything should be populated
+        with a string, and `messages` should be an empty string.
+        """
+        message += '<b>'+title+'</b> ('+urls+')\n'
+        message += str(score)+STAR_CHAR+' | '+str(media_type)+' | Status: '+str(status)+' | Episodes: '+str(series_count)+'\n'
+        message += 'Genres: '+genres_str+'\n'
+        message += synopsis
+
+        return message
+    except Exception:
+        return 'I had an error looking for that'
+        traceback.print_stack()
 
 def build_manga_chat_message(results, options=None):
     """
@@ -245,29 +250,311 @@ def build_manga_chat_message(results, options=None):
     DataSource.MAL
     DataSource.ANIMEPLANET
     DataSource.MANGAUPDATES
+
+    ideal chat message
+    Nisekoi (MAL, A-P, AL, ADB)
+    7.43✪ | Manga | Status: Finished Publishing
+    Volumes: 25 | Chapters: 229
+    Genres: Comedy, Slice of Life
+    When Raku Ichijou was young, he made a heartfelt promise to his...
     """
-    message = ''
-    for source_type, entry in results.items():
-        if entry:
-            if message == '':
-                message += '<b>'+entry.title_romaji+'</b> (<a href=\"'+entry.urls[source_type]+'\">link</a>) [NYI]'
-    return message
+
+    try:
+        message = ''
+        title = None
+        score = None
+        media_type = None
+        status = None
+        genres = None
+        genres_str = ''
+        volume_count = None
+        chapter_count = None
+        synopsis = None
+        synopsis_limit = 180
+        urls = ''
+        if DataSource.MAL in results.keys():
+            """
+            don't put anything in here that happens to be MAL and
+            think 'oh i can just put that in here ahead of time'
+            because you're wrong. only put stuff in here that
+            you want to be prefer wential to MAL over other sites.
+            """
+            if hasattr(results[DataSource.MAL],'description') and results[DataSource.MAL].description != None:
+                if len(results[DataSource.MAL].description) > synopsis_limit:
+                    synopsis = results[DataSource.MAL].description[:synopsis_limit-3]+'...'
+                else:
+                    synopsis = results[DataSource.MAL].description
+            if hasattr(results[DataSource.MAL],'score'):
+                score = results[DataSource.MAL].score
+            # prefer MAL for volume and chapter stuff
+            if hasattr(results[DataSource.MAL],'volume_count'):
+                volume_count = results[DataSource.MAL].volume_count
+            if hasattr(results[DataSource.MAL],'chapter_count'):
+                chapter_count = results[DataSource.MAL].chapter_count
+        # attempts to populate all things in one interation for performance...
+        # so the code is messy
+        for source_type, entry in results.items():
+            if entry:
+                # sets the title to the first non-mal entry
+                if title == None and hasattr(entry,'title_english') and entry.title_english != None:
+                    title = entry.title_english
+                elif title == None and hasattr(entry,'title_romaji') and entry.title_romaji != None:
+                    title = entry.title_romaji
+                elif title == None and hasattr(entry, 'title_japanese') and entry.title_japanese != None:
+                    # assumes that there's always a japanese title
+                    title = entry.title_japanese
+
+                # populate urls
+                if DataSource.MAL == source_type:
+                    urls += '<a href=\"'+entry.urls[source_type]+'\">MAL</a>,'
+                if DataSource.KITSU == source_type:
+                    urls += '<a href=\"'+entry.urls[source_type]+'\">KT</a>,'
+                if DataSource.ANILIST == source_type:
+                    urls += '<a href=\"'+entry.urls[source_type]+'\">AL</a>,'
+                if DataSource.ANIMEPLANET == source_type:
+                    urls += '<a href=\"'+entry.urls[source_type]+'\">A-P</a>,'
+                if DataSource.ANIDB == source_type:
+                    urls += '<a href=\"'+entry.urls[source_type]+'\">ADB</a>,'
+
+                # populate media_type
+                if media_type == None and hasattr(entry, 'type'):
+                    if entry.type == Type.MANGA:
+                        media_type = 'Manga'
+                    elif entry.type == Type.ONE_SHOT:
+                        media_type = 'One Shot'
+                    elif entry.type == Type.LIGHT_NOVEL:
+                        media_type = 'Light Novel'
+                    elif entry.type == Type.DOUJINSHI:
+                        media_type = 'Doujinshi'
+                    elif entry.type == Type.MANHWA:
+                        media_type = 'Manhwa'
+                    elif entry.type == Type.MANHUA:
+                        media_type = 'Manhua'
+                    elif entry.type == Type.MANHUA:
+                        media_type = 'Other'
+
+                # populate status
+                if status == None and hasattr(entry, 'status'):
+                    if entry.status == Status.UNKNOWN:
+                        status = 'Unknown'
+                    elif entry.status == Status.FINISHED:
+                        status = 'Finished Publishing'
+                    elif entry.status == Status.ONGOING:
+                        status = 'Currently Publishing'
+                    elif entry.status == Status.UPCOMING:
+                        status = 'Upcoming'
+                    elif entry.status == Status.CANCELLED:
+                        status = 'Cancelled'
+
+                # populate volume_count
+                if volume_count == None and hasattr(entry, 'volume_count') and entry.volume_count != None:
+                    volume_count = entry.volume_count
+
+                # populate chapter_count
+                if chapter_count == None and hasattr(entry, 'chapter_count') and entry.chapter_count != None:
+                    chapter_count = entry.chapter_count
+
+                # in_second_but_not_in_first = in_second - in_first
+                # populate genres
+                if genres == None and hasattr(entry, 'genres'):
+                    genres = entry.genres
+                elif genres != None and hasattr(entry, 'genres'):
+                    # python sets() are neat
+                    # this appends to the end of genres...
+                    # ...what set items are in entry.genres...
+                    # ...but NOT in genres
+                    # it's basically adding the difference
+                    # cool, huh?
+                    genres = genres | (entry.genres - genres)
+
+                # populate synopsis
+                if synopsis == None and hasattr(entry, 'description'):
+                    if len(entry.description) > synopsis_limit:
+                        synopsis = entry.description[:synopsis_limit-3]+'...'
+                    else:
+                        synopsis = entry.description
+
+                # everything is populated
+            # end out if(entry)
+        # end of for-loop
+
+        # actually construct the message
+        urls = urls[:-1] # remove the trailing comma
+        for item in list(genres)[:-1]: # iterates over genres, except the last one
+            genres_str += str(item)+', ' # appends each one with a comma
+        genres_str += list(genres)[-1] # appends the last one
+
+        """
+        at this point in the code, everything should be populated
+        with a string, and `messages` should be an empty string.
+        """
+        message += '<b>'+title+'</b> ('+urls+')\n'
+        message += str(score)+STAR_CHAR+' | '+str(media_type)+' | Status: '+str(status)+'\n'
+        message += 'Volumes: '+str(volume_count)+' | Chapters: '+str(chapter_count)+'\n'
+        message += 'Genres: '+genres_str+'\n'
+        message += synopsis
+
+        return message
+    except Exception:
+        return 'I had an error looking for that.'
+        traceback.print_stack()
 
 def build_light_novel_chat_message(results, options=None):
     """
-    light_novel datasource enum:
+    manga datasource enum:
     DataSource.KITSU
     DataSource.ANILIST
     DataSource.MAL
     DataSource.ANIMEPLANET
     DataSource.MANGAUPDATES
+
+    ideal chat message
+    Nisekoi (MAL, A-P, AL, ADB)
+    7.43✪ | Manga | Status: Finished Publishing
+    Volumes: 25 | Chapters: 229
+    Genres: Comedy, Slice of Life
+    When Raku Ichijou was young, he made a heartfelt promise to his...
     """
-    message = ''
-    for source_type, entry in results.items():
-        if entry:
-            if message == '':
-                message += '<b>'+entry.title_romaji+'</b> (<a href=\"'+entry.urls[source_type]+'\">link</a>) [NYI]'
-    return message
+
+    try:
+        message = ''
+        title = None
+        score = None
+        media_type = None
+        status = None
+        genres = None
+        genres_str = ''
+        volume_count = None
+        chapter_count = None
+        synopsis = None
+        synopsis_limit = 180
+        urls = ''
+        if DataSource.MAL in results.keys():
+            """
+            don't put anything in here that happens to be MAL and
+            think 'oh i can just put that in here ahead of time'
+            because you're wrong. only put stuff in here that
+            you want to be prefer wential to MAL over other sites.
+            """
+            if hasattr(results[DataSource.MAL],'description') and results[DataSource.MAL].description != None:
+                if len(results[DataSource.MAL].description) > synopsis_limit:
+                    synopsis = results[DataSource.MAL].description[:synopsis_limit-3]+'...'
+                else:
+                    synopsis = results[DataSource.MAL].description
+            if hasattr(results[DataSource.MAL],'score') :
+                score = results[DataSource.MAL].score
+            # prefer MAL for volume and chapter stuff
+            if hasattr(results[DataSource.MAL],'volume_count'):
+                volume_count = results[DataSource.MAL].volume_count
+            if hasattr(results[DataSource.MAL],'chapter_count'):
+                chapter_count = results[DataSource.MAL].chapter_count
+        # attempts to populate all things in one interation for performance...
+        # so the code is messy
+        for source_type, entry in results.items():
+            if entry:
+                # sets the title to the first non-mal entry
+                if title == None and hasattr(entry,'title_english') and entry.title_english != None:
+                    title = entry.title_english
+                elif title == None and hasattr(entry,'title_romaji') and entry.title_romaji != None:
+                    title = entry.title_romaji
+                elif title == None and hasattr(entry, 'title_japanese') and entry.title_japanese != None:
+                    # assumes that there's always a japanese title (not really)
+                    title = entry.title_japanese
+
+                # populate urls
+                if DataSource.MAL == source_type:
+                    urls += '<a href=\"'+entry.urls[source_type]+'\">MAL</a>,'
+                if DataSource.KITSU == source_type:
+                    urls += '<a href=\"'+entry.urls[source_type]+'\">KT</a>,'
+                if DataSource.ANILIST == source_type:
+                    urls += '<a href=\"'+entry.urls[source_type]+'\">AL</a>,'
+                if DataSource.ANIMEPLANET == source_type:
+                    urls += '<a href=\"'+entry.urls[source_type]+'\">A-P</a>,'
+                if DataSource.ANIDB == source_type:
+                    urls += '<a href=\"'+entry.urls[source_type]+'\">ADB</a>,'
+
+                # populate media_type
+                if media_type == None and hasattr(entry, 'type'):
+                    if entry.type == Type.MANGA:
+                        media_type = 'Manga'
+                    elif entry.type == Type.ONE_SHOT:
+                        media_type = 'One Shot'
+                    elif entry.type == Type.LIGHT_NOVEL:
+                        media_type = 'Light Novel'
+                    elif entry.type == Type.DOUJINSHI:
+                        media_type = 'Doujinshi'
+                    elif entry.type == Type.MANHWA:
+                        media_type = 'Manhwa'
+                    elif entry.type == Type.MANHUA:
+                        media_type = 'Manhua'
+                    elif entry.type == Type.MANHUA:
+                        media_type = 'Other'
+
+                # populate status
+                if status == None and hasattr(entry, 'status'):
+                    if entry.status == Status.UNKNOWN:
+                        status = 'Unknown'
+                    elif entry.status == Status.FINISHED:
+                        status = 'Finished Publishing'
+                    elif entry.status == Status.ONGOING:
+                        status = 'Currently Publishing'
+                    elif entry.status == Status.UPCOMING:
+                        status = 'Upcoming'
+                    elif entry.status == Status.CANCELLED:
+                        status = 'Cancelled'
+
+                # populate volume_count
+                if volume_count == None and hasattr(entry, 'volume_count') and entry.volume_count != None:
+                    volume_count = entry.volume_count
+
+                # populate chapter_count
+                if chapter_count == None and hasattr(entry, 'chapter_count') and entry.chapter_count != None:
+                    chapter_count = entry.chapter_count
+
+                # in_second_but_not_in_first = in_second - in_first
+                # populate genres
+                if genres == None and hasattr(entry, 'genres'):
+                    genres = entry.genres
+                elif genres != None and hasattr(entry, 'genres'):
+                    # python sets() are neat
+                    # this appends to the end of genres...
+                    # ...what set items are in entry.genres...
+                    # ...but NOT in genres
+                    # it's basically adding the difference
+                    # cool, huh?
+                    genres = genres | (entry.genres - genres)
+
+                # populate synopsis
+                if synopsis == None and hasattr(entry, 'description'):
+                    if len(entry.description) > synopsis_limit:
+                        synopsis = entry.description[:synopsis_limit-3]+'...'
+                    else:
+                        synopsis = entry.description
+
+                # everything is populated
+            # end out if(entry)
+        # end of for-loop
+
+        # actually construct the message
+        urls = urls[:-1] # remove the trailing comma
+        for item in list(genres)[:-1]: # iterates over genres, except the last one
+            genres_str += str(item)+', ' # appends each one with a comma
+        genres_str += list(genres)[-1] # appends the last one
+
+        """
+        at this point in the code, everything should be populated
+        with a string, and `messages` should be an empty string.
+        """
+        message += '<b>'+title+'</b> ('+urls+')\n'
+        message += str(score)+STAR_CHAR+' | '+str(media_type)+' | Status: '+str(status)+'\n'
+        message += 'Volumes: '+str(volume_count)+' | Chapters: '+str(chapter_count)+'\n'
+        message += 'Genres: '+genres_str+'\n'
+        message += synopsis
+
+        return message
+    except Exception:
+        return 'I had an error looking for that'
+        traceback.print_stack()
 
 """
 Bot code for Telegram interactivity
@@ -307,6 +594,8 @@ def on_text_message(msg):
         # that should (hopefully) be enough
         if sufficient_results:
             bot.reply_to(msg, build_anime_chat_message(results), parse_mode='html', disable_web_page_preview=True)
+        else:
+            QUERIES_LOG.write('{'+attempt[1]+'}\n')
 
     if pat['ltgt'].search(msg.text) and msg.text.count('<') == 1 and msg.text.count('>') == 1:
         # probably a <ltgt> summon
@@ -320,6 +609,8 @@ def on_text_message(msg):
         # that should (hopefully) be enough
         if sufficient_results:
             bot.reply_to(msg, build_manga_chat_message(results), parse_mode='html', disable_web_page_preview=True)
+        else:
+            QUERIES_LOG.write('<'+attempt[1]+'>\n')
 
     if pat['brackets'].search(msg.text) and msg.text.count('[') == 1 and msg.text.count(']') == 1:
         # probably a ]bracket[ summon
@@ -333,6 +624,8 @@ def on_text_message(msg):
         # that should (hopefully) be enough
         if sufficient_results:
             bot.reply_to(msg, build_light_novel_chat_message(results), parse_mode='html', disable_web_page_preview=True)
+        else:
+            QUERIES_LOG.write(']'+attempt[1]+'[\n')
 
     if pat['pipes'].search(msg.text) and msg.text.count('|') == 2:
         # probably a |pipes| summon
@@ -346,3 +639,5 @@ Synchronous pyTelegramBotAPI will halt right here until it received SIGINT.
 """
 print(STYLE['SUCCESS']+'Telegram bot is polling.')
 bot.polling()
+QUERIES_LOG.close()
+print('Closing!')

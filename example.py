@@ -38,17 +38,19 @@ def get_anime(term):
     print(acerola.anime.consolidate(results))
 
 def get_score(term):
-    results = acerola.anime.search_closest(term)
+    print('term: '+str(term))
+    results = acerola.light_novel.search_closest(term)
     for source_type, anime in results.items():
-        if anime and hasattr(results[source_type], 'status'):
-            print(str(source_type) + ': ' + str(type(anime.status))+' '+str(anime.status))
-        else:
-            print('Nothing found for ' + str(source_type))
+        if anime and hasattr(results[source_type], 'title_romaji'):
+            print(str(source_type) + ': ' + str(type(anime.title_romaji))+' '+str(anime.title_romaji))
+        #if anime and hasattr(results[source_type], 'chapter_count'):
+        #    print(str(source_type) + ': ' + str(type(anime.chapter_count))+' '+str(anime.chapter_count))
+
 
     #print(acerola.anime.consolidate(results))
 
 def get_manga(term):
-    results = acerola.manga.search_closest(term)
+    results = acerola.light_novel.search_closest(term)
     for source_type, manga in results.items():
         if manga:
             print(str(source_type) + ': ' + (manga.title_romaji if manga.title_romaji else manga.title_english) + ', ' + manga.urls[source_type])
@@ -75,4 +77,4 @@ def get_light_novel(term):
 # print(results[DataSource.MAL].score)
 # print(type(results[DataSource.ANILIST].score))
 # print(results[DataSource.ANILIST].score)
-get_score('Oreimo')
+get_score('eromanga-sensei')
