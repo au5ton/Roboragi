@@ -88,4 +88,4 @@ def on_text_message(msg):
         attempt = pat['pipes'].search(msg.text)
         bot.reply_to(msg, 'pipes: '+attempt[1])
 
-#bot.polling()
+bot.polling()
