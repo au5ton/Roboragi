@@ -35,6 +35,8 @@ Roboruri depends on [Nihilate/Acerola](https://github.com/Nihilate/Acerola), a (
 
 For Telegram interactivity, Roboruri depends on [eternnoir/pyTelegramBotAPI](https://github.com/eternnoir/pyTelegramBotAPI), a popular python wrapper for the Telegram HTTP API.
 
+This is also my first real Python project so the code might be heinous. If it disturbs you that much, I encourage you to submit a pull request.
+
 ## What's with the name?
 There were already existing bots on Telegram named 'roboragi' and other renditions (all of them seemed dead), so I decided on an alternative name that follows the naming tradition that /u/Roboragi set.
 

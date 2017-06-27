@@ -1,5 +1,6 @@
 """
-Roboruri Telegram bot
+Roboruri Telegram bot entry point
+(to start the bot, call this file)
 """
 
 import telebot
@@ -51,7 +52,10 @@ STYLE['SUCCESS'] = colorama.Fore.GREEN
 # initialize telegram bot
 bot = telebot.TeleBot(config['Telegram']['BotToken'])
 
-# startup checks
+"""
+Startup checks. Verifies that everything if functioning normally
+as best a possible.
+"""
 print('Bot active. Performing startup checks.')
 print(STYLE['WARN']+'Is our Telegram token valid?')
 try:
@@ -79,6 +83,9 @@ except Exception:
     exit()
 
 
+"""
+Bot code for Telegram interactivity
+Message handlers and if-statements galore.
 """
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
@@ -122,5 +129,9 @@ def on_text_message(msg):
         attempt = pat['pipes'].search(msg.text)
         bot.reply_to(msg, 'pipes: '+attempt[1])
 
-        bot.polling()
 """
+Tell the bot to start accepting messages.
+Synchronous pyTelegramBotAPI will halt right here until it received SIGINT.
+(I think)
+"""
+bot.polling()
