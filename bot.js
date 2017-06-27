@@ -7,6 +7,7 @@ const popura = require('popura');
 const MAL = popura(process.env.MAL_USER, process.env.MAL_PASSWORD);
 const fs = require('fs');
 const git = require('git-last-commit');
+const bot_util = require('./util');
 
 const history_analyzer = require('./history_analyzer');
 
@@ -29,268 +30,143 @@ const DEV_TELEGRAM_ID = parseInt(process.env.DEV_TELEGRAM_ID) || 0;
 bot.on('message', (msg) => {
 	const chatId = msg.chat.id;
 
-	try {
-
-		if(msg.text) {
-			//group commands
-			if(msg.chat.type === 'group' || msg.chat.type === 'supergroup') {
-				//if this group has decided to mute roborugi or not
-				if(GL.muted.indexOf(msg.chat.id) >= 0) {
-					logger.log('Roborugi silences her tongue.');
-					return; //intentionally do nothing else
-				}
-
-				//if message is `roborugi mute n`
-				if(msg.text.match(/^roborugi mute [0-9]*$/) !== null) {
-					let time = parseInt(msg.text.split(' ')[2]);
-					let groupId = msg.chat.id;
-					bot.sendMessage(chatId, 'Gomennasai, back in '+time+' minutes.');
-					GL.muted.push(groupId);
-					logger.log('Muted for group '+groupId+' for '+time+' minutes.');
-					setTimeout(() => {
-						GL.muted.splice(GL.muted.indexOf(groupId), 1);
-						logger.log('Mute has expired, unmuted group '+groupId);
-					}, time*1000*60);
-				}
-			}
-			else if (msg.chat.type === 'private'){
-				//when the bot is being talked to one-on-one
-
-				if(msg.text.startsWith('roborugi version')) {
-					git.getLastCommit(function(err, commit) {
-						// read commit object properties
-						bot.sendMessage(chatId, 'commit '+commit['shortHash']+', last updated on '+new Date(parseInt(commit['authoredOn'])*1000).toDateString());
-					});
-
-				}
-				else if(msg.text.startsWith('roborugi commit')) {
-					git.getLastCommit(function(err, commit) {
-						// read commit object properties
-						bot.sendMessage(chatId, 'https://github.com/au5ton/Roboragi/tree/'+commit['hash']);
-					});
-				}
+	if(msg.text) {
+		//group commands
+		if(msg.chat.type === 'group' || msg.chat.type === 'supergroup') {
+			//if this group has decided to mute roboruri or not
+			if(GL.muted.indexOf(msg.chat.id) >= 0) {
+				logger.log('Roboruri silences her tongue.');
+				return; //intentionally do nothing else
 			}
 
-			if (msg.text.startsWith('roborugi ping')) {
-				bot.sendMessage(chatId, 'pong');
+			//if message is `roboruri mute n`
+			if(msg.text.match(/^roboruri mute [0-9]*$/) !== null) {
+				let time = parseInt(msg.text.split(' ')[2]);
+				let groupId = msg.chat.id;
+				bot.sendMessage(chatId, 'Gomennasai, back in '+time+' minutes.');
+				GL.muted.push(groupId);
+				logger.log('Muted for group '+groupId+' for '+time+' minutes.');
+				setTimeout(() => {
+					GL.muted.splice(GL.muted.indexOf(groupId), 1);
+					logger.log('Mute has expired, unmuted group '+groupId);
+				}, time*1000*60);
 			}
+		}
+		else if (msg.chat.type === 'private'){
+			//when the bot is being talked to one-on-one
 
-			if (msg.text.startsWith('thanks roborugi')) {
-				let catchphrases = ['I\'ll try my best', 'I don\'t know anyone by that name.', '( ´ ∀ `)'];
-				bot.sendMessage(chatId, catchphrases[Math.floor(Math.random() * catchphrases.length)]);
-			} else if (msg.text.startsWith('roborugi source code')) {
-				bot.sendMessage(chatId, 'https://github.com/au5ton/Roboragi');
+			if(msg.text.startsWith('roboruri version')) {
+				git.getLastCommit(function(err, commit) {
+					// read commit object properties
+					bot.sendMessage(chatId, 'commit '+commit['shortHash']+', last updated on '+new Date(parseInt(commit['authoredOn'])*1000).toDateString());
+				});
+
 			}
-
-			//developer tools
-			if(msg.from.id === DEV_TELEGRAM_ID) {
-				if (msg.text.startsWith('roborugi debug')) {
-					logger.warn('[DEBUG]\nmsg: ', msg, '\nGL:', GL);
-				}
-				if(msg.text.startsWith('roborugi get earliest entry')) {
-					history_analyzer.getEarliestEntryDate((date) => {
-						bot.sendMessage(chatId, 'The earliest query I can remember was '+date);
-					});
-				}
-				if(msg.text.startsWith('roborugi get entry count')) {
-					history_analyzer.getEntryCount((count) => {
-						bot.sendMessage(chatId, 'I have recorded '+count+' queries.');
-					});
-				}
-				/*if(msg.text.match(/^roborugi get top queries [0-9]*$/) !== null) {
-				let count = parseInt(msg.text.split(' ')[4]);
-				history_analyzer.getTopAnime(count, (queries) => {
-				let response = 'I';
-				for(let i = 0; i < queries.length; i++) {
-				rep
+			else if(msg.text.startsWith('roboruri commit')) {
+				git.getLastCommit(function(err, commit) {
+					// read commit object properties
+					bot.sendMessage(chatId, 'https://github.com/au5ton/Roboragi/tree/'+commit['hash']);
+				});
 			}
-			bot.sendMessage(chatId, response, {
-			parse_mode: 'html',
-			disable_web_page_preview: true
-		});
-	});
-}*/
-}
-}
+		}
 
-} catch (err) {
-	// ¯\_(ツ)_/¯
-	logger.log(err);
-}
-/*check if message is a query
-a messages is a query if:
-- there is exactly 1 `{` per message
-- there is exactly 1 `}` per message
-- the message matches the regex: \{([^)]+)\}
-OR
-- there is exactly 1 `<` per message
-- there is exactly 1 `>` per message
-- the message matches the regex: \<([^)]+)\>
+		if (msg.text.startsWith('roboruri ping')) {
+			bot.sendMessage(chatId, 'pong');
+		}
 
-i feel like this could be refractored so please feel free to shit on my code
-*/
-let brace_l_cnt = brace_r_cnt = less_l_cnt = less_r_cnt = brack_l_cnt = brack_r_cnt = pipe_cnt = 0;
+		if (msg.text.startsWith('thanks roboruri')) {
+			let catchphrases = ['I\'ll try my best', 'I don\'t know anyone by that name.', '( ´ ∀ `)'];
+			bot.replyTo(chatId, catchphrases[Math.floor(Math.random() * catchphrases.length)]);
+		} else if (msg.text.startsWith('roboruri source code')) {
+			bot.sendMessage(chatId, 'https://github.com/au5ton/Roboragi');
+		}
 
-if (msg.text) {
-	for (let i = 0; i < msg.text.length; i++) {
-		//Correctly tally the braces
-		let next = msg.text.charAt(i);
-		if (next === '{')
-		brace_l_cnt++;
-		else if (next === '}')
-		brace_r_cnt++;
-		else if (next === '<')
-		less_l_cnt++;
-		else if (next === '>')
-		less_r_cnt++;
-		else if (next === '[')
-		brack_l_cnt++;
-		else if (next === ']')
-		brack_r_cnt++;
-		else if (next === '|')
-		pipe_cnt++;
+		//developer tools
+		if(msg.from.id === DEV_TELEGRAM_ID) {
+			if (msg.text.startsWith('roboruri debug')) {
+				logger.warn('[DEBUG]\nmsg: ', msg, '\nGL:', GL);
+			}
+			if(msg.text.startsWith('roboruri get earliest entry')) {
+				history_analyzer.getEarliestEntryDate((date) => {
+					bot.sendMessage(chatId, 'The earliest query I can remember was '+date);
+				});
+			}
+			if(msg.text.startsWith('roboruri get entry count')) {
+				history_analyzer.getEntryCount((count) => {
+					bot.sendMessage(chatId, 'I have recorded '+count+' queries.');
+				});
+			}
+		}
 
-	}
-}
-if (brace_l_cnt === 1 && brace_r_cnt === 1) {
-	//perhaps an attempt to search {anime TV}
-	let attempt = msg.text.match(/\{([^)]+)\}/);
-	if (attempt !== null) {
-		MAL.searchAnimes(attempt[1]).then((animes) => {
-			if (animes[0] !== null) {
-				for (let i = 0; i < animes.length; i++) {
-					if (animes[i]['type'] === 'TV') {
-						bot.sendMessage(chatId, buildAnimeChatMessage(animes[i]), {
-							parse_mode: 'html',
-							disable_web_page_preview: true
-						});
-						recordQuery({
-							cmd: 'braces',
-							query: attempt[1],
-							result_id: animes[i]['id'],
-							chat_id: chatId
-						});
-						break;
+		//summon handlers
+		bot_util.isValidBraceSummon(msg, (query) => {
+			MAL.searchAnimes(query).then((animes) => {
+				if (animes[0] !== null) {
+					for (let i = 0; i < animes.length; i++) {
+						if (animes[i]['type'] === 'TV') {
+							bot.sendMessage(chatId, buildAnimeChatMessage(animes[i]), {
+								parse_mode: 'html',
+								disable_web_page_preview: true
+							});
+							break;
+						}
 					}
 				}
-			}
-			else {
-				//couldn't find an anime with that name
-				recordQuery({
-					cmd: 'braces',
-					query: attempt[1],
-					chat_id: chatId
-				});
-			}
-		}).catch((r) => {
-			//well that sucks
-			logger.error('failed to search mal: ', r);
+			}).catch((r) => {
+				//well that sucks
+				logger.error('failed to search mal: ', r);
+			});
 		});
-	}
-}
-if (brack_l_cnt === 1 && brack_r_cnt === 1) {
-	//perhaps an attempt to search [anime OVA+Movie]
-	let attempt = msg.text.match(/\[([^)]+)\]/);
-	if (attempt !== null) {
-		MAL.searchAnimes(attempt[1]).then((animes) => {
-			if (animes[0] !== null) {
-				for (let i = 0; i < animes.length; i++) {
-					if (animes[i]['type'] === 'OVA' || animes[i]['type'] === 'Movie') {
-						bot.sendMessage(chatId, buildAnimeChatMessage(animes[i]), {
-							parse_mode: 'html',
-							disable_web_page_preview: true
-						});
-						recordQuery({
-							cmd: 'brackets',
-							query: attempt[1],
-							result_id: animes[i]['id'],
-							chat_id: chatId
-						});
-						break;
+		bot_util.isValidBracketSummon(msg, (query) => {
+			MAL.searchAnimes(query).then((animes) => {
+				if (animes[0] !== null) {
+					for (let i = 0; i < animes.length; i++) {
+						if (animes[i]['type'] === 'OVA' || animes[i]['type'] === 'Movie') {
+							bot.sendMessage(chatId, buildAnimeChatMessage(animes[i]), {
+								parse_mode: 'html',
+								disable_web_page_preview: true
+							});
+							break;
+						}
 					}
 				}
-			}
-			else {
-				//couldn't find an anime with that name
-				recordQuery({
-					cmd: 'brackets',
-					query: attempt[1],
-					chat_id: chatId
-				});
-			}
-		}).catch((r) => {
-			//well that sucks
-			logger.error('failed to search mal: ', r);
+			}).catch((r) => {
+				//well that sucks
+				logger.error('failed to search mal: ', r);
+			});
 		});
-	}
-}
-if (pipe_cnt === 2) {
-	//perhaps an attempt to search |anime exact title|
-	let attempt = msg.text.match(/\|([^)]+)\|/);
-	if (attempt !== null) {
-		MAL.searchAnimes(attempt[1]).then((animes) => {
-			if (animes[0] !== null) {
-				for (let i = 0; i < animes.length; i++) {
-					if (attempt[1].toLowerCase() === animes[i]['title'].toLowerCase() || attempt[1].toLowerCase() === animes[i]['english'].toLowerCase()) {
-						bot.sendMessage(chatId, buildAnimeChatMessage(animes[i]), {
-							parse_mode: 'html',
-							disable_web_page_preview: true
-						});
-						recordQuery({
-							cmd: 'pipes',
-							query: attempt[1],
-							result_id: animes[i]['id'],
-							chat_id: chatId
-						});
+		bot_util.isValidPipeSummon(msg, (query) => {
+			MAL.searchAnimes(query).then((animes) => {
+				if (animes[0] !== null) {
+					for (let i = 0; i < animes.length; i++) {
+						if (attempt[1].toLowerCase() === animes[i]['title'].toLowerCase() || attempt[1].toLowerCase() === animes[i]['english'].toLowerCase()) {
+							bot.sendMessage(chatId, buildAnimeChatMessage(animes[i]), {
+								parse_mode: 'html',
+								disable_web_page_preview: true
+							});
+						}
 					}
 				}
-			}
-			else {
-				//couldn't find an anime with that name
-				recordQuery({
-					cmd: 'pipes',
-					query: attempt[1],
-					chat_id: chatId
-				});
-			}
-		}).catch((r) => {
-			//well that sucks
-			logger.error('failed to search mal: ', r);
-		});
-	}
-}
-if (less_l_cnt === 1 && less_r_cnt === 1) {
-	//perhaps an attempt to search <manga>
-	let attempt = msg.text.match(/\<([^)]+)\>/);
-	if (attempt !== null) {
-		MAL.searchMangas(attempt[1]).then((mangas) => {
-			if (mangas[0] !== null) {
-				bot.sendMessage(chatId, buildMangaChatMessage(mangas[0]), {
-					parse_mode: 'html',
-					disable_web_page_preview: true
-				});
-				recordQuery({
-					cmd: 'ltgt',
-					query: attempt[1],
-					result_id: mangas[0]['id'],
-					chat_id: chatId
-				});
-			}
-			else {
-				//couldn't find a manga with that name
-				recordQuery({
-					cmd: 'ltgt',
-					query: attempt[1],
-					chat_id: chatId
-				});
-			}
-		}).catch((r) => {
-			//well that sucks
-			logger.error('failed to search mal: ', r);
-		});
-	}
-}
 
+			}).catch((r) => {
+				//well that sucks
+				logger.error('failed to search mal: ', r);
+			});
+		});
+		bot_util.isValidLTGTSummon(msg, (query) => {
+			MAL.searchMangas(attempt[1]).then((mangas) => {
+				if (mangas[0] !== null) {
+					bot.sendMessage(chatId, buildMangaChatMessage(mangas[0]), {
+						parse_mode: 'html',
+						disable_web_page_preview: true
+					});
+				}
+			}).catch((r) => {
+				//well that sucks
+				logger.error('failed to search mal: ', r);
+			});
+		});
+	}
 });
 
 const star_char = '\u272A';
@@ -325,24 +201,6 @@ function buildMangaChatMessage(manga) {
 	message += ' (<a href=\"https://myanimelist.net/manga/' + manga['id'] + '\">MAL</a>)\n';
 	message += manga['score'] + star_char + ' | ' + manga['type'] + ' | Status: ' + manga['status'] + ' | Volumes: ' + manga['volumes'];
 	return message;
-}
-
-function recordQuery(record) {
-	//queries will be logged as one JSON object per line
-	//ideally: {"date":"2017-06-25T23:07:29.772Z","cmd":"braces","result_id":11111,"query":"Another"}
-	let entry = {};
-	//copy data over to new Object, because hardcoding fields is bad and
-	//some things might need to log more info in the future
-	for(let k in record) {
-		entry[k]=record[k];
-	}
-	//Sets default values
-	entry['result_id'] = entry.result_id || -1;
-	entry['date'] = new Date().toISOString();
-	//asynchronous append because order doesn't matter if we timestamp it, we want performance.
-	fs.appendFile('command_history.json', JSON.stringify(entry)+'\n', (err) => {
-		if (err) throw err;
-	});
 }
 
 logger.log('Bot active. Performing startup checks.');
