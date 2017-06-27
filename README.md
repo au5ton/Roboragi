@@ -1,13 +1,14 @@
 ![roboruri-kouhai](img/roboruri.png)
 
 # Roboruri
-Roboruri is a Telegram bot (based off of [/u/Roboragi](https://www.reddit.com/user/Roboragi/)) which creates anime and manga links from MAL when requested. Some of the code may be plagiarized from the original project, as this is ultimately a crude port. To reflect that, this project is a fork of the original and is prominently visible.
+Roboruri is a Telegram bot (based off of [/u/Roboragi](https://www.reddit.com/user/Roboragi/)) which creates anime and manga links from MAL, Anilist, MangaUpdates, and Anime-Planet when requested. To credit the author of /u/Roboragi, this project is a fork of it and is prominently visible.
 
 ## Running an instance
 Roboruri is written in Python. To get started:
 - `git clone https://github.com/au5ton/Roboragi.git`
 - `cd Roboragi`
 - `pip install -r requirements.txt`
+- You may have to also install the requirements for Acerola, as they don't install automatically. Use `pip install <module name goes here>` for each line in its [requirements.txt](https://github.com/Nihilate/Acerola/blob/master/requirements.txt).
 - `cp config.example.ini config.ini`
 - `nano config.ini` (edit the config file somehow)
 - Fill everything out.
@@ -22,11 +23,12 @@ btoa(username+':'+password)
 ```
 
 - (Optional) add your Telegram ID so you can perform administrator tasks by talking to the bot (not documented yet).
-- `screen -S my_bot`
-- `python roboruri/main.py`
+- `screen -S my_bot` (start a new screen session)
+- `python roboruri/main.py` (start the bot)
 - your bot is running persistently
+- To detach of the screen session, use `CTRL+A` then `CTRL+D`.
 
-please don't run these unless you know what you're doing. if not, you could just use the official bot instead: https://t.me/roboruri_bot
+Please don't run any of these unless you know what you're doing. I'm not good at writing idiot-proof stuff, but if you're a developer you shouldn't have trouble. If not, you could just use the official bot instead: https://t.me/roboruri_bot
 
 ## How it works
 Roboruri depends on [Nihilate/Acerola](https://github.com/Nihilate/Acerola), a (work in progress) python module developed by the original /u/Roboragi developer. This module is the foundation of this project. I appreciate Nihilate's efforts and help with this project. <3
