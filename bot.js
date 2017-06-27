@@ -3,14 +3,14 @@ const TelegramBot = require('node-telegram-bot-api');
 const logger = require('au5ton-logger');
 logger.setOption('prefix_date',true);
 const util = require('util');
-const popura = require('popura');
-const MAL = popura(process.env.MAL_USER, process.env.MAL_PASSWORD);
 const fs = require('fs');
 const git = require('git-last-commit');
 const bot_util = require('./util');
-
-const history_analyzer = require('./history_analyzer');
-
+const Searcher = require('./searcher');
+const enums = require('./enums')
+const popura = require('popura');
+const MAL = popura(process.env.MAL_USER, process.env.MAL_PASSWORD);
+const nani = require('nani').init(process.env.ANILIST_CLIENT_ID, process.env.ANILIST_CLIENT_SECRET);
 // replace the value below with the Telegram token you receive from @BotFather
 const token = process.env.TELEGRAM_BOT_TOKEN;
 
@@ -30,37 +30,17 @@ const DEV_TELEGRAM_ID = parseInt(process.env.DEV_TELEGRAM_ID) || 0;
 bot.on('message', (msg) => {
 	const chatId = msg.chat.id;
 
-	if(msg.text) {
-		//group commands
+	if(typeof msg.text === 'string' && msg.text.length > 0) {
 		if(msg.chat.type === 'group' || msg.chat.type === 'supergroup') {
-			//if this group has decided to mute roboruri or not
-			if(GL.muted.indexOf(msg.chat.id) >= 0) {
-				logger.log('Roboruri silences her tongue.');
-				return; //intentionally do nothing else
-			}
-
-			//if message is `roboruri mute n`
-			if(msg.text.match(/^roboruri mute [0-9]*$/) !== null) {
-				let time = parseInt(msg.text.split(' ')[2]);
-				let groupId = msg.chat.id;
-				bot.sendMessage(chatId, 'Gomennasai, back in '+time+' minutes.');
-				GL.muted.push(groupId);
-				logger.log('Muted for group '+groupId+' for '+time+' minutes.');
-				setTimeout(() => {
-					GL.muted.splice(GL.muted.indexOf(groupId), 1);
-					logger.log('Mute has expired, unmuted group '+groupId);
-				}, time*1000*60);
-			}
+			//group specific stuff
 		}
-		else if (msg.chat.type === 'private'){
+		if (msg.chat.type === 'private'){
 			//when the bot is being talked to one-on-one
-
 			if(msg.text.startsWith('roboruri version')) {
 				git.getLastCommit(function(err, commit) {
 					// read commit object properties
 					bot.sendMessage(chatId, 'commit '+commit['shortHash']+', last updated on '+new Date(parseInt(commit['authoredOn'])*1000).toDateString());
 				});
-
 			}
 			else if(msg.text.startsWith('roboruri commit')) {
 				git.getLastCommit(function(err, commit) {
@@ -73,11 +53,11 @@ bot.on('message', (msg) => {
 		if (msg.text.startsWith('roboruri ping')) {
 			bot.sendMessage(chatId, 'pong');
 		}
-
 		if (msg.text.startsWith('thanks roboruri')) {
 			let catchphrases = ['I\'ll try my best', 'I don\'t know anyone by that name.', '( ´ ∀ `)'];
 			bot.replyTo(chatId, catchphrases[Math.floor(Math.random() * catchphrases.length)]);
-		} else if (msg.text.startsWith('roboruri source code')) {
+		}
+		if (msg.text.startsWith('roboruri source code')) {
 			bot.sendMessage(chatId, 'https://github.com/au5ton/Roboragi');
 		}
 
@@ -86,39 +66,28 @@ bot.on('message', (msg) => {
 			if (msg.text.startsWith('roboruri debug')) {
 				logger.warn('[DEBUG]\nmsg: ', msg, '\nGL:', GL);
 			}
-			if(msg.text.startsWith('roboruri get earliest entry')) {
-				history_analyzer.getEarliestEntryDate((date) => {
-					bot.sendMessage(chatId, 'The earliest query I can remember was '+date);
-				});
-			}
-			if(msg.text.startsWith('roboruri get entry count')) {
-				history_analyzer.getEntryCount((count) => {
-					bot.sendMessage(chatId, 'I have recorded '+count+' queries.');
+			if(msg.text.startsWith('roboruri leave')) {
+				bot.sendMessage(chatId, 'Sayōnara').then(() => {
+					bot.leaveChat(chatId);
 				});
 			}
 		}
 
 		//summon handlers
-		bot_util.isValidBraceSummon(msg, (query) => {
-			MAL.searchAnimes(query).then((animes) => {
-				if (animes[0] !== null) {
-					for (let i = 0; i < animes.length; i++) {
-						if (animes[i]['type'] === 'TV') {
-							bot.sendMessage(chatId, buildAnimeChatMessage(animes[i]), {
-								parse_mode: 'html',
-								disable_web_page_preview: true
-							});
-							break;
-						}
-					}
-				}
+		bot_util.isValidBraceSummon(msg).then((query) => {
+			Searcher.searchAnimes(query).then((result) => {
+				bot.sendMessage(chatId, buildAnimeChatMessage(result), {
+					parse_mode: 'html',
+					disable_web_page_preview: true
+				});
 			}).catch((r) => {
 				//well that sucks
-				logger.error('failed to search mal: ', r);
+				logger.error('failed to search with Searcher: ', r);
 			});
-		});
-		bot_util.isValidBracketSummon(msg, (query) => {
+		}).catch(()=>{});
+		bot_util.isValidBracketSummon(msg).then((query) => {
 			MAL.searchAnimes(query).then((animes) => {
+				logger.log(animes);
 				if (animes[0] !== null) {
 					for (let i = 0; i < animes.length; i++) {
 						if (animes[i]['type'] === 'OVA' || animes[i]['type'] === 'Movie') {
@@ -134,8 +103,8 @@ bot.on('message', (msg) => {
 				//well that sucks
 				logger.error('failed to search mal: ', r);
 			});
-		});
-		bot_util.isValidPipeSummon(msg, (query) => {
+		}).catch(()=>{});
+		bot_util.isValidPipeSummon(msg).then((query) => {
 			MAL.searchAnimes(query).then((animes) => {
 				if (animes[0] !== null) {
 					for (let i = 0; i < animes.length; i++) {
@@ -147,13 +116,12 @@ bot.on('message', (msg) => {
 						}
 					}
 				}
-
 			}).catch((r) => {
 				//well that sucks
 				logger.error('failed to search mal: ', r);
 			});
-		});
-		bot_util.isValidLTGTSummon(msg, (query) => {
+		}).catch(()=>{});
+		bot_util.isValidLTGTSummon(msg).then((query) => {
 			MAL.searchMangas(attempt[1]).then((mangas) => {
 				if (mangas[0] !== null) {
 					bot.sendMessage(chatId, buildMangaChatMessage(mangas[0]), {
@@ -165,7 +133,7 @@ bot.on('message', (msg) => {
 				//well that sucks
 				logger.error('failed to search mal: ', r);
 			});
-		});
+		}).catch(()=>{});
 	}
 });
 
@@ -207,6 +175,7 @@ logger.log('Bot active. Performing startup checks.');
 
 logger.warn('Is our Telegram token valid?');
 bot.getMe().then((r) => {
+
 	//doesn't matter who we are, we're good
 	logger.success('Telegram token is valid.');
 	bot.startPolling().then((r) => {
