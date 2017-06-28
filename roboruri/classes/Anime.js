@@ -1,0 +1,224 @@
+// Anime.js
+
+const logger = require('au5ton-logger');
+
+const DataSource = require('../enums').DataSource;
+const Hyperlinks = require('./Hyperlinks');
+
+/*
+
+In order for an anime to be used specifically in Roboruri,
+the resulting chat message must have a couple different
+things:
+- title (japanese, romaji if available, english if available)
+- hyperlinks to different anime datasources
+- MAL score
+- media type (TV? OVA? Movie?)
+- status
+- episode count
+- synopsis or show description
+(nice to haves, will try and include anyway)
+- start date
+- end date
+- image
+- synonyms
+
+These values might be named different things across different websites,
+but comparable ones must fit in our little Anime class so that using an
+Anime object is always safe and doesn't need second guessing. It should
+be predictable. In that case, here are some rules:
+
+- In an Anime object, a field that is confirmed empty
+  (for example, if MAL doesn't have a episode count)
+  MUST be `null`, not undefined, not 0. It must explicitly
+  be null so that using an Anime object means you only
+  have to check for a null, none of this inspecific bullshit.
+
+- In an Anime object, every field should coorespond to each other.
+  If a search result on one site isn't the same as another, the
+  independent results must be confirmed to be the same show (via title
+  probably) before attempting to merge their data.
+
+- In the end, you can only use one Anime object to print out a message.
+  We also want to generate one independent Anime object per
+  website/datasource for the sake of abstraction. This means that merging
+  Anime objects will be a thing, and it should be a straightfoward check
+  of if an Anime object's property is null or not (remember rule 1?).
+
+- We don't want to worry about how the shows will merge before we
+  even get all the data. One Anime object will be made per datasource.
+  Using bot_util, merging will be done there.
+
+Schema:
+- Anime.title_romaji => string
+- Anime.title_english => string
+- Anime.title_japanese => string
+- Anime.title => string, generated accessor
+- Anime.hyperlinks => instance of Hyperlinks, enumerated dictionary
+- Anime.score_str => number/string, whatever as long as its printable
+- Anime.score_num => number, generated accessor; returns null if NaN
+- Anime.media_type => string
+- Anime.status => string
+- Anime.episode_count => number/string
+- Anime.synopsis_full => string
+- Anime.synopsis => string, generated accessor
+- Anime.start_date => ¯\_(ツ)_/¯
+- Anime.end_date => ¯\_(ツ)_/¯
+- Anime.image => string, hyperlink
+- Anime.synonyms => instance of Synonyms, array of strings
+*/
+
+
+
+const non_empty = (val) => {
+    return (val !== null && val !== undefined && val !== '');
+};
+const non_empty_array = (ray) => {
+    return (Array.isArray(ray) && ray.length > 0);
+};
+
+class Anime {
+    constructor(options) {
+
+        //all the titles
+        if(non_empty(options.title_romaji)) {
+            this.title_romaji = options.title_romaji;
+        }
+        else {
+            this.title_romaji = null;
+        }
+        if(non_empty(options.title_english)) {
+            this.title_english = options.title_english;
+        }
+        else {
+            this.title_english = null;
+        }
+        if(non_empty(options.title_japanese)) {
+            this.title_japanese = options.title_japanese;
+        }
+        else {
+            this.title_japanese = null;
+        }
+        //score
+        if(non_empty(options.score_str)) {
+            this.score_str = options.score_str;
+        }
+        else {
+            this.score_str = null;
+        }
+        //media_type
+        if(non_empty(options.media_type)) {
+            this.media_type = options.media_type;
+        }
+        else {
+            this.media_type = null;
+        }
+        //status
+        if(non_empty(options.status)) {
+            this.status = options.status;
+        }
+        else {
+            this.status = null;
+        }
+        //episode_count
+        if(non_empty(options.episode_count)) {
+            this.episode_count = options.episode_count;
+        }
+        else {
+            this.episode_count = null;
+        }
+        //synopsis_full
+        if(non_empty(options.synopsis_full)) {
+            this.synopsis_full = options.synopsis_full;
+        }
+        else {
+            this.synopsis_full = null;
+        }
+        //start_date
+        if(non_empty(options.start_date)) {
+            this.start_date = options.start_date;
+        }
+        else {
+            this.start_date = null;
+        }
+        //end_date
+        if(non_empty(options.end_date)) {
+            this.end_date = options.end_date;
+        }
+        else {
+            this.end_date = null;
+        }
+        //images
+        if(non_empty(options.image)) {
+            this.image = options.image
+        }
+        else {
+            this.image = null;
+        }
+
+        //synonyms
+        if(non_empty(options.synonyms) && non_empty_array(options.synonyms)){
+            this.synonyms = options.synonyms;
+        }
+        else {
+            this.synonyms = null;
+        }
+        //hyperlinks
+        if(non_empty(options.hyperlinks) && options.hyperlinks instanceof Hyperlinks) {
+            this.hyperlinks = options.hyperlinks
+        }
+        else {
+            this.hyperlinks = null;
+        }
+    }
+    //generated accessors
+    get title() {
+        if(this.title_english !== null) {
+            return this.title_english
+        }
+        else if(this.title_romaji !== null) {
+            return this.title_romaji
+        }
+        else if(this.title_japanese !== null) {
+            return this.title_japanese
+        }
+        else {
+            null
+        }
+    }
+    get synopsis() {
+        const firstParagraph = this.synopsis_full.split('\n')[0];
+        const txtLimit = 180;
+        if (firstParagraph.length > txtLimit) {
+            return firstParagraph.substring(0, txtLimit - 3) + '...';
+        }
+        return firstParagraph;
+    }
+    get score_num() {
+        let parsed = parseFloat(this.score_str);
+        if(isNaN(parsed)) {
+            return null;
+        }
+        else {
+            return parsed
+        }
+    }
+    static consolidate() {
+        let args = Array.from(arguments)
+        for(let i in args) {
+            if(args[i] instanceof Anime) {
+                logger.log(i,' ',args[i]);
+            }
+        }
+        logger.log('concat: ',[{}].concat(Array.from(arguments)))
+        return Object.assign.apply(this, arguments);
+    }
+}
+
+logger.log('Object.assign: ',Anime.consolidate(new Anime({
+    title_english: 'a life in a better werl'
+}),new Anime({
+    title_romaji: 'Re:Zero'
+})));
+
+module.exports = Anime

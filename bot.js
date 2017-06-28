@@ -5,14 +5,19 @@ logger.setOption('prefix_date',true);
 const util = require('util');
 const fs = require('fs');
 const git = require('git-last-commit');
-const bot_util = require('./util');
-const Searcher = require('./searcher');
-const enums = require('./enums')
 const popura = require('popura');
 const MAL = popura(process.env.MAL_USER, process.env.MAL_PASSWORD);
 const nani = require('nani').init(process.env.ANILIST_CLIENT_ID, process.env.ANILIST_CLIENT_SECRET);
 // replace the value below with the Telegram token you receive from @BotFather
 const token = process.env.TELEGRAM_BOT_TOKEN;
+
+// Custom modules
+const bot_util = require('./roboruri/bot_util');
+const Searcher = require('./roboruri/searcher');
+const enums = require('./roboruri/enums');
+
+// Custom classes
+const Anime = require('./roboruri/classes/Anime');
 
 // Create a bot that uses 'polling' to fetch new updates
 const bot = new TelegramBot(token, {

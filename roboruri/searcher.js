@@ -7,18 +7,9 @@ const nani = require('nani').init(process.env.ANILIST_CLIENT_ID, process.env.ANI
 const DataSource = require('./enums').DataSource;
 const logger = require('au5ton-logger');
 
-class Resolved {
-    constructor(DataSource, data) {
-        this.DataSource = DataSource;
-        this.data = data;
-    }
-}
-class Rejected {
-    constructor(DataSource, err) {
-        this.DataSource = DataSource;
-        this.err = err;
-    }
-}
+const Resolved = require('./classes/Resolved');
+const Rejected = require('./classes/Rejected');
+const Anime = require('./classes/Anime');
 
 _.searchAnimes = (query) => {
     return new Promise((resolve, reject) => {
