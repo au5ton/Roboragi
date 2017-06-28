@@ -83,6 +83,7 @@ bot.on('message', (msg) => {
 
 		//summon handlers
 		bot_util.isValidBraceSummon(msg).then((query) => {
+			//logger.log('q: ', query);
 			Searcher.searchAnimes(query).then((result) => {
 				bot.sendMessage(chatId, buildAnimeChatMessage(result), {
 					parse_mode: 'html',
@@ -153,14 +154,33 @@ bot.on('message', (msg) => {
 const star_char = '\u272A';
 const filled_x = '\u274C';
 
+function buildHyperlinksForAnime(anime) {
+	let message = '';
+
+	let exists = (val) => {
+		return (val !== undefined);
+	};
+
+	for(let e in DataSource) {
+		if(DataSource[e] === DataSource.MAL && exists(anime.hyperlinks.dict[DataSource[e]])) {
+			message += '<a href=\"'+anime.hyperlinks.dict[DataSource[e]]+'\">MAL</a>, ';
+		}
+		else if(DataSource[e] === DataSource.ANILIST && exists(anime.hyperlinks.dict[DataSource[e]])) {
+			message += '<a href=\"'+anime.hyperlinks.dict[DataSource[e]]+'\">AL</a>, ';
+		}
+	}
+	return message.substring(0,message.length-2); //remove trailing comma and space
+}
+
 function buildAnimeChatMessage(anime, options) {
 	options = options || {};
 	let message = '';
 	message += '<b>' + anime['title'] + '</b>';
-	message += ' (<a href=\"'+anime.hyperlinks.dict[DataSource.MAL]+'\">MAL</a>)\n';
-	//var elvisLives = Math.PI > 4 ? 'Yep' : 'Nope';
-	message += anime['score_num'] !== null ? String(anime['score_num']) : anime['score_str'];
-	message += star_char + ' | ' + anime['media_type'] + ' | Status: ' + anime['status'] + ' | Episodes: ' + anime['episode_count'];
+	message += ' ('+buildHyperlinksForAnime(anime)+')\n';
+	if(anime['score_str'] !== null) {
+		message += anime['score_str'] + star_char + ' | ';
+	}
+	message += anime['media_type'] + ' | Status: ' + anime['status'] + ' | Episodes: ' + anime['episode_count'];
 	message += '\n' + anime['synopsis'];
 	return message;
 }

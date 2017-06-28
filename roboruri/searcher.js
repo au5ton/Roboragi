@@ -106,6 +106,7 @@ _.searchAnimes = (query,query_format) => {
                     }
                     else {
                         //mal returned no results
+                        logger.warn('mal returned no results');
                     }
                 }
                 else if(ResolvedArray[r].DataSource === DataSource.ANILIST) {
@@ -119,7 +120,7 @@ _.searchAnimes = (query,query_format) => {
                                 title_romaji: a_result['title_romaji'],
                                 title_english: a_result['title_english'],
                                 hyperlinks: new Hyperlinks(temp_dict),
-                                score_str: String(parseFloat(a_result['average_score'])/10),
+                                //score_str: String(parseFloat(a_result['average_score'])/10),
                                 media_type: a_result['type'],
                                 status: a_result['airing_status'],
                                 episode_count: a_result['total_episodes'],
@@ -132,7 +133,8 @@ _.searchAnimes = (query,query_format) => {
                         }
                     }
                     else {
-                        //mal returned no results or an error
+                        //anilist returned no results or an error
+                        logger.warn('anilist returned no results');
                     }
                 }
             }
@@ -153,10 +155,11 @@ _.searchAnimes = (query,query_format) => {
 
             */
             var very_best_match = new Anime();
+            //logger.log(anime_arrays);
             for(let r in anime_arrays) {
                 //logger.log(r);
                 best_match[r] = _.findBestMatchForAnimeArray(query,anime_arrays[r]);
-                very_best_match = Anime.consolidate(very_best_match,best_match[r]);
+                very_best_match = Anime.consolidate(very_best_match,best_match[r])
             }
 
             logger.log('q: {'+query+'} => '+very_best_match.flattened.title);
@@ -215,7 +218,15 @@ _.findBestMatchForAnimeArray = (query,animes) => {
     let art_format; //english, romaji, japanese
     //first check if we got nothin
     if(bmr === null && bme === null && bmj === null) {
-        throw 'can\'t findBestMatchForAnimeArray if there are no titles';
+        //throw 'can\'t findBestMatchForAnimeArray if there are no titles';
+        /*
+        above line was a mistake^
+        this DOESNT throw an error so that other DataSources still get checked,
+        and this (deadass) one gets consolidated.
+
+        this means that checking for a 'no match' must be done further up the pipeline.
+        */
+        return new Anime()
     }
     if(bmj == null) {
         /*
@@ -238,6 +249,10 @@ _.findBestMatchForAnimeArray = (query,animes) => {
         bme['bestMatch'] = {};
         bme['bestMatch']['rating'] = -1.0;
     }
+
+    //logger.log('    bme:',bme);
+    //logger.log('    bmr:',bmr);
+    //logger.log('    bmj:',bmj);
 
     if(bme['bestMatch']['rating'] >= bmr['bestMatch']['rating'] && bme['bestMatch']['rating'] >= bmj['bestMatch']['rating']) {
         //english got the best rating

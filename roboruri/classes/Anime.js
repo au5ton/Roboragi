@@ -81,7 +81,7 @@ Schema:
 
 
 const non_empty = (val) => {
-    return (val !== null && val !== undefined && val !== '' && isNaN(val) === true);
+    return (val !== null && val !== undefined && val !== '');
 };
 const non_empty_array = (ray) => {
     return (Array.isArray(ray) && ray.length > 0);
