@@ -26,7 +26,7 @@ Before consolidating the results, the result that best matches the query is calc
 
 Using the ART, the search results are consolidated into one `Anime` instance and is then used to print out:
 
-![roboruri-kouhai](img/screenshot_01.png)
+![roboruri-kouhai](img/Screenshot_01.png)
 
 ## What's with the name?
 There were already existing bots on Telegram named 'roboragi' and other renditions (all of them seemed dead), so I decided on an alternative name that follows the naming tradition that /u/Roboragi set.
