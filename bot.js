@@ -10,6 +10,7 @@ const MAL = popura(process.env.MAL_USER, process.env.MAL_PASSWORD);
 const nani = require('nani').init(process.env.ANILIST_CLIENT_ID, process.env.ANILIST_CLIENT_SECRET);
 // replace the value below with the Telegram token you receive from @BotFather
 const token = process.env.TELEGRAM_BOT_TOKEN;
+const VERSION = require('./package').version;
 
 // Custom modules
 const bot_util = require('./roboruri/bot_util');
@@ -47,7 +48,9 @@ bot.on('message', (msg) => {
 			if(msg.text.startsWith('roboruri version')) {
 				git.getLastCommit(function(err, commit) {
 					// read commit object properties
-					bot.sendMessage(chatId, 'commit '+commit['shortHash']+', last updated on '+new Date(parseInt(commit['authoredOn'])*1000).toDateString());
+					bot.sendMessage(chatId, 'version '+VERSION+', commit '+commit['shortHash']+', last updated on '+new Date(parseInt(commit['authoredOn'])*1000).toDateString()+'\n\nhttps://github.com/au5ton/Roboragi/tree/'+commit['hash'],{
+						disable_web_page_preview: true
+					});
 				});
 			}
 			else if(msg.text.startsWith('roboruri commit')) {
