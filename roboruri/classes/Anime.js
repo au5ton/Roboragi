@@ -30,34 +30,34 @@ Anime object is always safe and doesn't need second guessing. It should
 be predictable. In that case, here are some rules:
 
 - In an Anime object, a field that is confirmed empty
-  (for example, if MAL doesn't have a episode count)
-  MUST be `null`, not undefined, not 0. It must explicitly
-  be null so that using an Anime object means you only
-  have to check for a null, none of this inspecific bullshit.
+(for example, if MAL doesn't have a episode count)
+MUST be `null`, not undefined, not 0. It must explicitly
+be null so that using an Anime object means you only
+have to check for a null, none of this inspecific bullshit.
 
 - In an Anime object, every field should coorespond to each other.
-  If a search result on one site isn't the same as another, the
-  independent results must be confirmed to be the same show (via title
-  probably) before attempting to merge their data.
+If a search result on one site isn't the same as another, the
+independent results must be confirmed to be the same show (via title
+probably) before attempting to merge their data.
 
 - In the end, you can only use one Anime object to print out a message.
-  We also want to generate one independent Anime object per
-  website/datasource for the sake of abstraction. This means that merging
-  Anime objects will be a thing, and it should be a straightfoward check
-  of if an Anime object's property is null or not (remember rule 1?).
+We also want to generate one independent Anime object per
+website/datasource for the sake of abstraction. This means that merging
+Anime objects will be a thing, and it should be a straightfoward check
+of if an Anime object's property is null or not (remember rule 1?).
 
 - We don't want to worry about how the shows will merge before we
-  even get all the data. One Anime object will be made per datasource.
-  Using Anime.consolidate(), merging will be done there.
+even get all the data. One Anime object will be made per datasource.
+Using Anime.consolidate(), merging will be done there.
 
-  EDIT: Anime.consolidate was a headache and a half but I got it
-  nailed down. :)
+EDIT: Anime.consolidate was a headache and a half but I got it
+nailed down. :)
 
-  (I think)
+(I think)
 
 - CONSOLDATION: *.consolidate() must be capable of consolidating
-  "empty instances" and undefined's, because all instances that
-  are provided aren't flattened
+"empty instances" and undefined's, because all instances that
+are provided aren't flattened
 
 Schema:
 - Anime.title_romaji => string
@@ -81,7 +81,7 @@ Schema:
 
 
 const non_empty = (val) => {
-    return (val !== null && val !== undefined && val !== '');
+    return (val !== null && val !== undefined && val !== '' && isNaN(val) === true);
 };
 const non_empty_array = (ray) => {
     return (Array.isArray(ray) && ray.length > 0);
@@ -318,18 +318,23 @@ dict[DataSource.MAL] = 'http://hello.world'
 let dict2 = {};
 dict2[DataSource.ANILIST] = 'http://foo.bar'
 
-let temp = new Anime({
-    title_english: 'a life in a better werl',
-    hyperlinks: new Hyperlinks(dict),
-    synonyms: new Synonyms(['Rem is best girl','',null,undefined,'Romance'])
-});
-let consol = Anime.consolidate(temp,new Anime({
-    title_romaji: 'Re:Zero',
-    hyperlinks: new Hyperlinks(dict2),
-    synonyms: new Synonyms(['Emilia waifu','','Romance'])
-}))
-logger.warn('copy.flattened: ', consol.flattened)
-logger.log('Object.assign: ',consol);
+//let temp = ;
+//let consol =
+// logger.warn('copy.flattened: ', consol.flattened)
+// logger.log('Object.assign: ', Anime.consolidate(
+//     new Anime({
+//         title_english: 'a life in a better werl',
+//         hyperlinks: new Hyperlinks(dict),
+//         synonyms: new Synonyms(['Rem is best girl','',null,undefined,'Romance'])
+//     }),
+//     new Anime({
+//         title_romaji: 'Re:Zero',
+//         hyperlinks: new Hyperlinks(dict2),
+//         synonyms: new Synonyms(['Emilia waifu','','Romance'])
+//     }),
+//     new Anime()
+// )
+// );
 //logger.log('title: ', consol.title);
 //logger.log('orgi: ', temp);
 //logger.log('instanceof: ',consol instanceof Anime)

@@ -24,7 +24,6 @@ class Hyperlinks {
             //logger.error('If you want to create an \"empty\" Hyperlinks instance, provide an empty Dictionary as a parameter.');
             return
         }
-
         if(non_empty(dict) && typeof dict === 'object') {
             for(let key in dict) {
 
@@ -81,14 +80,14 @@ class Hyperlinks {
 
 }
 
-let dict = {};
-dict[DataSource.MAL] = 'http://hello.world' //kept
-dict[DataSource.ANILIST] = 'http://bar.foo'
-let dict2 = {};
-dict2[DataSource.ANILIST] = 'http://foo.bar' //kept
-dict2[DataSource.MAL] = 'http://world.hello'
-
-let hyper = Hyperlinks.consolidate(new Hyperlinks(dict),new Hyperlinks({}))
+// let dict = {};
+// dict[DataSource.MAL] = 'http://hello.world' //kept
+// dict[DataSource.ANILIST] = 'http://bar.foo'
+// let dict2 = {};
+// dict2[DataSource.ANILIST] = 'http://foo.bar' //kept
+// dict2[DataSource.MAL] = 'http://world.hello'
+//
+// let hyper = Hyperlinks.consolidate(new Hyperlinks(dict),new Hyperlinks({}))
 //logger.log(hyper)
 //logger.log(hyper.dict[DataSource.MAL])
 

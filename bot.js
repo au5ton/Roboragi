@@ -14,10 +14,15 @@ const token = process.env.TELEGRAM_BOT_TOKEN;
 // Custom modules
 const bot_util = require('./roboruri/bot_util');
 const Searcher = require('./roboruri/searcher');
-const enums = require('./roboruri/enums');
+const DataSource = require('./roboruri/enums').DataSource;
+
 
 // Custom classes
+const Resolved = require('./roboruri/classes/Resolved');
+const Rejected = require('./roboruri/classes/Rejected');
 const Anime = require('./roboruri/classes/Anime');
+const Hyperlinks = require('./roboruri/classes/Hyperlinks');
+const Synonyms = require('./roboruri/classes/Synonyms');
 
 // Create a bot that uses 'polling' to fetch new updates
 const bot = new TelegramBot(token, {
@@ -26,8 +31,6 @@ const bot = new TelegramBot(token, {
 	}
 });
 
-const GL = {};
-GL.muted = []; //charIds that have muted the bot
 const DEV_TELEGRAM_ID = parseInt(process.env.DEV_TELEGRAM_ID) || 0;
 
 // Listen for any kind of message. There are different kinds of
@@ -60,7 +63,7 @@ bot.on('message', (msg) => {
 		}
 		if (msg.text.startsWith('thanks roboruri')) {
 			let catchphrases = ['I\'ll try my best', 'I don\'t know anyone by that name.', '( ´ ∀ `)'];
-			bot.replyTo(chatId, catchphrases[Math.floor(Math.random() * catchphrases.length)]);
+			bot.sendMessage(chatId, catchphrases[Math.floor(Math.random() * catchphrases.length)]);
 		}
 		if (msg.text.startsWith('roboruri source code')) {
 			bot.sendMessage(chatId, 'https://github.com/au5ton/Roboragi');
@@ -87,7 +90,12 @@ bot.on('message', (msg) => {
 				});
 			}).catch((r) => {
 				//well that sucks
-				logger.error('failed to search with Searcher: ', r);
+				if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
+					logger.warn('q: {'+query+'} => '+filled_x)
+				}
+				else {
+					logger.error('failed to search with Searcher: ', r);
+				}
 			});
 		}).catch(()=>{});
 		bot_util.isValidBracketSummon(msg).then((query) => {
@@ -143,24 +151,17 @@ bot.on('message', (msg) => {
 });
 
 const star_char = '\u272A';
+const filled_x = '\u274C';
 
 function buildAnimeChatMessage(anime, options) {
 	options = options || {};
 	let message = '';
-	if (anime['english'] !== null && anime['english'] !== '') {
-		message += '<b>' + anime['english'] + '</b>';
-	} else {
-		message += '<b>' + anime['title'] + '</b>';
-	}
-	message += ' (<a href=\"https://myanimelist.net/anime/' + anime['id'] + '\">MAL</a>)\n';
-	message += anime['score'] + star_char + ' | ' + anime['type'] + ' | Status: ' + anime['status'] + ' | Episodes: ' + anime['episodes'];
-
-	var firstParagraph = anime['synopsis'].split('\n')[0];
-	var txtLimit = 180;
-	if (firstParagraph.length > txtLimit) {
-		firstParagraph = firstParagraph.substring(0, txtLimit - 3) + '...';
-	}
-	message += '\n' + firstParagraph;
+	message += '<b>' + anime['title'] + '</b>';
+	message += ' (<a href=\"'+anime.hyperlinks.dict[DataSource.MAL]+'\">MAL</a>)\n';
+	//var elvisLives = Math.PI > 4 ? 'Yep' : 'Nope';
+	message += anime['score_num'] !== null ? String(anime['score_num']) : anime['score_str'];
+	message += star_char + ' | ' + anime['media_type'] + ' | Status: ' + anime['status'] + ' | Episodes: ' + anime['episode_count'];
+	message += '\n' + anime['synopsis'];
 	return message;
 }
 
