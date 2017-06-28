@@ -6,6 +6,7 @@ const MAL = popura(process.env.MAL_USER, process.env.MAL_PASSWORD);
 const ANILIST = require('nani').init(process.env.ANILIST_CLIENT_ID, process.env.ANILIST_CLIENT_SECRET);
 const logger = require('au5ton-logger');
 const stringSimilarity = require('string-similarity');
+const querystring = require('querystring');
 
 const DataSource = require('./enums').DataSource;
 const Resolved = require('./classes/Resolved');
@@ -40,7 +41,7 @@ _.searchAnimes = (query,query_format) => {
         promises.push(new Promise((resolve, reject) => {
             //Queries ANILIST
             //GET: {series_type}/search/{query}
-            ANILIST.get('anime/search/'+query).then((results) => {
+            ANILIST.get('anime/search/'+querystring.escape(query)).then((results) => {
                 resolve(new Resolved(DataSource.ANILIST, results));
             })
             .catch((err) => {
