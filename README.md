@@ -5,7 +5,7 @@ Roboruri is a Telegram bot (based off of [/u/Roboragi](https://www.reddit.com/us
 
 ## Running an instance
 Roboruri is written in Node.js. Node.js **version 6 and above is required** because ES6 features, however this project is debugged using Node v8.x, so keep that in mind if any problems reveal themselves. To get started:
-- `git clone https://github.com/au5ton/Roboragi.git`
+- `git clone https://github.com/au5ton/Roboruri.git`
 - `cd Roboragi`
 - `npm install`
 - `cp .env.example .env`

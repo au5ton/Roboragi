@@ -48,7 +48,7 @@ bot.on('message', (msg) => {
 			if(msg.text.startsWith('roboruri version')) {
 				git.getLastCommit(function(err, commit) {
 					// read commit object properties
-					bot.sendMessage(chatId, 'version '+VERSION+', commit '+commit['shortHash']+', last updated on '+new Date(parseInt(commit['authoredOn'])*1000).toDateString()+'\n\nhttps://github.com/au5ton/Roboragi/tree/'+commit['hash'],{
+					bot.sendMessage(chatId, 'version '+VERSION+', commit '+commit['shortHash']+', last updated on '+new Date(parseInt(commit['authoredOn'])*1000).toDateString()+'\n\nhttps://github.com/au5ton/Roboruri/tree/'+commit['hash'],{
 						disable_web_page_preview: true
 					});
 				});
@@ -56,7 +56,7 @@ bot.on('message', (msg) => {
 			else if(msg.text.startsWith('roboruri commit')) {
 				git.getLastCommit(function(err, commit) {
 					// read commit object properties
-					bot.sendMessage(chatId, 'https://github.com/au5ton/Roboragi/tree/'+commit['hash']);
+					bot.sendMessage(chatId, 'https://github.com/au5ton/Roboruri/tree/'+commit['hash']);
 				});
 			}
 		}
@@ -69,7 +69,7 @@ bot.on('message', (msg) => {
 			bot.sendMessage(chatId, catchphrases[Math.floor(Math.random() * catchphrases.length)]);
 		}
 		if (msg.text.startsWith('roboruri source code')) {
-			bot.sendMessage(chatId, 'https://github.com/au5ton/Roboragi');
+			bot.sendMessage(chatId, 'https://github.com/au5ton/Roboruri');
 		}
 
 		//developer tools
