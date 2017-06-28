@@ -4,8 +4,6 @@ const _ = {};
 
 _.isValidBraceSummon = (msg) => {
     return new Promise((resolve, reject) => {
-        if(typeof callback !== 'function') callback = function(){};
-        if(typeof bad_callback !== 'function') bad_callback = function(){};
         let l_cnt = r_cnt = 0, result = false;
         for (let i = 0; i < msg.text.length; i++) {
             //Correctly tally the braces
@@ -27,8 +25,6 @@ _.isValidBraceSummon = (msg) => {
 
 _.isValidBracketSummon = (msg) => {
     return new Promise((resolve, reject) => {
-        if(typeof callback !== 'function') callback = function(){};
-        if(typeof bad_callback !== 'function') bad_callback = function(){};
         let l_cnt = r_cnt = 0, result = false;
         for (let i = 0; i < msg.text.length; i++) {
             //Correctly tally the braces
@@ -50,8 +46,6 @@ _.isValidBracketSummon = (msg) => {
 
 _.isValidLTGTSummon = (msg) => {
     return new Promise((resolve, reject) => {
-        if(typeof callback !== 'function') callback = function(){};
-        if(typeof bad_callback !== 'function') bad_callback = function(){};
         let l_cnt = r_cnt = 0, result = false;
         for (let i = 0; i < msg.text.length; i++) {
             //Correctly tally the braces
@@ -73,8 +67,6 @@ _.isValidLTGTSummon = (msg) => {
 
 _.isValidPipeSummon = (msg) => {
     return new Promise((resolve, reject) => {
-        if(typeof callback !== 'function') callback = function(){};
-        if(typeof bad_callback !== 'function') bad_callback = function(){};
         let cnt = 0, result = false;
         for (let i = 0; i < msg.text.length; i++) {
             //Correctly tally the braces

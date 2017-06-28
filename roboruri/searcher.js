@@ -3,7 +3,7 @@
 const _ = {};
 const popura = require('popura');
 const MAL = popura(process.env.MAL_USER, process.env.MAL_PASSWORD);
-const nani = require('nani').init(process.env.ANILIST_CLIENT_ID, process.env.ANILIST_CLIENT_SECRET);
+const ANILIST = require('nani').init(process.env.ANILIST_CLIENT_ID, process.env.ANILIST_CLIENT_SECRET);
 const DataSource = require('./enums').DataSource;
 const logger = require('au5ton-logger');
 
@@ -31,29 +31,30 @@ _.searchAnimes = (query) => {
             MAL.searchAnimes(query).then((results) =>{
                 resolve(new Resolved(DataSource.MAL, results));
             }).catch((err) => {
-                reject(new Rejected(DataSource.MAL, results));
+                reject(new Rejected(DataSource.MAL, err));
             });
         }));
         promises.push(new Promise((resolve, reject) => {
-            //Queries MAL
-            MAL.searchAnimes(query).then((results) =>{
-                resolve(new Resolved(DataSource.MAL, results));
-            }).catch((err) => {
-                reject(new Rejected(DataSource.MAL, results));
-            });
-        }));
-        promises.push(new Promise((resolve, reject) => {
-            //Queries MAL
-            MAL.searchAnimes(query).then((results) =>{
-                resolve(new Resolved(DataSource.MAL, results));
-            }).catch((err) => {
-                reject(new Rejected(DataSource.MAL, results));
+            //Queries ANILIST
+            //GET: {series_type}/search/{query}
+            ANILIST.get('anime/1').then((results) => {
+                resolve(new Resolved(DataSource.ANILIST, results));
+            })
+            .catch((err) => {
+                reject(new Rejected(DataSource.ANILIST, err));
             });
         }));
         Promise.all(promises).then((ResolvedArray) => {
-            //logger.log(ResolvedArray)
+
             for(let Resolved of ResolvedArray) {
                 if(Resolved.DataSource === DataSource.MAL) {
+                    //expect results in particular format
+                    resolve('something') //this returns:  failed to search with Searcher: TypeError: Cannot read property 'split' of undefined
+                    //which means the reject()s and resolves are collapsing as intended!
+                    //The error was in the message builder so our data made it over there without trouble.
+                    //The logged message was made from the isValid promise, which means we caught the error without trouble too
+                }
+                else if(Resolved.DataSource === DataSource.ANILIST) {
                     //expect results in particular format
                     resolve('something') //this returns:  failed to search with Searcher: TypeError: Cannot read property 'split' of undefined
                     //which means the reject()s and resolves are collapsing as intended!

@@ -48,7 +48,12 @@ be predictable. In that case, here are some rules:
 
 - We don't want to worry about how the shows will merge before we
   even get all the data. One Anime object will be made per datasource.
-  Using bot_util, merging will be done there.
+  Using Anime.consolidate(), merging will be done there.
+
+  EDIT: Anime.consolidate was a headache and a half but I got it
+  nailed down. :)
+
+  (I think)
 
 - CONSOLDATION: *.consolidate() must be capable of consolidating
   "empty instances" and undefined's, because all instances that
