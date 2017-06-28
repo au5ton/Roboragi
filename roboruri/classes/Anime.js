@@ -4,6 +4,7 @@ const logger = require('au5ton-logger');
 
 const DataSource = require('../enums').DataSource;
 const Hyperlinks = require('./Hyperlinks');
+const Synonyms = require('./Synonyms');
 
 /*
 
@@ -49,6 +50,10 @@ be predictable. In that case, here are some rules:
   even get all the data. One Anime object will be made per datasource.
   Using bot_util, merging will be done there.
 
+- CONSOLDATION: *.consolidate() must be capable of consolidating
+  "empty instances" and undefined's, because all instances that
+  are provided aren't flattened
+
 Schema:
 - Anime.title_romaji => string
 - Anime.title_english => string
@@ -76,100 +81,123 @@ const non_empty = (val) => {
 const non_empty_array = (ray) => {
     return (Array.isArray(ray) && ray.length > 0);
 };
+const non_def = (val) => {
+    //doesn't account for if an object has the value defined,
+    //but has decided to leave it holding undefined for
+    //whatever reason.
+    //fuck it, bulldozer that shit with nulls
+    return (val === undefined)
+};
 
 class Anime {
     constructor(options) {
+
+        if(!non_empty(options)) {
+            return
+        }
 
         //all the titles
         if(non_empty(options.title_romaji)) {
             this.title_romaji = options.title_romaji;
         }
         else {
-            this.title_romaji = null;
+            //this.title_romaji = null;
         }
         if(non_empty(options.title_english)) {
             this.title_english = options.title_english;
         }
         else {
-            this.title_english = null;
+            //this.title_english = null;
         }
         if(non_empty(options.title_japanese)) {
             this.title_japanese = options.title_japanese;
         }
         else {
-            this.title_japanese = null;
+            //this.title_japanese = null;
         }
         //score
         if(non_empty(options.score_str)) {
             this.score_str = options.score_str;
         }
         else {
-            this.score_str = null;
+            //this.score_str = null;
         }
         //media_type
         if(non_empty(options.media_type)) {
             this.media_type = options.media_type;
         }
         else {
-            this.media_type = null;
+            //this.media_type = null;
         }
         //status
         if(non_empty(options.status)) {
             this.status = options.status;
         }
         else {
-            this.status = null;
+            //this.status = null;
         }
         //episode_count
         if(non_empty(options.episode_count)) {
             this.episode_count = options.episode_count;
         }
         else {
-            this.episode_count = null;
+            //this.episode_count = null;
         }
         //synopsis_full
         if(non_empty(options.synopsis_full)) {
             this.synopsis_full = options.synopsis_full;
         }
         else {
-            this.synopsis_full = null;
+            //this.synopsis_full = null;
         }
         //start_date
         if(non_empty(options.start_date)) {
             this.start_date = options.start_date;
         }
         else {
-            this.start_date = null;
+            //this.start_date = null;
         }
         //end_date
         if(non_empty(options.end_date)) {
             this.end_date = options.end_date;
         }
         else {
-            this.end_date = null;
+            //this.end_date = null;
         }
         //images
         if(non_empty(options.image)) {
             this.image = options.image
         }
         else {
-            this.image = null;
+            //this.image = null;
         }
 
         //synonyms
-        if(non_empty(options.synonyms) && non_empty_array(options.synonyms)){
+        if(non_empty(options.synonyms) && options.synonyms instanceof Synonyms){
             this.synonyms = options.synonyms;
         }
         else {
-            this.synonyms = null;
+            //this.synonyms = null;
         }
         //hyperlinks
         if(non_empty(options.hyperlinks) && options.hyperlinks instanceof Hyperlinks) {
             this.hyperlinks = options.hyperlinks
         }
         else {
-            this.hyperlinks = null;
+            //this.hyperlinks = null;
         }
+
+        /*
+        THIS IS IMPORTANT
+        THIS IS IMPORTANT
+        THIS IS IMPORTANT
+        */
+        this._flattened = false;
+        /*
+        THIS IS IMPORTANT
+        THIS IS IMPORTANT
+        THIS IS IMPORTANT
+        */
     }
     //generated accessors
     get title() {
@@ -183,7 +211,7 @@ class Anime {
             return this.title_japanese
         }
         else {
-            null
+            return null
         }
     }
     get synopsis() {
@@ -203,22 +231,103 @@ class Anime {
             return parsed
         }
     }
+    get flattened() {
+        let copy = new Anime(Object.assign({}, this))
+
+        //all the titles
+        if(non_def(copy.title_romaji)) {
+            copy.title_romaji = null;
+        }
+        if(non_def(copy.title_english)) {
+            copy.title_english = null;
+        }
+        if(non_def(copy.title_japanese)) {
+            copy.title_japanese = null;
+        }
+        //score_str
+        if(non_def(copy.score_str)) {
+            copy.score_str = null;
+        }
+        //media_type
+        if(non_def(copy.media_type)) {
+            copy.media_type = null;
+        }
+        //status
+        if(non_def(copy.status)) {
+            copy.status = null;
+        }
+        //episode_count
+        if(non_def(copy.episode_count)) {
+            copy.episode_count = null;
+        }
+        //synopsis_full
+        if(non_def(copy.synopsis_full)) {
+            copy.synopsis_full = null;
+        }
+        //start_date
+        if(non_def(copy.start_date)) {
+            copy.start_date = null;
+        }
+        //end_date
+        if(non_def(copy.end_date)) {
+            copy.end_date = null;
+        }
+        //images
+        if(non_def(copy.images)) {
+            copy.images = null;
+        }
+
+        //synonyms
+        if(non_def(copy.synonyms)) {
+            copy.synonyms = null;
+        }
+        //hyperlinks
+        if(non_def(copy.hyperlinks)) {
+            copy.hyperlinks = null;
+        }
+        copy._flattened = true
+        return copy;
+    }
     static consolidate() {
-        let args = Array.from(arguments)
-        for(let i in args) {
-            if(args[i] instanceof Anime) {
-                logger.log(i,' ',args[i]);
+        //consolidate Class objects manually and set aside to re-insert
+        let temp_hyperlinks;
+        let temp_synonyms;
+        for(let i in arguments) {
+            if(arguments[i] instanceof Anime) {
+                temp_hyperlinks = Hyperlinks.consolidate(temp_hyperlinks,arguments[i].hyperlinks);
+                temp_synonyms = Synonyms.consolidate(temp_synonyms,arguments[i].synonyms);
+            }
+            else {
+                //logger.warn('Anime.consolidate() supplied with non-Anime instance: ', arguments[i])
             }
         }
-        logger.log('concat: ',[{}].concat(Array.from(arguments)))
-        return Object.assign.apply(this, arguments);
+        let copy = Object.assign.apply(this, [new Anime()].concat(Array.from(arguments)))
+        copy.hyperlinks = temp_hyperlinks;
+        copy.synonyms = temp_synonyms;
+        return copy;
     }
 }
 
-logger.log('Object.assign: ',Anime.consolidate(new Anime({
-    title_english: 'a life in a better werl'
-}),new Anime({
-    title_romaji: 'Re:Zero'
-})));
+let dict = {};
+dict[DataSource.MAL] = 'http://hello.world'
+let dict2 = {};
+dict2[DataSource.ANILIST] = 'http://foo.bar'
+
+let temp = new Anime({
+    title_english: 'a life in a better werl',
+    hyperlinks: new Hyperlinks(dict),
+    synonyms: new Synonyms(['Rem is best girl','',null,undefined,'Romance'])
+});
+let consol = Anime.consolidate(temp,new Anime({
+    title_romaji: 'Re:Zero',
+    hyperlinks: new Hyperlinks(dict2),
+    synonyms: new Synonyms(['Emilia waifu','','Romance'])
+}))
+logger.warn('copy.flattened: ', consol.flattened)
+logger.log('Object.assign: ',consol);
+//logger.log('title: ', consol.title);
+//logger.log('orgi: ', temp);
+//logger.log('instanceof: ',consol instanceof Anime)
+
 
 module.exports = Anime
