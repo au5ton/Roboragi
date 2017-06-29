@@ -220,12 +220,17 @@ class Anime {
         }
     }
     get synopsis() {
-        const firstParagraph = this.synopsis_full.split('\n')[0];
-        const txtLimit = 180;
-        if (firstParagraph.length > txtLimit) {
-            return firstParagraph.substring(0, txtLimit - 3) + '...';
+        if(this.synopsis_full !== null) {
+            const firstParagraph = this.synopsis_full.split('\n')[0];
+            const txtLimit = 180;
+            if (firstParagraph.length > txtLimit) {
+                return firstParagraph.substring(0, txtLimit - 3) + '...';
+            }
+            return firstParagraph;
         }
-        return firstParagraph;
+        else {
+            return null;
+        }
     }
     get score_num() {
         let parsed = parseFloat(this.score_str);

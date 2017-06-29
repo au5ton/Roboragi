@@ -16,6 +16,7 @@ const Hyperlinks = require('./classes/Hyperlinks');
 const Synonyms = require('./classes/Synonyms');
 
 _.searchAnimes = (query,query_format) => {
+    logger.log('searchAnimes() with \'', query,'\'');
     return new Promise((resolve, reject) => {
         let results = {};
         var promises = [];
@@ -35,6 +36,7 @@ _.searchAnimes = (query,query_format) => {
             MAL.searchAnimes(query).then((results) =>{
                 resolve(new Resolved(DataSource.MAL, results));
             }).catch((err) => {
+                logger.ind().log('mal error caught');
                 reject(new Rejected(DataSource.MAL, err));
             });
         }));
@@ -45,6 +47,7 @@ _.searchAnimes = (query,query_format) => {
                 resolve(new Resolved(DataSource.ANILIST, results));
             })
             .catch((err) => {
+                logger.ind().log('anilist error caught');
                 reject(new Rejected(DataSource.ANILIST, err));
             });
         }));
@@ -157,11 +160,22 @@ _.searchAnimes = (query,query_format) => {
             */
             var very_best_match = new Anime();
             //logger.log(anime_arrays);
+            logger.ind().log('anime_arrays');
+            //`r` should be the DataSource because anime_arrays is a dict
+            logger.warn('best_match before populating:',best_match);
             for(let r in anime_arrays) {
-                //logger.log(r);
-                best_match[r] = _.findBestMatchForAnimeArray(query,anime_arrays[r]);
-                very_best_match = Anime.consolidate(very_best_match,best_match[r])
+                logger.ind().warn(r,' results:');
+                if(anime_arrays[r].length === 0 || anime_arrays[r] === null || anime_arrays[r] === undefined) {
+                    logger.ind().warn(r,' has no results to offer');
+                }
+                else {
+                    best_match[r] = _.findBestMatchForAnimeArray(query,anime_arrays[r]);
+                    logger.ind(1).success('Picked ANIMEOBJ:',best_match[r]);
+                    very_best_match = Anime.consolidate(very_best_match,best_match[r])
+                }
+                //THE FOLLOWING LINE IS BAD AND SHOULD FEEL BAD
             }
+            logger.warn('best_match AFTER populating:',best_match);
 
             logger.log('q: {'+query+'} => '+very_best_match.flattened.title);
             //THIS IS WHAT IT ALL BOILS DOWN TO
@@ -184,15 +198,24 @@ _.findBestMatchForAnimeArray = (query,animes) => {
     let just_titles_romaji = [];
     let just_titles_english = [];
     let just_titles_japanese = [];
+    let just_synonyms = [];
     for(let i in animes) {
+        logger.ind(1).log(i,' index');
         if(animes[i].flattened['title_romaji'] !== null){
+            logger.ind(2).log('r:`',animes[i]['title_romaji'],'`');
             just_titles_romaji.push(animes[i]['title_romaji']);
         }
         if(animes[i].flattened['title_english'] !== null){
+            logger.ind(2).log('e:`',animes[i]['title_romaji'],'`');
             just_titles_english.push(animes[i]['title_english']);
         }
         if(animes[i].flattened['title_japanese'] !== null){
+            logger.ind(2).log('j:`',animes[i]['title_romaji'],'`');
             just_titles_japanese.push(animes[i]['title_japanese']);
+        }
+        if(animes[i].flattened['synonyms'] !== null){
+            logger.ind(2).log('syn:`',animes[i]['synonyms'].array,'`');
+            just_synonyms = just_synonyms.concat(animes[i]['synonyms'].array);
         }
     }
 
@@ -204,16 +227,24 @@ _.findBestMatchForAnimeArray = (query,animes) => {
     let bmr = null;
     if(just_titles_romaji.length > 0) {
         bmr = stringSimilarity.findBestMatch(query,just_titles_romaji);
+        logger.ind(2).log('bmr:',bmr);
     }
     //best match english
     let bme = null;
     if(just_titles_english.length > 0) {
         bme = stringSimilarity.findBestMatch(query,just_titles_english);
+        logger.ind(2).log('bme:',bme);
     }
     //best match japanese
     let bmj = null;
     if(just_titles_japanese.length > 0) {
         bmj = stringSimilarity.findBestMatch(query,just_titles_japanese);
+        logger.ind(2).log('bmj:',bmj);
+    }
+    let bms = null;
+    if(just_synonyms.length > 0) {
+        bms = stringSimilarity.findBestMatch(query,just_synonyms);
+        logger.ind(2).log('bms:',bms);
     }
     let art; //assumed real title
     let art_format; //english, romaji, japanese
@@ -250,26 +281,41 @@ _.findBestMatchForAnimeArray = (query,animes) => {
         bme['bestMatch'] = {};
         bme['bestMatch']['rating'] = -1.0;
     }
+    if(true) {
+        bms = {};
+        bms['bestMatch'] = {};
+        bms['bestMatch']['rating'] = -1.0;
+    }
 
-    //logger.log('    bme:',bme);
-    //logger.log('    bmr:',bmr);
-    //logger.log('    bmj:',bmj);
+    logger.ind(2).warn('ratings:');
+    logger.ind(3).log('bmr',bmr['bestMatch']['rating']);
+    logger.ind(3).log('bme',bme['bestMatch']['rating']);
+    logger.ind(3).log('bmj',bmj['bestMatch']['rating']);
+    logger.ind(3).log('bms',bms['bestMatch']['rating']);
 
-    if(bme['bestMatch']['rating'] >= bmr['bestMatch']['rating'] && bme['bestMatch']['rating'] >= bmj['bestMatch']['rating']) {
+    if(bme['bestMatch']['rating'] >= bmr['bestMatch']['rating'] && bme['bestMatch']['rating'] >= bmj['bestMatch']['rating'] && bme['bestMatch']['rating'] >= bms['bestMatch']['rating']) {
         //english got the best rating
         art = bme['bestMatch']['target'];
         art_format = 'english';
+        logger.ind(2).success('Picked ART (',art_format,'):',art);
     }
-    else if(bmr['bestMatch']['rating'] >= bme['bestMatch']['rating'] && bmr['bestMatch']['rating'] >= bmj['bestMatch']['rating']) {
+    else if(bmr['bestMatch']['rating'] >= bme['bestMatch']['rating'] && bmr['bestMatch']['rating'] >= bmj['bestMatch']['rating'] &&  bmr['bestMatch']['rating'] >= bms['bestMatch']['rating']) {
         //romaji got the best rating
         art = bmr['bestMatch']['target'];
         art_format = 'romaji';
+        logger.ind(2).success('Picked ART (',art_format,'):',art);
     }
-    else if(bmj['bestMatch']['rating'] >= bmr['bestMatch']['rating'] && bmj['bestMatch']['rating'] >= bme['bestMatch']['rating']) {
+    else if(bmj['bestMatch']['rating'] >= bmr['bestMatch']['rating'] && bmj['bestMatch']['rating'] >= bme['bestMatch']['rating'] && bmj['bestMatch']['rating'] >= bms['bestMatch']['rating']) {
         //japanese got the best rating
         art = bmj['bestMatch']['target'];
         art_format = 'japanese';
+        logger.ind(2).success('Picked ART (',art_format,'):',art);
     }
+    // else if(bms['bestMatch']['rating'] >= bmr['bestMatch']['rating'] && bms['bestMatch']['rating'] >= bme['bestMatch']['rating'] && bms['bestMatch']['rating'] >= bmj['bestMatch']['rating']) {
+    //     //japanese got the best rating
+    //     art = bmj['bestMatch']['target'];
+    //     art_format = 'synonym';
+    // }
 
     /*
     Use ART and ART format to reverse lookup the anime search result
@@ -293,6 +339,14 @@ _.findBestMatchForAnimeArray = (query,animes) => {
                 return animes[i];
             }
         }
+        // else if(art_format === 'synonym') {
+        //     for(let n = 0; n < animes[i]['synonyms'].array.length; n++) {
+        //         if(art === animes[i]['synonyms'].array[n]) {
+        //             //found the anime
+        //             return animes[i];
+        //         }
+        //     }
+        // }
     }
 
 };
