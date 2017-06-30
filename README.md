@@ -3,6 +3,9 @@
 # Roboruri
 Roboruri is a Telegram bot (based off of [/u/Roboragi](https://www.reddit.com/user/Roboragi/)) which creates anime and manga links from [undecided] when requested. To credit the author of /u/Roboragi, this project is a fork of it and is prominently visible.
 
+## Beta
+Roboruri is currently operating in beta. Expect problems and PLEASE FOR THE LOVE OF GOD REPORT THEM! Once I've ironed as many bugs as I can, I will take Roboruri out of beta stage.
+
 ## Running an instance
 Roboruri is written in Node.js. Node.js **version 6 and above is required** because ES6 features, however this project is debugged using Node v8.x, so keep that in mind if any problems reveal themselves. To get started:
 - `git clone https://github.com/au5ton/Roboruri.git`
