@@ -161,38 +161,35 @@ _.searchAnimes = (query,query_format) => {
 
             */
             //logger.log(anime_arrays);
-            logger.ind().log('anime_arrays');
+            //logger.ind().log('anime_arrays');
             //`r` should be the DataSource because anime_arrays is a dict
-            logger.warn('best_match before populating:',best_match);
+            //logger.warn('best_match before populating:',best_match);
             let sufficient_results = false;
             for(let r in anime_arrays) {
-                logger.ind().warn(r,' results:');
+                //logger.ind().warn(r,' results:');
                 if(anime_arrays[r].length === 0 || anime_arrays[r] === null || anime_arrays[r] === undefined) {
                     logger.ind().warn(r,' has no results to offer');
                 }
                 else {
                     best_match[r] = _.findBestMatchForAnimeArray(query,anime_arrays[r]);
-                    logger.ind(1).success('Picked ANIMEOBJ:',best_match[r]);
+                    //logger.ind(1).success('Picked ANIMEOBJ:',best_match[r]);
                     sufficient_results = true;
-                    //when comparing best_matches, the titles must have
-                    //very_best_match = Anime.consolidate(very_best_match,best_match[r])
                 }
-                //THE FOLLOWING LINE IS BAD AND SHOULD FEEL BAD
             }
             if(!sufficient_results) {
                 reject('insufficient results: has no results to offer');
             }
-            logger.warn('best_match AFTER populating:',best_match);
+            //logger.warn('best_match AFTER populating:',best_match);
 
             //clear some space
-            logger.nl(2);
-            logger.error('------------------------------------');
-            logger.nl(1);
-            logger.log('VERY BEST CANDIDATES for query: {',query,'}');
-            for(let r in best_match) {
-                logger.warn(r)
-                logger.log(best_match[r].flattened.all_titles);
-            }
+            //logger.nl(2);
+            //logger.error('------------------------------------');
+            //logger.nl(1);
+            //logger.log('VERY BEST CANDIDATES for query: {',query,'}');
+            // for(let r in best_match) {
+            //     logger.warn(r)
+            //     logger.log(best_match[r].flattened.all_titles);
+            // }
 
             /*
             Here's how comparing top results works.
@@ -284,9 +281,9 @@ _.searchAnimes = (query,query_format) => {
 
 
 
-            logger.nl(1);
-            logger.error('------------------------------------');
-            logger.nl(2);
+            //logger.nl(1);
+            //logger.error('------------------------------------');
+            //logger.nl(2);
 
             logger.log('q: {'+query+'} => '+very_best_match.flattened.title);
             //THIS IS WHAT IT ALL BOILS DOWN TO
@@ -311,21 +308,21 @@ _.findBestMatchForAnimeArray = (query,animes) => {
     let just_titles_japanese = [];
     let just_synonyms = [];
     for(let i in animes) {
-        logger.ind(1).log(i,' index');
+        //logger.ind(1).log(i,' index');
         if(animes[i].flattened['title_romaji'] !== null){
-            logger.ind(2).log('r:`',animes[i]['title_romaji'],'`');
+            //logger.ind(2).log('r:`',animes[i]['title_romaji'],'`');
             just_titles_romaji.push(animes[i]['title_romaji']);
         }
         if(animes[i].flattened['title_english'] !== null){
-            logger.ind(2).log('e:`',animes[i]['title_romaji'],'`');
+            //logger.ind(2).log('e:`',animes[i]['title_romaji'],'`');
             just_titles_english.push(animes[i]['title_english']);
         }
         if(animes[i].flattened['title_japanese'] !== null){
-            logger.ind(2).log('j:`',animes[i]['title_romaji'],'`');
+            //logger.ind(2).log('j:`',animes[i]['title_romaji'],'`');
             just_titles_japanese.push(animes[i]['title_japanese']);
         }
         if(animes[i].flattened['synonyms'] !== null){
-            logger.ind(2).log('syn:`',animes[i]['synonyms'].array,'`');
+            //logger.ind(2).log('syn:`',animes[i]['synonyms'].array,'`');
             just_synonyms = just_synonyms.concat(animes[i]['synonyms'].array);
         }
     }
@@ -338,24 +335,24 @@ _.findBestMatchForAnimeArray = (query,animes) => {
     let bmr = null;
     if(just_titles_romaji.length > 0) {
         bmr = stringSimilarity.findBestMatch(query,just_titles_romaji);
-        logger.ind(2).log('bmr:',bmr);
+        //logger.ind(2).log('bmr:',bmr);
     }
     //best match english
     let bme = null;
     if(just_titles_english.length > 0) {
         bme = stringSimilarity.findBestMatch(query,just_titles_english);
-        logger.ind(2).log('bme:',bme);
+        //logger.ind(2).log('bme:',bme);
     }
     //best match japanese
     let bmj = null;
     if(just_titles_japanese.length > 0) {
         bmj = stringSimilarity.findBestMatch(query,just_titles_japanese);
-        logger.ind(2).log('bmj:',bmj);
+        //logger.ind(2).log('bmj:',bmj);
     }
     let bms = null;
     if(just_synonyms.length > 0) {
         bms = stringSimilarity.findBestMatch(query,just_synonyms);
-        logger.ind(2).log('bms:',bms);
+        //logger.ind(2).log('bms:',bms);
     }
     let art; //assumed real title
     let art_format; //english, romaji, japanese
@@ -398,29 +395,29 @@ _.findBestMatchForAnimeArray = (query,animes) => {
         bms['bestMatch']['rating'] = -1.0;
     }
 
-    logger.ind(2).warn('ratings:');
-    logger.ind(3).log('bmr',bmr['bestMatch']['rating']);
-    logger.ind(3).log('bme',bme['bestMatch']['rating']);
-    logger.ind(3).log('bmj',bmj['bestMatch']['rating']);
-    logger.ind(3).log('bms',bms['bestMatch']['rating']);
+    // logger.ind(2).warn('ratings:');
+    // logger.ind(3).log('bmr',bmr['bestMatch']['rating']);
+    // logger.ind(3).log('bme',bme['bestMatch']['rating']);
+    // logger.ind(3).log('bmj',bmj['bestMatch']['rating']);
+    // logger.ind(3).log('bms',bms['bestMatch']['rating']);
 
     if(bme['bestMatch']['rating'] >= bmr['bestMatch']['rating'] && bme['bestMatch']['rating'] >= bmj['bestMatch']['rating'] && bme['bestMatch']['rating'] >= bms['bestMatch']['rating']) {
         //english got the best rating
         art = bme['bestMatch']['target'];
         art_format = 'english';
-        logger.ind(2).success('Picked ART with ',art_format,' (',bme['bestMatch']['rating'],'):',art);
+        //logger.ind(2).success('Picked ART with ',art_format,' (',bme['bestMatch']['rating'],'):',art);
     }
     else if(bmr['bestMatch']['rating'] >= bme['bestMatch']['rating'] && bmr['bestMatch']['rating'] >= bmj['bestMatch']['rating'] &&  bmr['bestMatch']['rating'] >= bms['bestMatch']['rating']) {
         //romaji got the best rating
         art = bmr['bestMatch']['target'];
         art_format = 'romaji';
-        logger.ind(2).success('Picked ART with ',art_format,' (',bmr['bestMatch']['rating'],'):',art);
+        //logger.ind(2).success('Picked ART with ',art_format,' (',bmr['bestMatch']['rating'],'):',art);
     }
     else if(bmj['bestMatch']['rating'] >= bmr['bestMatch']['rating'] && bmj['bestMatch']['rating'] >= bme['bestMatch']['rating'] && bmj['bestMatch']['rating'] >= bms['bestMatch']['rating']) {
         //japanese got the best rating
         art = bmj['bestMatch']['target'];
         art_format = 'japanese';
-        logger.ind(2).success('Picked ART with ',art_format,' (',bmj['bestMatch']['rating'],'):',art);
+        //logger.ind(2).success('Picked ART with ',art_format,' (',bmj['bestMatch']['rating'],'):',art);
     }
     else if(bms['bestMatch']['rating'] >= bmr['bestMatch']['rating'] && bms['bestMatch']['rating'] >= bme['bestMatch']['rating'] && bms['bestMatch']['rating'] >= bmj['bestMatch']['rating']) {
         //japanese got the best rating
