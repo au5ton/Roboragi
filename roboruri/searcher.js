@@ -158,11 +158,11 @@ _.searchAnimes = (query,query_format) => {
             Consolidate the best match across DataSources
 
             */
-            var very_best_match = new Anime();
             //logger.log(anime_arrays);
             logger.ind().log('anime_arrays');
             //`r` should be the DataSource because anime_arrays is a dict
             logger.warn('best_match before populating:',best_match);
+            let sufficient_results = false;
             for(let r in anime_arrays) {
                 logger.ind().warn(r,' results:');
                 if(anime_arrays[r].length === 0 || anime_arrays[r] === null || anime_arrays[r] === undefined) {
@@ -171,11 +171,120 @@ _.searchAnimes = (query,query_format) => {
                 else {
                     best_match[r] = _.findBestMatchForAnimeArray(query,anime_arrays[r]);
                     logger.ind(1).success('Picked ANIMEOBJ:',best_match[r]);
-                    very_best_match = Anime.consolidate(very_best_match,best_match[r])
+                    sufficient_results = true;
+                    //when comparing best_matches, the titles must have
+                    //very_best_match = Anime.consolidate(very_best_match,best_match[r])
                 }
                 //THE FOLLOWING LINE IS BAD AND SHOULD FEEL BAD
             }
+            if(!sufficient_results) {
+                reject('insufficient results: has no results to offer');
+            }
             logger.warn('best_match AFTER populating:',best_match);
+
+            //clear some space
+            logger.nl(2);
+            logger.error('------------------------------------');
+            logger.nl(1);
+            logger.log('VERY BEST CANDIDATES for query: {',query,'}');
+            for(let r in best_match) {
+                logger.warn(r)
+                logger.log(best_match[r].flattened.all_titles);
+            }
+
+            /*
+            Here's how comparing top results works.
+
+            First, if the array has made it this far, we are
+            guaranteed a couple things:
+            - There ARE results in best_match
+            - The results in best_match HAVE been compared to the query
+              and have some expectation of relation to the query
+
+            Next, we're under a couple assumptions:
+            - The 'title_romaji' is the primary title
+            - If the anime is something the user is interested in, it's
+              99.99% going to have a romaji title
+            - The 'title_romaji' under the Anime class is actually holding
+              the result's title in romaji format
+            - An anime's 'title_romaji' is relatively standardized, meaning
+              that the 'title_romaji' from one site won't vary from another site,
+              other than maybe capitalization or some extra whitespace
+              accidentally put at the beginning or end of a string. We can make
+              this inference because some animes (like `K-On!`) are differentiated
+              by very subtle changes in title_romaji, such as punctuation.
+              The Japanese are strict about titles?
+            - Because some animes (like `K-On!`) are differentiated
+              by very subtle changes in title_romaji, such as punctuation, we
+              cannot compare the top results using stringSimilarity, as we might
+              catch the wrong season.
+            - Some breaking to this rule might be 'Kiss X Sis', where the title
+              is technically exactly the same between OVA and TV (or S1 or S2,
+              depending on how you look at it), but the anime database listing
+              could vary to differentiate to the audience with an unofficial name.
+              For cases like this, comparing the media_type (TV, OVA, etc)
+              should suffice.
+            - If you want something with the same title released
+              on the same media_type multiple times, dude, just Google it.
+              Give my bot a break.
+
+              So, exactly matching a result between databases should
+              look something like:
+
+              a.title_romaji.toLowerCase().trim() === b.title_romaji.toLowerCase().trim()
+              &&
+              a.media_type === b.media_type
+            */
+            let SuperART; //Super Assumed Real Title (format = romaji)
+            let topRomaji = [];
+            let sufficient_results_other = false;
+            var very_best_match = new Anime();
+            //Gather all romaji titles if available
+            for(let r in best_match) {
+                if(best_match[r].flattened.title_romaji !== null) {
+                    sufficient_results_other = true;
+                    topRomaji.push(best_match[r].title_romaji);
+                }
+                else {
+                    //fuck this shit, there's no title
+                }
+            }
+            //Reject if we've somehow made it this far without romaji titles
+            if(!sufficient_results_other) {
+                //how tf does this even happen
+                reject('insufficient results: no romaji titles to compare');
+            }
+            //Assign SuperART
+            SuperART = stringSimilarity.findBestMatch(query,topRomaji);
+
+            //Reverse search with SuperART to consolidate results
+            for(let r in best_match) {
+                if(best_match[r].flattened.title_romaji !== null) {
+                    //because SuperART is literally from best_match,
+                    //there should be at least one instance in very_best_match
+
+                    //previously I described matching with media_type in addition, but
+                    //until I standardize media_type in the Anime object, I can't do that
+                    //TO BE IMPLEMENTED
+                    if(SuperART['bestMatch']['target'].toLowerCase().trim() === best_match[r].flattened.title_romaji.toLowerCase().trim()) {
+                        very_best_match = Anime.consolidate(very_best_match,best_match[r]);
+                    }
+                    else {
+                        logger.warn('`',best_match[r].flattened.title_romaji,'` was NOT CONSOLIDATED with `', SuperART['bestMatch']['target'],'`')
+                    }
+                }
+                else {
+                    //this is confirmed by the previous loop not to happen
+                    reject('insufficient results: LOGIC ERROR');
+                }
+            }
+
+
+
+
+            logger.nl(1);
+            logger.error('------------------------------------');
+            logger.nl(2);
 
             logger.log('q: {'+query+'} => '+very_best_match.flattened.title);
             //THIS IS WHAT IT ALL BOILS DOWN TO
@@ -297,19 +406,19 @@ _.findBestMatchForAnimeArray = (query,animes) => {
         //english got the best rating
         art = bme['bestMatch']['target'];
         art_format = 'english';
-        logger.ind(2).success('Picked ART (',art_format,'):',art);
+        logger.ind(2).success('Picked ART with ',art_format,' (',bme['bestMatch']['rating'],'):',art);
     }
     else if(bmr['bestMatch']['rating'] >= bme['bestMatch']['rating'] && bmr['bestMatch']['rating'] >= bmj['bestMatch']['rating'] &&  bmr['bestMatch']['rating'] >= bms['bestMatch']['rating']) {
         //romaji got the best rating
         art = bmr['bestMatch']['target'];
         art_format = 'romaji';
-        logger.ind(2).success('Picked ART (',art_format,'):',art);
+        logger.ind(2).success('Picked ART with ',art_format,' (',bmr['bestMatch']['rating'],'):',art);
     }
     else if(bmj['bestMatch']['rating'] >= bmr['bestMatch']['rating'] && bmj['bestMatch']['rating'] >= bme['bestMatch']['rating'] && bmj['bestMatch']['rating'] >= bms['bestMatch']['rating']) {
         //japanese got the best rating
         art = bmj['bestMatch']['target'];
         art_format = 'japanese';
-        logger.ind(2).success('Picked ART (',art_format,'):',art);
+        logger.ind(2).success('Picked ART with ',art_format,' (',bmj['bestMatch']['rating'],'):',art);
     }
     // else if(bms['bestMatch']['rating'] >= bmr['bestMatch']['rating'] && bms['bestMatch']['rating'] >= bme['bestMatch']['rating'] && bms['bestMatch']['rating'] >= bmj['bestMatch']['rating']) {
     //     //japanese got the best rating
