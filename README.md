@@ -1,6 +1,10 @@
-<img alt="roboruri" width="630" height="300" src="img/shitty_banner.png">
+![roboruri](img/roboruri.png)
 
 # Roboruri
+
+<hr>
+
+## Synopsis
 Roboruri is a Telegram bot (based off of [/u/Roboragi](https://www.reddit.com/user/Roboragi/)) which creates anime and manga links from [undecided] when requested. To credit the author of /u/Roboragi, this project is a fork of it and is prominently visible.
 
 ## Running an instance
