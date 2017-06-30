@@ -88,6 +88,7 @@ bot.on('message', (msg) => {
 		bot_util.isValidBraceSummon(msg).then((query) => {
 			//logger.log('q: ', query);
 			Searcher.searchAnimes(query).then((result) => {
+				//logger.log(result);
 				bot.sendMessage(chatId, buildAnimeChatMessage(result), {
 					parse_mode: 'html',
 					disable_web_page_preview: true

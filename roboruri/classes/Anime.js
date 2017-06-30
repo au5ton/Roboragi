@@ -206,26 +206,69 @@ class Anime {
     }
     //generated accessors
     get title() {
-        if(this.title_english !== null) {
-            return this.title_english
-        }
-        else if(this.title_romaji !== null) {
-            return this.title_romaji
-        }
-        else if(this.title_japanese !== null) {
-            return this.title_japanese
+        if(this._flattened) {
+            if(this.title_english !== null) {
+                return this.title_english
+            }
+            else if(this.title_romaji !== null) {
+                return this.title_romaji
+            }
+            else if(this.title_japanese !== null) {
+                return this.title_japanese
+            }
+            else {
+                return null
+            }
         }
         else {
-            return null
+            logger.warn('Anime.title invoked without being flattened first');
+            return undefined
+        }
+    }
+    get all_titles() {
+        //must use a flattened object to function properly
+        if(this._flattened) {
+            let dict = {};
+            if(this.title_english !== null) {
+                dict['title_english'] = this.title_english
+            }
+            if(this.title_romaji !== null) {
+                dict['title_romaji'] = this.title_romaji
+            }
+            if(this.title_japanese !== null) {
+                dict['title_japanese'] = this.title_japanese
+            }
+            if(this.synonyms !== null) {
+                dict['synonyms'] = this.synonyms
+            }
+            //check for empty object
+            if(Object.keys(dict).length === 0 && dict.constructor === Object) {
+                return null
+            }
+            return dict;
+        }
+        else {
+            logger.warn('Anime.all_titles invoked without being flattened first');
+            return undefined
         }
     }
     get synopsis() {
-        const firstParagraph = this.synopsis_full.split('\n')[0];
-        const txtLimit = 180;
-        if (firstParagraph.length > txtLimit) {
-            return firstParagraph.substring(0, txtLimit - 3) + '...';
+        if(this.synopsis_full !== null) {
+            var firstParagraph = this.synopsis_full.split('\n')[0];
+            const txtLimit = 180;
+
+            //sanitise for telegram (remove <br> tag)
+            firstParagraph = firstParagraph.replace(new RegExp('<br>', 'g'), '');
+
+            //shorten
+            if (firstParagraph.length > txtLimit) {
+                return firstParagraph.substring(0, txtLimit - 3) + '...';
+            }
+            return firstParagraph;
         }
-        return firstParagraph;
+        else {
+            return null;
+        }
     }
     get score_num() {
         let parsed = parseFloat(this.score_str);

@@ -13,7 +13,7 @@ _.isValidBraceSummon = (msg) => {
             if(next === '}')
             r_cnt++;
         }
-        let attempt = msg.text.match(/\{([^)]+)\}/);
+        let attempt = msg.text.match(/\{([^{}]+)\}/);
         if(attempt !== null && l_cnt == 1 && r_cnt == 1) {
             resolve(attempt[1]);
         }
