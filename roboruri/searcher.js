@@ -371,7 +371,7 @@ _.findBestMatchForAnimeArray = (query,animes) => {
         */
         return new Anime()
     }
-    if(bmj == null) {
+    if(bmj === null) {
         /*
         this is so we don't have to copy and paste the If-statement monster below
         if it ain't there, the rating is -1. It will not be chosen no matter what.
@@ -382,17 +382,17 @@ _.findBestMatchForAnimeArray = (query,animes) => {
         bmj['bestMatch'] = {};
         bmj['bestMatch']['rating'] = -1.0;
     }
-    if(bmr == null) {
+    if(bmr === null) {
         bmr = {};
         bmr['bestMatch'] = {};
         bmr['bestMatch']['rating'] = -1.0;
     }
-    if(bme == null) {
+    if(bme === null) {
         bme = {};
         bme['bestMatch'] = {};
         bme['bestMatch']['rating'] = -1.0;
     }
-    if(true) {
+    if(bms === null) {
         bms = {};
         bms['bestMatch'] = {};
         bms['bestMatch']['rating'] = -1.0;
@@ -422,11 +422,11 @@ _.findBestMatchForAnimeArray = (query,animes) => {
         art_format = 'japanese';
         logger.ind(2).success('Picked ART with ',art_format,' (',bmj['bestMatch']['rating'],'):',art);
     }
-    // else if(bms['bestMatch']['rating'] >= bmr['bestMatch']['rating'] && bms['bestMatch']['rating'] >= bme['bestMatch']['rating'] && bms['bestMatch']['rating'] >= bmj['bestMatch']['rating']) {
-    //     //japanese got the best rating
-    //     art = bmj['bestMatch']['target'];
-    //     art_format = 'synonym';
-    // }
+    else if(bms['bestMatch']['rating'] >= bmr['bestMatch']['rating'] && bms['bestMatch']['rating'] >= bme['bestMatch']['rating'] && bms['bestMatch']['rating'] >= bmj['bestMatch']['rating']) {
+        //japanese got the best rating
+        art = bms['bestMatch']['target'];
+        art_format = 'synonym';
+    }
 
     /*
     Use ART and ART format to reverse lookup the anime search result
@@ -450,14 +450,14 @@ _.findBestMatchForAnimeArray = (query,animes) => {
                 return animes[i];
             }
         }
-        // else if(art_format === 'synonym') {
-        //     for(let n = 0; n < animes[i]['synonyms'].array.length; n++) {
-        //         if(art === animes[i]['synonyms'].array[n]) {
-        //             //found the anime
-        //             return animes[i];
-        //         }
-        //     }
-        // }
+        else if(art_format === 'synonym') {
+            for(let n = 0; n < animes[i]['synonyms'].array.length; n++) {
+                if(art === animes[i]['synonyms'].array[n]) {
+                    //found the anime
+                    return animes[i];
+                }
+            }
+        }
     }
 
 };
