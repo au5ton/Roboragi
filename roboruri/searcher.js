@@ -43,7 +43,9 @@ _.searchAnimes = (query,query_format) => {
         promises.push(new Promise((resolve, reject) => {
             //Queries ANILIST
             //GET: {series_type}/search/{query}
-            ANILIST.get('anime/search/'+querystring.escape(query)).then((results) => {
+            //attempt to make the query url friendly by removing all slashes and encoding
+            //other punctuation
+            ANILIST.get('anime/search/'+encodeURIComponent(query.replace(new RegExp('/', 'g'), ''))).then((results) => {
                 resolve(new Resolved(DataSource.ANILIST, results));
             })
             .catch((err) => {
