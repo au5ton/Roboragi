@@ -258,7 +258,7 @@ class Anime {
             const txtLimit = 180;
 
             //sanitise for telegram (remove <br> tag)
-            firstParagraph = firstParagraph.replace(new RegExp('<br>', 'g'), replacement)
+            firstParagraph = firstParagraph.replace(new RegExp('<br>', 'g'), '');
 
             //shorten
             if (firstParagraph.length > txtLimit) {
