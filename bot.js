@@ -82,7 +82,7 @@ bot.on('text', (context) => {
 
 		//summon handlers
 		bot_util.isValidBraceSummon(message_str).then((query) => {
-			console.time('execution time: ');
+			console.time('execution time');
 			//logger.log('q: ', query);
 			Searcher.matchFromCache(query).then((result) => {
 				//boo yah
@@ -90,7 +90,7 @@ bot.on('text', (context) => {
 					parse_mode: 'html',
 					disable_web_page_preview: true
 				});
-				console.timeEnd('execution time: ');
+				console.timeEnd('execution time');
 			}).catch((err) => {
 				//logger.error('NOTHING IN CACHE, WE GOIN ANYWAYS: ', err)
 				//nothing in cache
@@ -100,7 +100,7 @@ bot.on('text', (context) => {
 						parse_mode: 'html',
 						disable_web_page_preview: true
 					});
-					console.timeEnd('execution time: ');
+					console.timeEnd('execution time');
 				}).catch((err) => {
 					//logger.error('NOTHING IN DATABASE, WE GOIN ON: ', err)
 					//nothing in database
@@ -110,7 +110,7 @@ bot.on('text', (context) => {
 							parse_mode: 'html',
 							disable_web_page_preview: true
 						});
-						console.timeEnd('execution time: ');
+						console.timeEnd('execution time');
 					}).catch((r) => {
 						//well that sucks
 						if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
@@ -119,7 +119,7 @@ bot.on('text', (context) => {
 						else {
 							logger.error('failed to search with Searcher: ', r);
 						}
-						console.timeEnd('execution time: ');
+						console.timeEnd('execution time');
 					});
 				})
 			});
