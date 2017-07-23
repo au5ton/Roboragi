@@ -2,18 +2,18 @@
 
 const _ = {};
 
-_.isValidBraceSummon = (msg) => {
+_.isValidBraceSummon = (message_str) => {
     return new Promise((resolve, reject) => {
         let l_cnt = r_cnt = 0, result = false;
-        for (let i = 0; i < msg.text.length; i++) {
+        for (let i = 0; i < message_str.length; i++) {
             //Correctly tally the braces
-            let next = msg.text.charAt(i);
+            let next = message_str.charAt(i);
             if(next === '{')
             l_cnt++;
             if(next === '}')
             r_cnt++;
         }
-        let attempt = msg.text.match(/\{([^{}]+)\}/);
+        let attempt = message_str.match(/\{([^{}]+)\}/);
         if(attempt !== null && l_cnt == 1 && r_cnt == 1) {
             resolve(attempt[1]);
         }
@@ -23,18 +23,18 @@ _.isValidBraceSummon = (msg) => {
     });
 };
 
-_.isValidBracketSummon = (msg) => {
+_.isValidBracketSummon = (message_str) => {
     return new Promise((resolve, reject) => {
         let l_cnt = r_cnt = 0, result = false;
-        for (let i = 0; i < msg.text.length; i++) {
+        for (let i = 0; i < message_str.length; i++) {
             //Correctly tally the braces
-            let next = msg.text.charAt(i);
+            let next = message_str.charAt(i);
             if(next === '[')
             l_cnt++;
             if(next === ']')
             r_cnt++;
         }
-        let attempt = msg.text.match(/\[([^)]+)\]/);
+        let attempt = message_str.match(/\[([^)]+)\]/);
         if(attempt !== null && l_cnt == 1 && r_cnt == 1) {
     		resolve(attempt[1]);
         }
@@ -44,18 +44,18 @@ _.isValidBracketSummon = (msg) => {
     });
 };
 
-_.isValidLTGTSummon = (msg) => {
+_.isValidLTGTSummon = (message_str) => {
     return new Promise((resolve, reject) => {
         let l_cnt = r_cnt = 0, result = false;
-        for (let i = 0; i < msg.text.length; i++) {
+        for (let i = 0; i < message_str.length; i++) {
             //Correctly tally the braces
-            let next = msg.text.charAt(i);
+            let next = message_str.charAt(i);
             if(next === '<')
             l_cnt++;
             if(next === '>')
             r_cnt++;
         }
-        let attempt = msg.text.match(/\<([^)]+)\>/);
+        let attempt = message_str.match(/\<([^)]+)\>/);
         if(attempt !== null && l_cnt == 1 && r_cnt == 1) {
     		resolve(attempt[1]);
         }
@@ -65,15 +65,15 @@ _.isValidLTGTSummon = (msg) => {
     });
 };
 
-_.isValidPipeSummon = (msg) => {
+_.isValidPipeSummon = (message_str) => {
     return new Promise((resolve, reject) => {
         let cnt = 0, result = false;
-        for (let i = 0; i < msg.text.length; i++) {
+        for (let i = 0; i < message_str.length; i++) {
             //Correctly tally the braces
-            if(msg.text.charAt(i) === '|')
+            if(message_str.charAt(i) === '|')
             cnt++;
         }
-        let attempt = msg.text.match(/\|([^)]+)\|/);
+        let attempt = message_str.match(/\|([^)]+)\|/);
         if(attempt !== null && l_cnt == 2) {
     		resolve(attempt[1]);
         }
