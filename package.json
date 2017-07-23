@@ -1,6 +1,6 @@
 {
   "name": "roboruri",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "telegram bot for myanimelist",
   "main": "index.js",
   "scripts": {
@@ -13,8 +13,8 @@
     "dotenv": "^4.0.0",
     "git-last-commit": "^0.3.0",
     "nani": "^1.2.0",
-    "node-telegram-bot-api": "^0.27.1",
     "popura": "^1.2.5",
-    "string-similarity": "^1.2.0"
+    "string-similarity": "^1.2.0",
+    "telegraf": "^3.9.0"
   }
 }

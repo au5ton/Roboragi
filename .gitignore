@@ -58,7 +58,7 @@ typings/
 .env
 
 # new npm stuff
-package-lock.json
+# package-lock.json
 
 # analytics
 stdout.txt
