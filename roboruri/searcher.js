@@ -8,6 +8,11 @@ const NodeCache = require( "node-cache" );
 const matchingCache = new NodeCache({ //3 hour check period, make that cache last
     checkperiod: 10800
 });
+const path = require('path');
+const sqlite3 = require('sqlite3').verbose();
+let loc = path.dirname(require.main.filename)+'/synonyms.db';
+logger.log(loc);
+var db = new sqlite3.Database(loc, sqlite3.OPEN_READONLY);
 
 // Anime APIs
 const popura = require('popura');
@@ -548,6 +553,16 @@ _.findBestMatchForAnimeArray = (query,animes) => {
 
 _.matchFromDatabase = (query) => {
     return new Promise((resolve, reject) => {
+
+        /*
+        db.serialize(() => {
+            db.each('SELECT * from synonyms', function(err, row) {
+                if(err)throw err;
+                console.log(row);
+            });
+        });
+        */
+
         reject('not yet implemented')
     });
 }
