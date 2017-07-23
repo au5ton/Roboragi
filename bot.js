@@ -82,21 +82,46 @@ bot.on('text', (context) => {
 
 		//summon handlers
 		bot_util.isValidBraceSummon(message_str).then((query) => {
+			console.time('execution time: ');
 			//logger.log('q: ', query);
-			Searcher.searchAnimes(query).then((result) => {
-				//logger.log(result);
+			Searcher.matchFromCache(query).then((result) => {
+				//boo yah
 				context.reply(buildAnimeChatMessage(result), {
 					parse_mode: 'html',
 					disable_web_page_preview: true
 				});
-			}).catch((r) => {
-				//well that sucks
-				if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
-					logger.warn('q: {'+query+'} => '+filled_x)
-				}
-				else {
-					logger.error('failed to search with Searcher: ', r);
-				}
+				console.timeEnd('execution time: ');
+			}).catch((err) => {
+				//logger.error('NOTHING IN CACHE, WE GOIN ANYWAYS: ', err)
+				//nothing in cache
+				Searcher.matchFromDatabase(query).then((result) => {
+					//boo yah
+					context.reply(buildAnimeChatMessage(result), {
+						parse_mode: 'html',
+						disable_web_page_preview: true
+					});
+					console.timeEnd('execution time: ');
+				}).catch((err) => {
+					//logger.error('NOTHING IN DATABASE, WE GOIN ON: ', err)
+					//nothing in database
+					Searcher.searchAnimes(query).then((result) => {
+						//logger.log(result);
+						context.reply(buildAnimeChatMessage(result), {
+							parse_mode: 'html',
+							disable_web_page_preview: true
+						});
+						console.timeEnd('execution time: ');
+					}).catch((r) => {
+						//well that sucks
+						if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
+							logger.warn('q: {'+query+'} => '+filled_x)
+						}
+						else {
+							logger.error('failed to search with Searcher: ', r);
+						}
+						console.timeEnd('execution time: ');
+					});
+				})
 			});
 		}).catch(()=>{});
 		bot_util.isValidBracketSummon(message_str).then((query) => {

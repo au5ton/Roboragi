@@ -4,6 +4,10 @@ const _ = {};
 const logger = require('au5ton-logger');
 const stringSimilarity = require('string-similarity');
 const querystring = require('querystring');
+const NodeCache = require( "node-cache" );
+const matchingCache = new NodeCache({ //3 hour check period, make that cache last
+    checkperiod: 10800
+});
 
 // Anime APIs
 const popura = require('popura');
@@ -367,7 +371,8 @@ _.searchAnimes = (query,query_format) => {
             //logger.error('------------------------------------');
             //logger.nl(2);
 
-            logger.log('q: {'+query+'} => '+very_best_match.flattened.title);
+            logger.log('search: {'+query+'} => '+very_best_match.flattened.title);
+            matchingCache.set(query, very_best_match.flattened);
             //THIS IS WHAT IT ALL BOILS DOWN TO
             resolve(very_best_match.flattened);
 
@@ -540,5 +545,24 @@ _.findBestMatchForAnimeArray = (query,animes) => {
     }
 
 };
+
+_.matchFromDatabase = (query) => {
+    return new Promise((resolve, reject) => {
+        reject('not yet implemented')
+    });
+}
+
+_.matchFromCache = (query) => {
+    return new Promise((resolve, reject) => {
+        let value = matchingCache.get(query);
+        if(value === undefined) {
+            reject('nothing cached for this query');
+        }
+        else {
+            logger.log('cache: {'+query+'} => '+value.title);
+            resolve(value);
+        }
+    });
+}
 
 module.exports = _;
