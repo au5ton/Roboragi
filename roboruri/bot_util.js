@@ -34,7 +34,7 @@ _.isValidBracketSummon = (message_str) => {
             if(next === ']')
             r_cnt++;
         }
-        let attempt = message_str.match(/\[([^)]+)\]/);
+        let attempt = message_str.match(/\]([^)]+)\[/);
         if(attempt !== null && l_cnt == 1 && r_cnt == 1) {
     		resolve(attempt[1]);
         }
