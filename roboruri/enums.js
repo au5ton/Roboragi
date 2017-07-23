@@ -15,11 +15,11 @@ _.DataSource = {
 _.MalMediaTypeMap = {
     'TV': 'TV',
     'Movie': 'Movie',
+    'Special': 'Special',
     'OVA': 'OVA',
     'ONA': 'ONA',
-    'Special': 'Special',
     'Manga': 'Manga',
-    'Novel': 'Novel',
+    'Novel': 'Light Novel',
     'One-shot': 'One-shot',
     'Doujinshi': 'Doujinshi',
     'Manhwa': 'Manhwa',
