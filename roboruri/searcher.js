@@ -9,6 +9,10 @@ const stringSimilarity = require('string-similarity');
 const querystring = require('querystring');
 
 const DataSource = require('./enums').DataSource;
+const MalMediaTypeMap = require('./enums').MalMediaTypeMap;
+const AnilistMediaTypeMap = require('./enums').AnilistMediaTypeMap;
+const MalStatusMap = require('./enums').MalStatusMap;
+const AnilistStatusMap = require('./enums').AnilistStatusMap;
 const Resolved = require('./classes/Resolved');
 const Rejected = require('./classes/Rejected');
 const Anime = require('./classes/Anime');
@@ -99,8 +103,8 @@ _.searchAnimes = (query,query_format) => {
                                 title_english: a_result['english'],
                                 hyperlinks: new Hyperlinks(temp_dict),
                                 score_str: a_result['score'],
-                                media_type: a_result['type'],
-                                status: a_result['status'],
+                                media_type: MalMediaTypeMap[a_result['type']],
+                                status: MalStatusMap[a_result['status']],
                                 episode_count: a_result['episodes'],
                                 synopsis_full: a_result['synopsis'],
                                 start_date: a_result['start_date'],
@@ -122,13 +126,12 @@ _.searchAnimes = (query,query_format) => {
                             let a_result = ResolvedArray[r].data[c];
                             let temp_dict = {};
                             temp_dict[ResolvedArray[r].DataSource] = 'https://anilist.co/anime/'+a_result['id']+'/';
-                            anime_arrays[ResolvedArray[r].DataSource].push(new Anime({
+                            let some_anime = new Anime({
                                 title_romaji: a_result['title_romaji'],
                                 title_english: a_result['title_english'],
                                 hyperlinks: new Hyperlinks(temp_dict),
-                                //score_str: String(parseFloat(a_result['average_score'])/10),
-                                media_type: a_result['type'],
-                                status: a_result['airing_status'],
+                                media_type: AnilistMediaTypeMap[a_result['type']],
+                                status: AnilistStatusMap[a_result['airing_status']],
                                 episode_count: a_result['total_episodes'],
                                 synopsis_full: a_result['description'],
                                 start_date: a_result['start_date'],
@@ -136,7 +139,8 @@ _.searchAnimes = (query,query_format) => {
                                 image: a_result['image_url_lge'],
                                 nsfw: a_result['adult'],
                                 synonyms: new Synonyms(a_result['synonyms'])
-                            }));
+                            });
+                            anime_arrays[ResolvedArray[r].DataSource].push(some_anime);
                         }
                     }
                     else {
@@ -237,6 +241,7 @@ _.searchAnimes = (query,query_format) => {
             */
             let SuperART; //Super Assumed Real Title (format = romaji)
             let topRomaji = [];
+            let romaji_to_media_dict = [];
             let sufficient_results_other = false;
             var very_best_match = new Anime();
             //Gather all romaji titles if available
@@ -244,6 +249,8 @@ _.searchAnimes = (query,query_format) => {
                 if(best_match[r].flattened.title_romaji !== null) {
                     sufficient_results_other = true;
                     topRomaji.push(best_match[r].title_romaji);
+                    //uses the unique romaji titles to make getting the media_type easier from a Dice's Coefficient easier
+                    romaji_to_media_dict[best_match[r].title_romaji] = best_match[r].media_type;
                 }
                 else {
                     //fuck this shit, there's no title
@@ -256,6 +263,7 @@ _.searchAnimes = (query,query_format) => {
             }
             //Assign SuperART
             SuperART = stringSimilarity.findBestMatch(query,topRomaji);
+            SuperARTMediaType = romaji_to_media_dict[SuperART['bestMatch']['target']];
 
             //Reverse search with SuperART to consolidate results
             for(let r in best_match) {
@@ -267,7 +275,10 @@ _.searchAnimes = (query,query_format) => {
                     //until I standardize media_type in the Anime object, I can't do that
                     //TO BE IMPLEMENTED
                     if(SuperART['bestMatch']['target'].toLowerCase().trim() === best_match[r].flattened.title_romaji.toLowerCase().trim()) {
-                        very_best_match = Anime.consolidate(very_best_match,best_match[r]);
+                        //media_type is standardized, so it is safe to confirm that a show and movie aren't being mushed together
+                        if(SuperARTMediaType === best_match[r].flattened.media_type) {
+                            very_best_match = Anime.consolidate(very_best_match,best_match[r]);
+                        }
                     }
                     else {
                         logger.warn('`',best_match[r].flattened.title_romaji,'` was NOT CONSOLIDATED with `', SuperART['bestMatch']['target'],'`')
