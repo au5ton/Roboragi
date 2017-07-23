@@ -134,6 +134,7 @@ _.searchAnimes = (query,query_format) => {
                                 start_date: a_result['start_date'],
                                 end_date: a_result['end_date'],
                                 image: a_result['image_url_lge'],
+                                nsfw: a_result['adult'],
                                 synonyms: new Synonyms(a_result['synonyms'])
                             }));
                         }

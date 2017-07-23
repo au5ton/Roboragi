@@ -34,7 +34,7 @@ const DEV_TELEGRAM_ID = parseInt(process.env.DEV_TELEGRAM_ID) || 0;
 bot.command('/start', (context) => {
 	context.getChat().then((chat) => {
 		if(chat.type === 'private') {
-			context.reply('Welcome!\n\n'+warning_sign+'Roboruri is currently in beta, so PLEASE report any issues you experience!'+warning_sign+'\n\nI reply with links to anime with the following format:\n{anime}\n\nI reply with links to manga with the following format:\n<manga>\n\nI reply with links to light novels with the following format:\n]light novel[\n\nIf roboruri doesn\'t recognize the anime you requested correctly, tell @austinj or leave an issue on github if you\'re socially awkward.\nhttps://github.com/au5ton/Roboruri/issues',{
+			context.reply('Welcome!\n\n'+warning_sign+'Roboruri is currently in beta, so PLEASE report any issues you experience!'+warning_sign+'\n\nI reply with links to anime with the following format:\n{anime}\n\nI reply with links to manga with the following format:\n<manga>\n\nI reply with links to light novels with the following format:\n]light novel[\n\nAny response containing `'+prohibited_symbol+'` is NSFW content.\n\nIf roboruri doesn\'t recognize the anime you requested correctly, tell @austinj or leave an issue on github if you\'re socially awkward.\nhttps://github.com/au5ton/Roboruri/issues',{
 		  	  disable_web_page_preview: true
 		    });
 		}
@@ -150,6 +150,7 @@ bot.on('text', (context) => {
 const star_char = '\u272A';
 const filled_x = '\u274C';
 const warning_sign = '\u26A0';
+const prohibited_symbol = String.fromCodePoint(0x1f232);
 
 function buildHyperlinksForAnime(anime) {
 	let message = '';
@@ -174,6 +175,9 @@ function buildAnimeChatMessage(anime, options) {
 	let message = '';
 	message += '<b>' + anime['title'] + '</b>';
 	message += ' ('+buildHyperlinksForAnime(anime)+')\n';
+	if(anime['nsfw'] === true) {
+		message += prohibited_symbol+' | ';
+	}
 	if(anime['score_str'] !== null) {
 		message += anime['score_str'] + star_char + ' | ';
 	}

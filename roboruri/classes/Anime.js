@@ -176,6 +176,12 @@ class Anime {
         else {
             //this.image = null;
         }
+        if(non_empty(options.nsfw)) {
+            this.nsfw = options.nsfw;
+        }
+        else {
+            //this.nsfw = null;
+        }
 
         //synonyms
         if(non_empty(options.synonyms) && options.synonyms instanceof Synonyms){
@@ -324,6 +330,10 @@ class Anime {
         if(non_def(copy.images)) {
             copy.images = null;
         }
+        //nsfw
+        if(non_def(copy.nsfw)) {
+            copy.nsfw = null;
+        }
 
         //synonyms
         if(non_def(copy.synonyms)) {
@@ -356,10 +366,10 @@ class Anime {
     }
 }
 
-let dict = {};
-dict[DataSource.MAL] = 'http://hello.world'
-let dict2 = {};
-dict2[DataSource.ANILIST] = 'http://foo.bar'
+// let dict = {};
+// dict[DataSource.MAL] = 'http://hello.world'
+// let dict2 = {};
+// dict2[DataSource.ANILIST] = 'http://foo.bar'
 
 //let temp = ;
 //let consol =
