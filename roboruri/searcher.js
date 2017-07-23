@@ -274,14 +274,12 @@ _.searchAnimes = (query,query_format) => {
                     //previously I described matching with media_type in addition, but
                     //until I standardize media_type in the Anime object, I can't do that
                     //TO BE IMPLEMENTED
-                    if(SuperART['bestMatch']['target'].toLowerCase().trim() === best_match[r].flattened.title_romaji.toLowerCase().trim()) {
+                    if(SuperART['bestMatch']['target'].toLowerCase().trim() === best_match[r].flattened.title_romaji.toLowerCase().trim() && SuperARTMediaType === best_match[r].flattened.media_type) {
                         //media_type is standardized, so it is safe to confirm that a show and movie aren't being mushed together
-                        if(SuperARTMediaType === best_match[r].flattened.media_type) {
-                            very_best_match = Anime.consolidate(very_best_match,best_match[r]);
-                        }
+                        very_best_match = Anime.consolidate(very_best_match,best_match[r]);
                     }
                     else {
-                        logger.warn('`',best_match[r].flattened.title_romaji,'` was NOT CONSOLIDATED with `', SuperART['bestMatch']['target'],'`')
+                        logger.warn('`',best_match[r].flattened.title_romaji,'` was NOT CONSOLIDATED with `', SuperART['bestMatch']['target'],'`');
                     }
                 }
                 else {
