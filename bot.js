@@ -5,10 +5,14 @@ logger.setOption('prefix_date',true);
 const util = require('util');
 const fs = require('fs');
 const git = require('git-last-commit');
+const VERSION = require('./package').version;
+
+// Anime APIs
 const popura = require('popura');
 const MAL = popura(process.env.MAL_USER, process.env.MAL_PASSWORD);
 const nani = require('nani').init(process.env.ANILIST_CLIENT_ID, process.env.ANILIST_CLIENT_SECRET);
-const VERSION = require('./package').version;
+const Kitsu = require('kitsu');
+const kitsu = new Kitsu();
 
 // Custom modules
 const bot_util = require('./roboruri/bot_util');
@@ -166,6 +170,9 @@ function buildHyperlinksForAnime(anime) {
 		else if(DataSource[e] === DataSource.ANILIST && exists(anime.hyperlinks.dict[DataSource[e]])) {
 			message += '<a href=\"'+anime.hyperlinks.dict[DataSource[e]]+'\">AL</a>, ';
 		}
+		else if(DataSource[e] === DataSource.KITSU && exists(anime.hyperlinks.dict[DataSource[e]])) {
+			message += '<a href=\"'+anime.hyperlinks.dict[DataSource[e]]+'\">KIT</a>, ';
+		}
 	}
 	return message.substring(0,message.length-2); //remove trailing comma and space
 }
@@ -216,4 +223,15 @@ MAL.verifyAuth().then((r) => {
 }).catch((r) => {
 	logger.error('MAL failed to authenticate: ', r.message);
 	process.exit();
+});
+
+logger.warn('Is out Kitsu authentication valid?');
+kitsu.auth({
+    clientId: process.env.KITSU_CLIENT_ID,
+    clientSecret: process.env.KITSU_CLIENT_SECRET,
+    username: process.env.KITSU_USER,
+    password: process.env.KITSU_PASSWORD
+}).then((access_token) => {
+    if (kitsu.isAuth) logger.success('Kitsu authenticated.');
+    else logger.error('Kitsu failed to authenticate.');
 });

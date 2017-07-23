@@ -1,18 +1,33 @@
 // searcher.js
 
 const _ = {};
-const popura = require('popura');
-const MAL = popura(process.env.MAL_USER, process.env.MAL_PASSWORD);
-const ANILIST = require('nani').init(process.env.ANILIST_CLIENT_ID, process.env.ANILIST_CLIENT_SECRET);
 const logger = require('au5ton-logger');
 const stringSimilarity = require('string-similarity');
 const querystring = require('querystring');
 
+// Anime APIs
+const popura = require('popura');
+const MAL = popura(process.env.MAL_USER, process.env.MAL_PASSWORD);
+const ANILIST = require('nani').init(process.env.ANILIST_CLIENT_ID, process.env.ANILIST_CLIENT_SECRET);
+const Kitsu = require('kitsu');
+const kitsu = new Kitsu();
+kitsu.auth({
+    clientId: process.env.KITSU_CLIENT_ID,
+    clientSecret: process.env.KITSU_CLIENT_SECRET,
+    username: process.env.KITSU_USER,
+    password: process.env.KITSU_PASSWORD
+});
+
+// Custom enums
 const DataSource = require('./enums').DataSource;
 const MalMediaTypeMap = require('./enums').MalMediaTypeMap;
-const AnilistMediaTypeMap = require('./enums').AnilistMediaTypeMap;
 const MalStatusMap = require('./enums').MalStatusMap;
 const AnilistStatusMap = require('./enums').AnilistStatusMap;
+const AnilistMediaTypeMap = require('./enums').AnilistMediaTypeMap;
+const KitsuStatusMap = require('./enums').KitsuStatusMap;
+const KitsuMediaTypeMap = require('./enums').KitsuMediaTypeMap;
+
+// Custom classes
 const Resolved = require('./classes/Resolved');
 const Rejected = require('./classes/Rejected');
 const Anime = require('./classes/Anime');
@@ -57,6 +72,17 @@ _.searchAnimes = (query,query_format) => {
                 reject(new Rejected(DataSource.ANILIST, err));
             });
         }));
+        promises.push(new Promise((resolve, reject) => {
+            //Queries KITSU
+            kitsu.get('anime', {
+                filter: { text: query }
+            }).then((response) => {
+                resolve(new Resolved(DataSource.KITSU, response));
+            }).catch((err) => {
+                logger.ind().log('kitsu error caught');
+                reject(new Rejected(DataSource.KITSU, err));
+            });
+        }));
         Promise.all(promises).then((ResolvedArray) => {
 
             /*
@@ -92,6 +118,7 @@ _.searchAnimes = (query,query_format) => {
             */
             for(let r in ResolvedArray) {
                 if(ResolvedArray[r].DataSource === DataSource.MAL) {
+                    //confirm there were results
                     if(ResolvedArray[r].data[0] !== null) {
                         for(let c in ResolvedArray[r].data) {
                             //ResolvedArray[r].data[c] is the object
@@ -120,6 +147,7 @@ _.searchAnimes = (query,query_format) => {
                     }
                 }
                 else if(ResolvedArray[r].DataSource === DataSource.ANILIST) {
+                    //confirm there were results
                     if(typeof ResolvedArray[r].data['error'] !== 'object') {
                         for(let c in ResolvedArray[r].data) {
                             //ResolvedArray[r].data[c] is the object
@@ -137,7 +165,7 @@ _.searchAnimes = (query,query_format) => {
                                 start_date: a_result['start_date'],
                                 end_date: a_result['end_date'],
                                 image: a_result['image_url_lge'],
-                                nsfw: a_result['adult'],
+                                nsfw: a_result['adult'], //confirmed bool 👍
                                 synonyms: new Synonyms(a_result['synonyms'])
                             });
                             anime_arrays[ResolvedArray[r].DataSource].push(some_anime);
@@ -146,6 +174,50 @@ _.searchAnimes = (query,query_format) => {
                     else {
                         //anilist returned no results or an error
                         logger.warn('anilist returned no results');
+                    }
+                }
+                else if(ResolvedArray[r].DataSource === DataSource.KITSU) {
+                    //confirm there were results (kitsu makes this so easy)
+                    if(ResolvedArray[r].data.meta.count > 0) {
+                        for(let c in ResolvedArray[r].data.data) {
+                            //ResolvedArray[r].data[c] is the object
+                            let a_result = ResolvedArray[r].data.data[c];
+                            let temp_dict = {};
+                            temp_dict[ResolvedArray[r].DataSource] = 'https://kitsu.io/anime/'+a_result['id']+'/';
+                            let score_try = String(Math.round(parseFloat(a_result['averageRating'])*10)/100);
+                            if(score_try === 'NaN') {
+                                score_try = a_result['averageRating'];
+                            }
+                            let synonyms_try = a_result['abbreviatedTitles'];
+                            if(synonyms_try === null) {
+                                synonyms_try = [];
+                            }
+                            if(Array.isArray(synonyms_try) && typeof a_result['canonicalTitle'] === 'string') {
+                                synonyms_try = synonyms_try.concat([a_result['canonicalTitle']]);
+                            }
+
+                            let some_anime = new Anime({
+                                title_romaji: a_result['titles']['en_jp'],
+                                title_english: a_result['titles']['en'],
+                                title_japanese: a_result['titles']['ja_jp'],
+                                hyperlinks: new Hyperlinks(temp_dict),
+                                score_str: score_try, //confirmed format please work ^
+                                media_type: KitsuMediaTypeMap[a_result['showType']],
+                                status: KitsuStatusMap[a_result['status']],
+                                episode_count: a_result['episodeCount'],
+                                synopsis_full: a_result['synopsis'],
+                                start_date: a_result['startDate'],
+                                end_date: a_result['endDate'],
+                                image: a_result['posterImage']['original'],
+                                nsfw: a_result['nsfw'], //confirmed bool 👍
+                                synonyms: new Synonyms(synonyms_try) //maybe this'll be good enough, please work ^
+                            });
+                            anime_arrays[ResolvedArray[r].DataSource].push(some_anime);
+                        }
+                    }
+                    else {
+                        //anilist returned no results or an error
+                        logger.warn('kitsu returned no results');
                     }
                 }
             }

@@ -124,7 +124,12 @@ kitsu.auth({
     kitsu.get('anime', {
         filter: { text: 'naruto' }
     }).then((response) => {
-        logger.log(response);
+        logger.log(response.meta.count);
+    });
+    kitsu.get('anime', {
+        filter: { text: 'jahsdiouahsidasuduyasgduyagsuydgauys' }
+    }).then((response) => {
+        logger.warn(response.meta);
     });
 });
 
