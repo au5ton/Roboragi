@@ -5,10 +5,14 @@ logger.setOption('prefix_date',true);
 const util = require('util');
 const fs = require('fs');
 const git = require('git-last-commit');
+const VERSION = require('./package').version;
+
+// Anime APIs
 const popura = require('popura');
 const MAL = popura(process.env.MAL_USER, process.env.MAL_PASSWORD);
 const nani = require('nani').init(process.env.ANILIST_CLIENT_ID, process.env.ANILIST_CLIENT_SECRET);
-const VERSION = require('./package').version;
+const Kitsu = require('kitsu');
+const kitsu = new Kitsu();
 
 // Custom modules
 const bot_util = require('./roboruri/bot_util');
@@ -32,7 +36,15 @@ const DEV_TELEGRAM_ID = parseInt(process.env.DEV_TELEGRAM_ID) || 0;
 // Basic commands
 
 bot.command('/start', (context) => {
-  context.reply('Welcome!');
+	context.getChat().then((chat) => {
+		if(chat.type === 'private') {
+			context.reply('Welcome!\n\n'+warning_sign+'Roboruri is currently in beta, so PLEASE report any issues you experience!'+warning_sign+'\n\nI reply with links to anime with the following format:\n{anime}\n\nI reply with links to manga with the following format:\n<manga>\n\nI reply with links to light novels with the following format:\n]light novel[\n\nAny response containing `'+prohibited_symbol+'` is NSFW content.\n\nIf roboruri doesn\'t recognize the anime you requested correctly, tell @austinj or leave an issue on github if you\'re socially awkward.\nhttps://github.com/au5ton/Roboruri/issues',{
+		  	  disable_web_page_preview: true
+		    });
+		}
+	}).catch((err) => {
+		//
+	});
 });
 
 bot.command('/ping', (context) => {
@@ -70,21 +82,47 @@ bot.on('text', (context) => {
 
 		//summon handlers
 		bot_util.isValidBraceSummon(message_str).then((query) => {
+			logger.log('Summon: {', query, '}');
+			console.time('execution time');
 			//logger.log('q: ', query);
-			Searcher.searchAnimes(query).then((result) => {
-				//logger.log(result);
+			Searcher.matchFromCache(query).then((result) => {
+				//boo yah
 				context.reply(buildAnimeChatMessage(result), {
 					parse_mode: 'html',
 					disable_web_page_preview: true
 				});
-			}).catch((r) => {
-				//well that sucks
-				if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
-					logger.warn('q: {'+query+'} => '+filled_x)
-				}
-				else {
-					logger.error('failed to search with Searcher: ', r);
-				}
+				console.timeEnd('execution time');
+			}).catch((err) => {
+				logger.warn('cache empty: ', err);
+				//nothing in cache
+				Searcher.matchAnimeFromDatabase(query).then((result) => {
+					//boo yah
+					context.reply(buildAnimeChatMessage(result), {
+						parse_mode: 'html',
+						disable_web_page_preview: true
+					});
+					console.timeEnd('execution time');
+				}).catch((err) => {
+					logger.warn('database empty: ', err);
+					//nothing in database
+					Searcher.searchAnimes(query).then((result) => {
+						//logger.log(result);
+						context.reply(buildAnimeChatMessage(result), {
+							parse_mode: 'html',
+							disable_web_page_preview: true
+						});
+						console.timeEnd('execution time');
+					}).catch((r) => {
+						//well that sucks
+						if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
+							logger.warn('q: {'+query+'} => '+filled_x)
+						}
+						else {
+							logger.error('failed to search with Searcher: ', r);
+						}
+						console.timeEnd('execution time');
+					});
+				})
 			});
 		}).catch(()=>{});
 		bot_util.isValidBracketSummon(message_str).then((query) => {
@@ -141,6 +179,8 @@ bot.on('text', (context) => {
 
 const star_char = '\u272A';
 const filled_x = '\u274C';
+const warning_sign = '\u26A0';
+const prohibited_symbol = String.fromCodePoint(0x1f232);
 
 function buildHyperlinksForAnime(anime) {
 	let message = '';
@@ -156,6 +196,9 @@ function buildHyperlinksForAnime(anime) {
 		else if(DataSource[e] === DataSource.ANILIST && exists(anime.hyperlinks.dict[DataSource[e]])) {
 			message += '<a href=\"'+anime.hyperlinks.dict[DataSource[e]]+'\">AL</a>, ';
 		}
+		else if(DataSource[e] === DataSource.KITSU && exists(anime.hyperlinks.dict[DataSource[e]])) {
+			message += '<a href=\"'+anime.hyperlinks.dict[DataSource[e]]+'\">KIT</a>, ';
+		}
 	}
 	return message.substring(0,message.length-2); //remove trailing comma and space
 }
@@ -165,8 +208,14 @@ function buildAnimeChatMessage(anime, options) {
 	let message = '';
 	message += '<b>' + anime['title'] + '</b>';
 	message += ' ('+buildHyperlinksForAnime(anime)+')\n';
+	if(anime['nsfw'] === true) {
+		message += prohibited_symbol+' | ';
+	}
 	if(anime['score_str'] !== null) {
 		message += anime['score_str'] + star_char + ' | ';
+	}
+	if(anime['rating'] !== null) {
+		message += anime['rating'] + '%' + ' | ';
 	}
 	message += anime['media_type'] + ' | Status: ' + anime['status'] + ' | Episodes: ' + anime['episode_count'];
 	message += '\n' + anime['synopsis'];
@@ -203,4 +252,15 @@ MAL.verifyAuth().then((r) => {
 }).catch((r) => {
 	logger.error('MAL failed to authenticate: ', r.message);
 	process.exit();
+});
+
+logger.warn('Is out Kitsu authentication valid?');
+kitsu.auth({
+    clientId: process.env.KITSU_CLIENT_ID,
+    clientSecret: process.env.KITSU_CLIENT_SECRET,
+    username: process.env.KITSU_USER,
+    password: process.env.KITSU_PASSWORD
+}).then((access_token) => {
+    if (kitsu.isAuth) logger.success('Kitsu authenticated.');
+    else logger.error('Kitsu failed to authenticate.');
 });

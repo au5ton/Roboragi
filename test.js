@@ -4,6 +4,8 @@ const MAL = popura(process.env.MAL_USER, process.env.MAL_PASSWORD);
 const ANILIST = require('nani').init(process.env.ANILIST_CLIENT_ID, process.env.ANILIST_CLIENT_SECRET);
 const logger = require('au5ton-logger');
 const stringSimilarity = require('string-similarity');
+const Kitsu = require('kitsu');
+const kitsu = new Kitsu();
 
 var promises = [];
 
@@ -92,18 +94,58 @@ const non_empty = (val) => {
 //     logger.error(err);
 // });
 
-let show = new Anime({
-    title_english: 'hello'
+// let show = new Anime({
+//     title_english: 'hello'
+// });
+// function buildHyperlinksForAnime(anime) {
+// 	let message = '';
+// 	for(let e in DataSource) {
+// 		logger.log(anime.hyperlinks.dict[DataSource[e]]);
+// 	}
+// 	return message;
+// }
+//
+//
+// logger.log('before flat: ',show)
+// let other = show.flattened
+// logger.log('after flat: ',show);
+
+// kitsu.auth({
+//     clientId: process.env.KITSU_CLIENT_ID,
+//     clientSecret: process.env.KITSU_CLIENT_SECRET,
+//     username: process.env.KITSU_USER,
+//     password: process.env.KITSU_PASSWORD
+// }).then((what) => {
+//     logger.log(what);
+//
+//     if (kitsu.isAuth) console.log('Authenticated')
+//     else console.log('Not authenticated')
+//
+//     kitsu.get('anime', {
+//         filter: { text: 'naruto' }
+//     }).then((response) => {
+//         logger.log(response.meta.count);
+//     });
+//     kitsu.get('anime', {
+//         filter: { text: 'jahsdiouahsidasuduyasgduyagsuydgauys' }
+//     }).then((response) => {
+//         logger.warn(response.meta);
+//     });
+// });
+
+MAL.verifyAuth().then((r) => {
+	logger.success('MAL authenticated. ');
+    MAL.searchAnimes(query).then((results) => {
+        logger.log(results);
+    }).catch((err) => {
+        logger.ind().log('mal error caught');
+        reject(new Rejected(DataSource.MAL, err));
+    });
+}).catch((r) => {
+	logger.error('MAL failed to authenticate: ', r.message);
+	process.exit();
 });
-function buildHyperlinksForAnime(anime) {
-	let message = '';
-	for(let e in DataSource) {
-		logger.log(anime.hyperlinks.dict[DataSource[e]]);
-	}
-	return message;
-}
 
 
-logger.log('before flat: ',show)
-let other = show.flattened
-logger.log('after flat: ',show);
+
+//logger.log('access_token: ', access_token);

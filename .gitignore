@@ -60,7 +60,7 @@ typings/
 # new npm stuff
 # package-lock.json
 
-# analytics
+# roboruri stuff
 stdout.txt
 stderr.txt
-command_history.json
+synonyms.db
