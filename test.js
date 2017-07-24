@@ -110,27 +110,42 @@ const non_empty = (val) => {
 // let other = show.flattened
 // logger.log('after flat: ',show);
 
-kitsu.auth({
-    clientId: process.env.KITSU_CLIENT_ID,
-    clientSecret: process.env.KITSU_CLIENT_SECRET,
-    username: process.env.KITSU_USER,
-    password: process.env.KITSU_PASSWORD
-}).then((what) => {
-    logger.log(what);
+// kitsu.auth({
+//     clientId: process.env.KITSU_CLIENT_ID,
+//     clientSecret: process.env.KITSU_CLIENT_SECRET,
+//     username: process.env.KITSU_USER,
+//     password: process.env.KITSU_PASSWORD
+// }).then((what) => {
+//     logger.log(what);
+//
+//     if (kitsu.isAuth) console.log('Authenticated')
+//     else console.log('Not authenticated')
+//
+//     kitsu.get('anime', {
+//         filter: { text: 'naruto' }
+//     }).then((response) => {
+//         logger.log(response.meta.count);
+//     });
+//     kitsu.get('anime', {
+//         filter: { text: 'jahsdiouahsidasuduyasgduyagsuydgauys' }
+//     }).then((response) => {
+//         logger.warn(response.meta);
+//     });
+// });
 
-    if (kitsu.isAuth) console.log('Authenticated')
-    else console.log('Not authenticated')
-
-    kitsu.get('anime', {
-        filter: { text: 'naruto' }
-    }).then((response) => {
-        logger.log(response.meta.count);
+MAL.verifyAuth().then((r) => {
+	logger.success('MAL authenticated. ');
+    MAL.searchAnimes(query).then((results) => {
+        logger.log(results);
+    }).catch((err) => {
+        logger.ind().log('mal error caught');
+        reject(new Rejected(DataSource.MAL, err));
     });
-    kitsu.get('anime', {
-        filter: { text: 'jahsdiouahsidasuduyasgduyagsuydgauys' }
-    }).then((response) => {
-        logger.warn(response.meta);
-    });
+}).catch((r) => {
+	logger.error('MAL failed to authenticate: ', r.message);
+	process.exit();
 });
+
+
 
 //logger.log('access_token: ', access_token);

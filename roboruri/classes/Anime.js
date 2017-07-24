@@ -182,6 +182,12 @@ class Anime {
         else {
             //this.nsfw = null;
         }
+        if(non_empty(options.rating)) {
+            this.rating = options.rating;
+        }
+        else {
+            //this.rating = null;
+        }
 
         //synonyms
         if(non_empty(options.synonyms) && options.synonyms instanceof Synonyms){
@@ -333,6 +339,10 @@ class Anime {
         //nsfw
         if(non_def(copy.nsfw)) {
             copy.nsfw = null;
+        }
+        //rating
+        if(non_def(copy.rating)) {
+            copy.rating = null;
         }
 
         //synonyms

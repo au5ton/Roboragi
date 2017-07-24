@@ -82,6 +82,7 @@ bot.on('text', (context) => {
 
 		//summon handlers
 		bot_util.isValidBraceSummon(message_str).then((query) => {
+			logger.log('Summon: {', query, '}');
 			console.time('execution time');
 			//logger.log('q: ', query);
 			Searcher.matchFromCache(query).then((result) => {
@@ -92,9 +93,9 @@ bot.on('text', (context) => {
 				});
 				console.timeEnd('execution time');
 			}).catch((err) => {
-				//logger.error('NOTHING IN CACHE, WE GOIN ANYWAYS: ', err)
+				logger.warn('cache empty: ', err);
 				//nothing in cache
-				Searcher.matchFromDatabase(query).then((result) => {
+				Searcher.matchAnimeFromDatabase(query).then((result) => {
 					//boo yah
 					context.reply(buildAnimeChatMessage(result), {
 						parse_mode: 'html',
@@ -102,7 +103,7 @@ bot.on('text', (context) => {
 					});
 					console.timeEnd('execution time');
 				}).catch((err) => {
-					//logger.error('NOTHING IN DATABASE, WE GOIN ON: ', err)
+					logger.warn('database empty: ', err);
 					//nothing in database
 					Searcher.searchAnimes(query).then((result) => {
 						//logger.log(result);
@@ -212,6 +213,9 @@ function buildAnimeChatMessage(anime, options) {
 	}
 	if(anime['score_str'] !== null) {
 		message += anime['score_str'] + star_char + ' | ';
+	}
+	if(anime['rating'] !== null) {
+		message += anime['rating'] + '%' + ' | ';
 	}
 	message += anime['media_type'] + ' | Status: ' + anime['status'] + ' | Episodes: ' + anime['episode_count'];
 	message += '\n' + anime['synopsis'];
