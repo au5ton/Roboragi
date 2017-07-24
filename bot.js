@@ -179,7 +179,7 @@ bot.on('text', (context) => {
 
 const star_char = '\u272A';
 const filled_x = '\u274C';
-const warning_sign = '\u26A0';
+const warning_sign = '⚠️'; //please work
 const prohibited_symbol = String.fromCodePoint(0x1f232);
 
 function buildHyperlinksForAnime(anime) {
