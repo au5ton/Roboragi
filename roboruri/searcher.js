@@ -348,7 +348,8 @@ _.searchAnimes = (query, query_format) => {
 						//media_type is standardized, so it is safe to confirm that a show and movie aren't being mushed together
 						very_best_match = Anime.consolidate(very_best_match, best_match[r]);
 					} else {
-						logger.warn('`', best_match[r].flattened.title_romaji, '` was NOT CONSOLIDATED with `', SuperART['bestMatch']['target'], '`');
+						logger.warn('`', best_match[r].flattened.title_romaji, '` ('+r+') was NOT CONSOLIDATED with `', SuperART['bestMatch']['target'], '`');
+                        logger.warn('why? title match: ',SuperART['bestMatch']['target'].toLowerCase().trim() === best_match[r].flattened.title_romaji.toLowerCase().trim(), ', media_type match: ',SuperARTMediaType === best_match[r].flattened.media_type);
 					}
 				} else {
 					//this is confirmed by the previous loop not to happen
