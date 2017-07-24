@@ -12,7 +12,7 @@ Roboruri is currently operating in beta. Expect problems and PLEASE FOR THE LOVE
 ## Running an instance
 Roboruri is written in Node.js. Node.js **version 6 and above is required** because ES6 features, however this project is debugged using Node v8.x, so keep that in mind if any problems reveal themselves. To get started:
 - `git clone https://github.com/au5ton/Roboruri.git`
-- `cd Roboragi`
+- `cd Roboruri`
 - `npm install`
 - `cp .env.example .env`
 - `nano .env` (edit the config file somehow)
