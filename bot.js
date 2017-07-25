@@ -6,6 +6,7 @@ const util = require('util');
 const fs = require('fs');
 const git = require('git-last-commit');
 const VERSION = require('./package').version;
+var BOT_USERNAME;
 
 // Anime APIs
 const popura = require('popura');
@@ -35,7 +36,7 @@ const DEV_TELEGRAM_ID = parseInt(process.env.DEV_TELEGRAM_ID) || 0;
 
 // Basic commands
 
-bot.command('/start', (context) => {
+bot.hears(new RegExp('\/start|\/start@' + BOT_USERNAME), (context) => {
 	context.getChat().then((chat) => {
 		if(chat.type === 'private') {
 			context.reply('Welcome!\n\n'+warning_sign+'Roboruri is currently in beta, so PLEASE report any issues you experience!'+warning_sign+'\n\nI reply with links to anime with the following format:\n{anime}\n\nI reply with links to manga with the following format:\n<manga>\n\nI reply with links to light novels with the following format:\n]light novel[\n\nAny response containing `'+prohibited_symbol+'` is NSFW content.\n\nIf roboruri doesn\'t recognize the anime you requested correctly, tell @austinj or leave an issue on github if you\'re socially awkward.\nhttps://github.com/au5ton/Roboruri/issues',{
@@ -47,11 +48,11 @@ bot.command('/start', (context) => {
 	});
 });
 
-bot.command('/ping', (context) => {
+bot.hears(new RegExp('\/ping|\/ping@' + BOT_USERNAME), (context) => {
 	context.reply('pong');
 });
 
-bot.command('/version', (context) => {
+bot.hears(new RegExp('\/version|\/version@' + BOT_USERNAME), (context) => {
 	git.getLastCommit(function(err, commit) {
 		// read commit object properties
 		context.reply('version '+VERSION+', commit '+commit['shortHash']+', last updated on '+new Date(parseInt(commit['authoredOn'])*1000).toDateString()+'\n\nhttps://github.com/au5ton/Roboruri/tree/'+commit['hash'],{
@@ -60,7 +61,7 @@ bot.command('/version', (context) => {
 	});
 });
 
-bot.command('/commit', (context) => {
+bot.hears(new RegExp('\/commit|\/commit@' + BOT_USERNAME), (context) => {
 	git.getLastCommit(function(err, commit) {
 		// read commit object properties
 		context.reply('https://github.com/au5ton/Roboruri/tree/'+commit['hash'],{
@@ -240,6 +241,7 @@ logger.warn('Is our Telegram token valid?');
 bot.telegram.getMe().then((r) => {
 	//doesn't matter who we are, we're good
 	logger.success('Telegram token valid for @',r.username);
+	BOT_USERNAME = r.username;
 	bot.startPolling();
 }).catch((r) => {
 	logger.error('Telegram bot failed to start polling:\n',r);
