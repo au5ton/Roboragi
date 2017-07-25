@@ -55,7 +55,7 @@ bot.hears(new RegExp('\/ping|\/ping@' + BOT_USERNAME), (context) => {
 bot.hears(new RegExp('\/version|\/version@' + BOT_USERNAME), (context) => {
 	git.getLastCommit(function(err, commit) {
 		// read commit object properties
-		context.reply('version '+VERSION+', commit '+commit['shortHash']+', last updated on '+new Date(parseInt(commit['authoredOn'])*1000).toDateString()+'\n\nhttps://github.com/au5ton/Roboruri/tree/'+commit['hash'],{
+		context.reply('version '+VERSION+', commit '+commit['shortHash']+', last updated on '+new Date(parseInt(commit['authoredOn'])*1000).toDateString(),{
 			disable_web_page_preview: true
 		});
 	});
@@ -76,7 +76,11 @@ bot.hears(/thanks roboruri|good bot/gi, (context) => {
 		'I\'ll try my best',
 		'I don\'t know anyone by that name.',
 		'( ´ ∀ `)',
-		'Arigatō'
+		'( ＾ワ＾)',
+		'(* ◡‿◡)',
+		'(￢_￢;)',
+		'Arigatō',
+		'I aim to please.'
 	];
 	context.reply(catchphrases[Math.floor(Math.random() * catchphrases.length)]);
 });
