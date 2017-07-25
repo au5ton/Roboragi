@@ -71,10 +71,21 @@ bot.hears(new RegExp('\/commit|\/commit@' + BOT_USERNAME), (context) => {
 })
 
 // Listen for regex
-
 bot.hears(/thanks roboruri|good bot/gi, (context) => {
-	let catchphrases = ['I\'ll try my best', 'I don\'t know anyone by that name.', '( ´ ∀ `)'];
+	let catchphrases = [
+		'I\'ll try my best',
+		'I don\'t know anyone by that name.',
+		'( ´ ∀ `)',
+		'Arigatō'
+	];
 	context.reply(catchphrases[Math.floor(Math.random() * catchphrases.length)]);
+});
+
+bot.hears(/anime_irl/gi, (context) => {
+	//1 in 100 chance
+	if(Math.floor(Math.random()*100) < 1) {
+		context.reply('me too thanks');
+	}
 });
 
 bot.on('text', (context) => {
