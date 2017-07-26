@@ -39,9 +39,12 @@ const DEV_TELEGRAM_ID = parseInt(process.env.DEV_TELEGRAM_ID) || 0;
 bot.hears(new RegExp('\/start|\/start@' + BOT_USERNAME), (context) => {
 	context.getChat().then((chat) => {
 		if(chat.type === 'private') {
-			context.reply('Welcome!\n\n'+warning_sign+'Roboruri is currently in beta, so PLEASE report any issues you experience!'+warning_sign+'\n\nI reply with links to anime with the following format:\n{anime}\n\nI reply with links to manga with the following format:\n<manga>\n\nI reply with links to light novels with the following format:\n]light novel[\n\nAny response containing `'+prohibited_symbol+'` is NSFW content.\n\nIf roboruri doesn\'t recognize the anime you requested correctly, tell @austinj or leave an issue on github if you\'re socially awkward.\nhttps://github.com/au5ton/Roboruri/issues',{
+			context.reply('Welcome!\n\n'+warning_sign+'Roboruri is currently in beta, so PLEASE report any issues you experience!'+warning_sign+'\n\nI reply with links to anime with the following format:\n{Toradora!}\n\nI reply with links to manga with the following format:\n<Game Over>\n\nI reply with links to light novels with the following format:\n]Re:Zero[\n\n(Coming soon) I reply with links to Western television with the following format:\n|Game of Thrones|\n\n(Coming soon) I reply with links to Western movies with the following format:\n>Spiderman<\n\nAny response containing `'+prohibited_symbol+'` is NSFW content.\n\nIf roboruri doesn\'t recognize the anime you requested correctly, tell @austinj or leave an issue on github if you\'re socially awkward.\nhttps://github.com/au5ton/Roboruri/issues',{
 		  	  disable_web_page_preview: true
 		    });
+		}
+		else if (chat.type === 'group' || chat.type === 'supergroup'){
+			context.reply('Message me directly for instructions.');
 		}
 	}).catch((err) => {
 		//
@@ -156,7 +159,7 @@ bot.on('text', (context) => {
 			}).catch((err) => {
 				logger.warn('cache empty: ', err);
 				//nothing in cache
-				Searcher.matchMangaFromDatabase(query).then((result) => {
+				Searcher.matchMangaFromDatabase(query, 'Manga').then((result) => {
 					//boo yah
 					context.reply(buildMangaChatMessage(result), {
 						parse_mode: 'html',
@@ -185,37 +188,53 @@ bot.on('text', (context) => {
 					// });
 				})
 			});
-
-			// MAL.searchMangas(attempt[1]).then((mangas) => {
-			// 	if (mangas[0] !== null) {
-			// 		context.reply(buildMangaChatMessage(mangas[0]), {
-			// 			parse_mode: 'html',
-			// 			disable_web_page_preview: true
-			// 		});
-			// 	}
-			// }).catch((r) => {
-			// 	//well that sucks
-			// 	logger.error('failed to search mal: ', r);
-			// });
+		}).catch(()=>{});
+		bot_util.isValidReverseBracketSummon(message_str).then((query) => {
+			logger.log('Summon: ]', query, '[');
+			console.time('execution time');
+			//logger.log('q: ', query);
+			Searcher.matchFromCache(']'+query+'[').then((result) => {
+				//boo yah
+				context.reply(buildMangaChatMessage(result), {
+					parse_mode: 'html',
+					disable_web_page_preview: true
+				});
+				console.timeEnd('execution time');
+			}).catch((err) => {
+				logger.warn('cache empty: ', err);
+				//nothing in cache
+				Searcher.matchMangaFromDatabase(query, 'LN').then((result) => {
+					//boo yah
+					context.reply(buildMangaChatMessage(result), {
+						parse_mode: 'html',
+						disable_web_page_preview: true
+					});
+					console.timeEnd('execution time');
+				}).catch((err) => {
+					logger.warn('database empty: ', err);
+					//nothing in database
+					// Searcher.searchManga(query).then((result) => {
+					// 	//logger.log(result);
+					// 	context.reply(buildMangaChatMessage(result), {
+					// 		parse_mode: 'html',
+					// 		disable_web_page_preview: true
+					// 	});
+					// 	console.timeEnd('execution time');
+					// }).catch((r) => {
+					// 	//well that sucks
+					// 	if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
+					// 		logger.warn('q: <'+query+'> => '+filled_x)
+					// 	}
+					// 	else {
+					// 		logger.error('failed to search with Searcher: ', r);
+					// 	}
+					// 	console.timeEnd('execution time');
+					// });
+				})
+			});
 		}).catch(()=>{});
 		bot_util.isValidBracketSummon(message_str).then((query) => {
-			MAL.searchAnimes(query).then((animes) => {
-				logger.log(animes);
-				if (animes[0] !== null) {
-					for (let i = 0; i < animes.length; i++) {
-						if (animes[i]['type'] === 'OVA' || animes[i]['type'] === 'Movie') {
-							context.reply(buildAnimeChatMessage(animes[i]), {
-								parse_mode: 'html',
-								disable_web_page_preview: true
-							});
-							break;
-						}
-					}
-				}
-			}).catch((r) => {
-				//well that sucks
-				logger.error('failed to search mal: ', r);
-			});
+			context.reply('TheTVDb support coming soon!');
 		}).catch(()=>{});
 		bot_util.isValidPipeSummon(message_str).then((query) => {
 			MAL.searchAnimes(query).then((animes) => {

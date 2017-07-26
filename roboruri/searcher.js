@@ -736,6 +736,9 @@ _.matchAnimeFromDatabase = (query) => {
 };
 
 _.matchMangaFromDatabase = (query, MangaOrLN) => {
+	if(MangaOrLN !== 'Manga' && MangaOrLN !== 'LN') {
+		throw 'supply MangaOrLN, no ifs ands or buts! supplied: '+MangaOrLN;
+	}
 	return new Promise((resolve, reject) => {
 		db.serialize(() => {
             let found_in_db = false;
