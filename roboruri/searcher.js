@@ -735,11 +735,11 @@ _.matchAnimeFromDatabase = (query) => {
 	});
 };
 
-_.matchMangaFromDatabase = (query) => {
+_.matchMangaFromDatabase = (query, MangaOrLN) => {
 	return new Promise((resolve, reject) => {
 		db.serialize(() => {
             let found_in_db = false;
-			db.each('SELECT name, dbLinks from synonyms WHERE type = \'Manga\' OR type = \'LN\'', (err, row) => {
+			db.each('SELECT name, dbLinks from synonyms WHERE type = \''+MangaOrLN+'\'', (err, row) => {
                 //callback for each row
                 if (err) throw err;
 				if (query.toLowerCase() === row.name.toLowerCase()) {
@@ -811,7 +811,7 @@ _.matchMangaFromDatabase = (query) => {
 										//ResolvedArray[r].data[c] is the object
                                         let a_result = ResolvedArray[r].data[c];
                                         if(String(a_result['id']) === String(dbLinks['mal'][1])) {
-                                            logger.log('found a MAL result with the intended id');
+                                            //logger.log('found a MAL result with the intended id');
                                             let temp_dict = {};
     										temp_dict[ResolvedArray[r].DataSource] = 'https://myanimelist.net/manga/' + a_result['id'];
 											if(dbLinks['mu'] !== undefined || dbLinks['mu'] !== '') {
@@ -820,7 +820,7 @@ _.matchMangaFromDatabase = (query) => {
 											if(dbLinks['ap'] !== undefined || dbLinks['ap'] !== '') {
 												temp_dict[DataSource.ANIMEPLANET] = 'https://www.anime-planet.com/manga/' + dbLinks['ap'];
 											}
-											logger.log(ResolvedArray[r].DataSource,' ',a_result['volumes'],' | ',a_result['chapters']);
+											//logger.log(ResolvedArray[r].DataSource,' ',a_result['volumes'],' | ',a_result['chapters']);
                                             the_manga = Anime.consolidate(new Anime({
     											title_romaji: a_result['title'],
     											title_english: a_result['english'],
@@ -847,7 +847,7 @@ _.matchMangaFromDatabase = (query) => {
 								//confirm there were results
 								if (typeof ResolvedArray[r].data['error'] !== 'object') {
 									let a_result = ResolvedArray[r].data;
-									logger.log(ResolvedArray[r].DataSource,' ',a_result['volumes'],' | ',a_result['chapters']);
+									//logger.log(ResolvedArray[r].DataSource,' ',a_result['volumes'],' | ',a_result['chapters']);
 									let temp_dict = {};
 									temp_dict[ResolvedArray[r].DataSource] = 'https://anilist.co/anime/' + a_result['id'] + '/';
 									if(dbLinks['mu'] !== undefined || dbLinks['mu'] !== '') {
@@ -928,8 +928,14 @@ _.matchMangaFromDatabase = (query) => {
 						}
 
                         //the_anime is the correct anime, no sorting matching bullshit left to do :D
-                        logger.log('database: <' + query + '> => ' + the_manga.flattened.title);
-						matchingCache.set('<'+query+'>', the_manga.flattened);
+                        if(MangaOrLN === 'Manga') {
+							logger.log('database: <' + query + '> => ' + the_manga.flattened.title);
+							matchingCache.set('<'+query+'>', the_manga.flattened);
+						}
+						else if(MangaOrLN === 'LN') {
+							logger.log('database: ]' + query + '[ => ' + the_manga.flattened.title);
+							matchingCache.set(']'+query+'[', the_manga.flattened);
+						}
 						//THIS IS WHAT IT ALL BOILS DOWN TO
 						resolve(the_manga.flattened);
 					}).catch((Rejected) => {
