@@ -110,49 +110,55 @@ const non_empty = (val) => {
 // let other = show.flattened
 // logger.log('after flat: ',show);
 
-// kitsu.auth({
-//     clientId: process.env.KITSU_CLIENT_ID,
-//     clientSecret: process.env.KITSU_CLIENT_SECRET,
-//     username: process.env.KITSU_USER,
-//     password: process.env.KITSU_PASSWORD
-// }).then((what) => {
-//     logger.log(what);
-//
-//     if (kitsu.isAuth) console.log('Authenticated')
-//     else console.log('Not authenticated')
-//
-//     kitsu.get('anime', {
-//         filter: { text: 'naruto' }
-//     }).then((response) => {
-//         logger.log(response.meta.count);
-//     });
-//     kitsu.get('anime', {
-//         filter: { text: 'jahsdiouahsidasuduyasgduyagsuydgauys' }
-//     }).then((response) => {
-//         logger.warn(response.meta);
-//     });
-// });
+kitsu.auth({
+    clientId: process.env.KITSU_CLIENT_ID,
+    clientSecret: process.env.KITSU_CLIENT_SECRET,
+    username: process.env.KITSU_USER,
+    password: process.env.KITSU_PASSWORD
+}).then((what) => {
+    //logger.log(what);
 
-MAL.verifyAuth().then((r) => {
-	logger.success('MAL authenticated. ');
-    logger.warn('try: ',process.argv[2])
-    MAL.searchMangas(process.argv[2]).then((results) => {
-        for(let i in results) {
-            if(String(results[i]['id']) === '67979') {
-                logger.succes(results[i]['id'], ' | ', results[i]['title']);
-            }
-            else {
-                logger.log(results[i]['id'], ' | ', results[i]['title']);
-            }
+    if (kitsu.isAuth) console.log('Authenticated')
+    else console.log('Not authenticated')
+
+    kitsu.get('manga', {
+        filter: {
+            text: 'eromanga',
+            subtype: 'novel'
         }
-    }).catch((err) => {
-        logger.error('mal error caught: ', err);
-        process.exit();
+    }).then((response) => {
+        logger.log(response.meta.count);
+        for(let i in response.data) {
+            logger.log(response.data[i]);
+        }
     });
-}).catch((r) => {
-	logger.error('MAL failed to authenticate: ', r.message);
-	process.exit();
+    // kitsu.get('anime', {
+    //     filter: { text: 'jahsdiouahsidasuduyasgduyagsuydgauys' }
+    // }).then((response) => {
+    //     logger.warn(response.meta);
+    // });
 });
+
+// MAL.verifyAuth().then((r) => {
+// 	logger.success('MAL authenticated. ');
+//     logger.warn('try: ',process.argv[2])
+//     MAL.searchMangas(process.argv[2]).then((results) => {
+//         for(let i in results) {
+//             if(String(results[i]['id']) === '67979') {
+//                 logger.succes(results[i]['id'], ' | ', results[i]['title']);
+//             }
+//             else {
+//                 logger.log(results[i]['id'], ' | ', results[i]['title']);
+//             }
+//         }
+//     }).catch((err) => {
+//         logger.error('mal error caught: ', err);
+//         process.exit();
+//     });
+// }).catch((r) => {
+// 	logger.error('MAL failed to authenticate: ', r.message);
+// 	process.exit();
+// });
 
 
 

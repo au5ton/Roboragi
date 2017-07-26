@@ -169,23 +169,23 @@ bot.on('text', (context) => {
 				}).catch((err) => {
 					logger.warn('database empty: ', err);
 					//nothing in database
-					// Searcher.searchManga(query).then((result) => {
-					// 	//logger.log(result);
-					// 	context.reply(buildMangaChatMessage(result), {
-					// 		parse_mode: 'html',
-					// 		disable_web_page_preview: true
-					// 	});
-					// 	console.timeEnd('execution time');
-					// }).catch((r) => {
-					// 	//well that sucks
-					// 	if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
-					// 		logger.warn('q: <'+query+'> => '+filled_x)
-					// 	}
-					// 	else {
-					// 		logger.error('failed to search with Searcher: ', r);
-					// 	}
-					// 	console.timeEnd('execution time');
-					// });
+					Searcher.searchManga(query, 'Manga').then((result) => {
+						//logger.log(result);
+						context.reply(buildMangaChatMessage(result), {
+							parse_mode: 'html',
+							disable_web_page_preview: true
+						});
+						console.timeEnd('execution time');
+					}).catch((r) => {
+						//well that sucks
+						if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
+							logger.warn('q: <'+query+'> => '+filled_x)
+						}
+						else {
+							logger.error('failed to search with Searcher: ', r);
+						}
+						console.timeEnd('execution time');
+					});
 				})
 			});
 		}).catch(()=>{});
@@ -213,23 +213,23 @@ bot.on('text', (context) => {
 				}).catch((err) => {
 					logger.warn('database empty: ', err);
 					//nothing in database
-					// Searcher.searchManga(query).then((result) => {
-					// 	//logger.log(result);
-					// 	context.reply(buildMangaChatMessage(result), {
-					// 		parse_mode: 'html',
-					// 		disable_web_page_preview: true
-					// 	});
-					// 	console.timeEnd('execution time');
-					// }).catch((r) => {
-					// 	//well that sucks
-					// 	if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
-					// 		logger.warn('q: <'+query+'> => '+filled_x)
-					// 	}
-					// 	else {
-					// 		logger.error('failed to search with Searcher: ', r);
-					// 	}
-					// 	console.timeEnd('execution time');
-					// });
+					Searcher.searchManga(query, 'LN').then((result) => {
+						//logger.log(result);
+						context.reply(buildMangaChatMessage(result), {
+							parse_mode: 'html',
+							disable_web_page_preview: true
+						});
+						console.timeEnd('execution time');
+					}).catch((r) => {
+						//well that sucks
+						if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
+							logger.warn('q: ]'+query+'[ => '+filled_x)
+						}
+						else {
+							logger.error('failed to search with Searcher: ', r);
+						}
+						console.timeEnd('execution time');
+					});
 				})
 			});
 		}).catch(()=>{});

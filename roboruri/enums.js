@@ -53,6 +53,7 @@ _.KitsuMediaTypeMap = {
     'music': 'Music',
     'doujin': 'Doujinshi',
     'manga': 'Manga',
+    'novel': 'Light Novel',
     'manhua': 'Manhua',
     'manhwa': 'Manhwa',
     'oel': 'OEL',
