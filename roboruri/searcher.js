@@ -89,7 +89,7 @@ _.searchAnimes = (query, query_format) => {
 				resolve(new Resolved(DataSource.KITSU, response));
 			}).catch((err) => {
 				logger.ind().log('kitsu error caught');
-				reject(new Rejected(DataSource.KITSU, err));
+				reject(new Rejected(DataSource.KITSU, err)); //something needs to be done around here
 			});
 		}));
 		Promise.all(promises).then((ResolvedArray) => {
