@@ -135,11 +135,19 @@ const non_empty = (val) => {
 
 MAL.verifyAuth().then((r) => {
 	logger.success('MAL authenticated. ');
-    MAL.searchAnimes(query).then((results) => {
-        logger.log(results);
+    logger.warn('try: ',process.argv[2])
+    MAL.searchMangas(process.argv[2]).then((results) => {
+        for(let i in results) {
+            if(String(results[i]['id']) === '67979') {
+                logger.succes(results[i]['id'], ' | ', results[i]['title']);
+            }
+            else {
+                logger.log(results[i]['id'], ' | ', results[i]['title']);
+            }
+        }
     }).catch((err) => {
-        logger.ind().log('mal error caught');
-        reject(new Rejected(DataSource.MAL, err));
+        logger.error('mal error caught: ', err);
+        process.exit();
     });
 }).catch((r) => {
 	logger.error('MAL failed to authenticate: ', r.message);

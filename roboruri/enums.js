@@ -11,7 +11,9 @@ _.SummonType = {
 _.DataSource = {
     'MAL':'DataSource.MYANIMELIST',
     'ANILIST':'DataSource.ANILIST',
-    'KITSU':'DataSource.KITSU'
+    'KITSU':'DataSource.KITSU',
+    'MANGAUPDATES':'DataSource.MANGAUPDATES',
+    'ANIMEPLANET':'DataSource.ANIMEPLANET',
 };
 _.MalMediaTypeMap = {
     'TV': 'TV',
@@ -48,8 +50,35 @@ _.KitsuMediaTypeMap = {
     'special': 'Special',
     'OVA': 'OVA',
     'ONA': 'ONA',
-    'music': 'Music'
+    'music': 'Music',
+    'doujin': 'Doujinshi',
+    'manga': 'Manga',
+    'manhua': 'Manhua',
+    'manhwa': 'Manhwa',
+    'oel': 'OEL',
+    'oneshot': 'One-shot'
 }
+/*
+'TV',
+'Movie',
+'Special',
+'OVA',
+'ONA',
+'Music',
+'Doujinshi',
+'Manga',
+'Manhua',
+'Manhwa',
+'OEL',
+'One-shot'
+'Light Novel'
+
+current
+finished
+tba
+unreleased
+upcoming
+*/
 
 _.MalStatusMap = {
     'Not yet aired': 'Not yet aired',
@@ -70,9 +99,9 @@ _.AnilistStatusMap = {
 _.KitsuStatusMap = {
     'finished': 'Finished Airing',
     'current': 'Currently Airing',
-    'unreleased': 'Not yet aired', //We're definitely losing a lot of detail here, but for uniformity this is better for now
-    'upcoming': 'Not yet aired',
-    'tba': 'Not yet aired'
+    'unreleased': 'Unreleased', //this isn't uniform, but fuck it. anilist isn't uniform and
+    'upcoming': 'Upcoming', //we have Anime and Manga being forced into the same object for shits and giggles
+    'tba': 'TBA'
 }
 
 module.exports = _;

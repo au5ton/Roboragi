@@ -368,7 +368,7 @@ _.searchAnimes = (query, query_format) => {
 			//logger.nl(2);
 
 			logger.log('search: {' + query + '} => ' + very_best_match.flattened.title);
-			matchingCache.set(query, very_best_match.flattened);
+			matchingCache.set('{'+query+'}', very_best_match.flattened);
 			//THIS IS WHAT IT ALL BOILS DOWN TO
 			resolve(very_best_match.flattened);
 
@@ -380,7 +380,7 @@ _.searchAnimes = (query, query_format) => {
 };
 
 // Receives: query string, array of Anime instances
-// Returns: Anime instance
+// Returns: Anime instance (or more specifically: objects with at least 1 of the 3 titles)
 _.findBestMatchForAnimeArray = (query, animes) => {
 
 	/*
@@ -620,7 +620,7 @@ _.matchAnimeFromDatabase = (query) => {
 									for (let c in ResolvedArray[r].data) {
 										//ResolvedArray[r].data[c] is the object
                                         let a_result = ResolvedArray[r].data[c];
-                                        if(a_result['id'] === dbLinks['mal'][1]) {
+                                        if(String(a_result['id']) === String(dbLinks['mal'][1])) {
                                             //logger.log('found a MAL result with the intended id');
                                             let temp_dict = {};
     										temp_dict[ResolvedArray[r].DataSource] = 'https://myanimelist.net/anime/' + a_result['id'];
@@ -658,8 +658,8 @@ _.matchAnimeFromDatabase = (query) => {
 										status: AnilistStatusMap[a_result['airing_status']],
 										episode_count: a_result['total_episodes'],
 										synopsis_full: a_result['description'],
-										start_date: a_result['start_date'],
-										end_date: a_result['end_date'],
+										start_date: a_result['start_date_fuzzy'],
+										end_date: a_result['end_date_fuzzy'],
 										image: a_result['image_url_lge'],
 										nsfw: a_result['adult'], //confirmed bool 👍
 										synonyms: new Synonyms(a_result['synonyms'])
@@ -718,7 +718,216 @@ _.matchAnimeFromDatabase = (query) => {
 						resolve(the_anime.flattened);
 					}).catch((Rejected) => {
 						//err occured
-                        logger.err('what the hell, why is this? :\n', Rejected); //???
+                        logger.error('what the hell, why is this? :\n', Rejected); //???
+						reject(Rejected)
+					});
+				}
+
+			}, (err, numOfRows) => {
+                //complete call back, when database query completes
+                if(err) throw err;
+                if(!found_in_db) {
+                    reject('couldn\'t find that name in the database');
+                }
+            });
+		});
+
+	});
+};
+
+_.matchMangaFromDatabase = (query) => {
+	return new Promise((resolve, reject) => {
+		db.serialize(() => {
+            let found_in_db = false;
+			db.each('SELECT name, dbLinks from synonyms WHERE type = \'Manga\'', (err, row) => {
+                //callback for each row
+                if (err) throw err;
+				if (query.toLowerCase() === row.name.toLowerCase()) {
+                    found_in_db = true;
+					//grab info about the anime
+					let dbLinks = JSON.parse(row.dbLinks);
+					var promises = [];
+                    //logger.log(dbLinks);
+
+					/*
+					Start an asynchonous snatching of all info from multiple anime services
+					*/
+					if(dbLinks['mal'] !== undefined && dbLinks['mal'][0] !== '') {
+                        promises.push(new Promise((resolve, reject) => {
+    						//Queries MAL, 0th index is the title, 1st index is the id
+    						MAL.searchMangas(dbLinks['mal'][0].replace(/[^\x00-\x7F]/g, '')).then((results) => {
+    							resolve(new Resolved(DataSource.MAL, results));
+    						}).catch((err) => {
+    							logger.ind().log('mal error caught');
+    							reject(new Rejected(DataSource.MAL, err));
+    						});
+    					}));
+                    }
+					if(dbLinks['ani'] !== undefined && dbLinks['ani'] !== '') {
+                        promises.push(new Promise((resolve, reject) => {
+    						//Queries ANILIST
+    						//GET: anime/{id}
+    						ANILIST.get('manga/' + dbLinks['ani']).then((results) => {
+    							resolve(new Resolved(DataSource.ANILIST, results));
+    						}).catch((err) => {
+    							logger.ind().log('anilist error caught');
+    							reject(new Rejected(DataSource.ANILIST, err));
+    						});
+    					}));
+                    }
+					if(dbLinks['hb'] !== undefined && dbLinks['hb'] !== '') {
+                        promises.push(new Promise((resolve, reject) => {
+    						//Queries KITSU
+    						kitsu.get('manga', {
+    							filter: {
+    								slug: dbLinks['hb']
+    							}
+    						}).then((response) => {
+								logger.log(response);
+    							resolve(new Resolved(DataSource.KITSU, response));
+    						}).catch((err) => {
+    							logger.ind().log('kitsu error caught');
+    							reject(new Rejected(DataSource.KITSU, err));
+    						});
+    					}));
+                    }
+					Promise.all(promises).then((ResolvedArray) => {
+                        //we got a bunch of search results
+						//not *technically* an Anime but all the code we wrote uses Anime objects
+						//just fucking go with it, let's make this work
+						var the_manga = new Anime(); //an empty anime object to consolidate others to
+						/*
+						Store search results into anime objects, from their proper tags
+						per DataSource
+						*/
+						for (let r in ResolvedArray) {
+							if (ResolvedArray[r].DataSource === DataSource.MAL) {
+								//confirm there were results
+								if (ResolvedArray[r].data[0] !== null) {
+									for (let c in ResolvedArray[r].data) {
+										//ResolvedArray[r].data[c] is the object
+                                        let a_result = ResolvedArray[r].data[c];
+                                        if(String(a_result['id']) === String(dbLinks['mal'][1])) {
+                                            //logger.log('found a MAL result with the intended id');
+                                            let temp_dict = {};
+    										temp_dict[ResolvedArray[r].DataSource] = 'https://myanimelist.net/manga/' + a_result['id'];
+											if(dbLinks['mu'] !== undefined || dbLinks['mu'] !== '') {
+												temp_dict[DataSource.MANGAUPDATES] = 'https://www.mangaupdates.com/series.html?id=' + dbLinks['mu'];
+											}
+											if(dbLinks['ap'] !== undefined || dbLinks['ap'] !== '') {
+												temp_dict[DataSource.ANIMEPLANET] = 'https://www.anime-planet.com/manga/' + dbLinks['ap'];
+											}
+                                            the_manga = Anime.consolidate(new Anime({
+    											title_romaji: a_result['title'],
+    											title_english: a_result['english'],
+    											hyperlinks: new Hyperlinks(temp_dict),
+    											score_str: a_result['score'],
+    											media_type: MalMediaTypeMap[a_result['type']],
+    											status: MalStatusMap[a_result['status']],
+    											volumes: a_result['volumes'],
+												chapters: a_result['chapters'],
+    											synopsis_full: a_result['synopsis'],
+    											start_date: a_result['start_date'],
+    											end_date: a_result['end_date'],
+    											image: a_result['image'],
+    											synonyms: new Synonyms(a_result['synonyms'])
+    										}), the_manga);
+                                        }
+									}
+								} else {
+									//mal returned no results
+									logger.warn('mal returned no results');
+								}
+							} else if (ResolvedArray[r].DataSource === DataSource.ANILIST) {
+								//confirm there were results
+								if (typeof ResolvedArray[r].data['error'] !== 'object') {
+									let a_result = ResolvedArray[r].data;
+									let temp_dict = {};
+									temp_dict[ResolvedArray[r].DataSource] = 'https://anilist.co/anime/' + a_result['id'] + '/';
+									if(dbLinks['mu'] !== undefined || dbLinks['mu'] !== '') {
+										temp_dict[DataSource.MANGAUPDATES] = 'https://www.mangaupdates.com/series.html?id=' + dbLinks['mu'];
+									}
+									if(dbLinks['ap'] !== undefined || dbLinks['ap'] !== '') {
+										temp_dict[DataSource.ANIMEPLANET] = 'https://www.anime-planet.com/manga/' + dbLinks['ap'];
+									}
+									let some_manga = new Anime({
+										title_romaji: a_result['title_romaji'],
+										title_english: a_result['title_english'],
+										hyperlinks: new Hyperlinks(temp_dict),
+										media_type: AnilistMediaTypeMap[a_result['type']],
+										status: AnilistStatusMap[a_result['publishing_status']],
+										volumes: a_result['total_volumes'],
+										chapters: a_result['total_chapters'],
+										synopsis_full: a_result['description'],
+										start_date: a_result['start_date_fuzzy'],
+										end_date: a_result['end_date_fuzzy'],
+										image: a_result['image_url_lge'],
+										nsfw: a_result['adult'], //confirmed bool 👍
+										synonyms: new Synonyms(a_result['synonyms'])
+									});
+									the_manga = Anime.consolidate(the_manga, some_manga);
+
+								} else {
+									//anilist returned no results or an error
+									logger.warn('anilist returned no results');
+								}
+							} else if (ResolvedArray[r].DataSource === DataSource.KITSU) {
+								//confirm there were results (kitsu makes this so easy)
+								if (ResolvedArray[r].data.meta.count > 0) {
+									for (let c in ResolvedArray[r].data.data) {
+										//ResolvedArray[r].data[c] is the object
+										let a_result = ResolvedArray[r].data.data[c];
+										logger.log(a_result);
+										let temp_dict = {};
+										temp_dict[ResolvedArray[r].DataSource] = 'https://kitsu.io/manga/' + a_result['id'] + '/';
+										if(dbLinks['mu'] !== undefined || dbLinks['mu'] !== '') {
+											temp_dict[DataSource.MANGAUPDATES] = 'https://www.mangaupdates.com/series.html?id=' + dbLinks['mu'];
+										}
+										if(dbLinks['ap'] !== undefined || dbLinks['ap'] !== '') {
+											temp_dict[DataSource.ANIMEPLANET] = 'https://www.anime-planet.com/manga/' + dbLinks['ap'];
+										}
+										let synonyms_try = a_result['abbreviatedTitles'];
+										if (synonyms_try === null) {
+											synonyms_try = [];
+										}
+										if (Array.isArray(synonyms_try) && typeof a_result['canonicalTitle'] === 'string') {
+											synonyms_try = synonyms_try.concat([a_result['canonicalTitle']]);
+										}
+
+										let some_manga = new Anime({
+											title_romaji: a_result['titles']['en_jp'],
+											title_english: a_result['titles']['en'],
+											title_japanese: a_result['titles']['ja_jp'],
+											hyperlinks: new Hyperlinks(temp_dict),
+											rating: a_result['averageRating'], //preserve kitsu rating AND mal score
+											media_type: KitsuMediaTypeMap[a_result['subtype']],
+											status: KitsuStatusMap[a_result['status']],
+											volumes: a_result['chapterCount'],
+											chapters: a_result['volumeCount'],
+											synopsis_full: a_result['synopsis'],
+											start_date: a_result['startDate'],
+											end_date: a_result['endDate'],
+											image: a_result['posterImage']['original'],
+											nsfw: a_result['nsfw'], //confirmed bool 👍
+											synonyms: new Synonyms(synonyms_try) //maybe this'll be good enough, please work ^
+										});
+										the_manga = Anime.consolidate(the_manga, some_manga);
+									}
+								} else {
+									//anilist returned no results or an error
+									logger.warn('kitsu returned no results');
+								}
+							}
+						}
+
+                        //the_anime is the correct anime, no sorting matching bullshit left to do :D
+                        logger.log('database: <' + query + '> => ' + the_manga.flattened.title);
+						matchingCache.set('<'+query+'>', the_manga.flattened);
+						//THIS IS WHAT IT ALL BOILS DOWN TO
+						resolve(the_manga.flattened);
+					}).catch((Rejected) => {
+						//err occured
+                        logger.error('what the hell, why is this? :\n', Rejected); //???
 						reject(Rejected)
 					});
 				}
@@ -741,7 +950,7 @@ _.matchFromCache = (query) => {
 		if (value === undefined) {
 			reject('nothing cached for this query');
 		} else {
-			logger.log('cache: {' + query + '} => ' + value.title);
+			logger.log('cache: ' + query + ' => ' + value.title);
 			resolve(value);
 		}
 	});

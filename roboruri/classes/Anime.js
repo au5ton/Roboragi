@@ -189,6 +189,20 @@ class Anime {
             //this.rating = null;
         }
 
+        //Printed media stuff
+        if(non_empty(options.chapters)) {
+            this.chapters = options.chapters;
+        }
+        else {
+            //this.chapters = null;
+        }
+        if(non_empty(options.volumes)) {
+            this.volumes = options.volumes;
+        }
+        else {
+            //this.volumes = null;
+        }
+
         //synonyms
         if(non_empty(options.synonyms) && options.synonyms instanceof Synonyms){
             this.synonyms = options.synonyms;
@@ -234,6 +248,57 @@ class Anime {
         }
         else {
             logger.warn('Anime.title invoked without being flattened first');
+            return undefined
+        }
+    }
+    //Returns 'Anime', 'Manga', 'LN', or 'Other' depending on whatever the media_type is
+    get format() {
+        if(this._flattened) {
+            if(this.media_type === null) {
+                return null
+            }
+            else if(this.media_type === 'TV') {
+                return 'Anime'
+            }
+            else if(this.media_type === 'Movie') {
+                return 'Anime'
+            }
+            else if(this.media_type === 'Special') {
+                return 'Anime'
+            }
+            else if(this.media_type === 'OVA') {
+                return 'Anime'
+            }
+            else if(this.media_type === 'ONA') {
+                return 'Anime'
+            }
+            else if(this.media_type === 'Music') {
+                return 'Other'
+            }
+            else if(this.media_type === 'Doujinshi') {
+                return 'Manga'
+            }
+            else if(this.media_type === 'Manga') {
+                return 'Manga'
+            }
+            else if(this.media_type === 'Manhua') {
+                return 'Manga'
+            }
+            else if(this.media_type === 'Manhwa') {
+                return 'Manga'
+            }
+            else if(this.media_type === 'OEL') {
+                return 'Manga'
+            }
+            else if(this.media_type === 'One-shot') {
+                return 'Manga'
+            }
+            else if(this.media_type === 'Light Novel') {
+                return 'LN'
+            }
+        }
+        else {
+            logger.warn('Anime.format invoked without being flattened first');
             return undefined
         }
     }
@@ -343,6 +408,16 @@ class Anime {
         //rating
         if(non_def(copy.rating)) {
             copy.rating = null;
+        }
+
+        //Printed media stuff
+        //chapters
+        if(non_def(copy.chapters)) {
+            copy.chapters = null;
+        }
+        //volumes
+        if(non_def(copy.volumes)) {
+            copy.volumes = null;
         }
 
         //synonyms

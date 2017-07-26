@@ -101,7 +101,7 @@ bot.on('text', (context) => {
 			logger.log('Summon: {', query, '}');
 			console.time('execution time');
 			//logger.log('q: ', query);
-			Searcher.matchFromCache(query).then((result) => {
+			Searcher.matchFromCache('{'+query+'}').then((result) => {
 				//boo yah
 				context.reply(buildAnimeChatMessage(result), {
 					parse_mode: 'html',
@@ -141,6 +141,63 @@ bot.on('text', (context) => {
 				})
 			});
 		}).catch(()=>{});
+		bot_util.isValidLTGTSummon(message_str).then((query) => {
+
+			logger.log('Summon: <', query, '>');
+			console.time('execution time');
+			//logger.log('q: ', query);
+			Searcher.matchFromCache('<'+query+'>').then((result) => {
+				//boo yah
+				context.reply(buildMangaChatMessage(result), {
+					parse_mode: 'html',
+					disable_web_page_preview: true
+				});
+				console.timeEnd('execution time');
+			}).catch((err) => {
+				logger.warn('cache empty: ', err);
+				//nothing in cache
+				Searcher.matchMangaFromDatabase(query).then((result) => {
+					//boo yah
+					context.reply(buildMangaChatMessage(result), {
+						parse_mode: 'html',
+						disable_web_page_preview: true
+					});
+					console.timeEnd('execution time');
+				}).catch((err) => {
+					logger.warn('database empty: ', err);
+					//nothing in database
+					// Searcher.searchManga(query).then((result) => {
+					// 	//logger.log(result);
+					// 	context.reply(buildMangaChatMessage(result), {
+					// 		parse_mode: 'html',
+					// 		disable_web_page_preview: true
+					// 	});
+					// 	console.timeEnd('execution time');
+					// }).catch((r) => {
+					// 	//well that sucks
+					// 	if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
+					// 		logger.warn('q: <'+query+'> => '+filled_x)
+					// 	}
+					// 	else {
+					// 		logger.error('failed to search with Searcher: ', r);
+					// 	}
+					// 	console.timeEnd('execution time');
+					// });
+				})
+			});
+
+			// MAL.searchMangas(attempt[1]).then((mangas) => {
+			// 	if (mangas[0] !== null) {
+			// 		context.reply(buildMangaChatMessage(mangas[0]), {
+			// 			parse_mode: 'html',
+			// 			disable_web_page_preview: true
+			// 		});
+			// 	}
+			// }).catch((r) => {
+			// 	//well that sucks
+			// 	logger.error('failed to search mal: ', r);
+			// });
+		}).catch(()=>{});
 		bot_util.isValidBracketSummon(message_str).then((query) => {
 			MAL.searchAnimes(query).then((animes) => {
 				logger.log(animes);
@@ -177,19 +234,6 @@ bot.on('text', (context) => {
 				logger.error('failed to search mal: ', r);
 			});
 		}).catch(()=>{});
-		bot_util.isValidLTGTSummon(message_str).then((query) => {
-			MAL.searchMangas(attempt[1]).then((mangas) => {
-				if (mangas[0] !== null) {
-					context.reply(buildMangaChatMessage(mangas[0]), {
-						parse_mode: 'html',
-						disable_web_page_preview: true
-					});
-				}
-			}).catch((r) => {
-				//well that sucks
-				logger.error('failed to search mal: ', r);
-			});
-		}).catch(()=>{});
 	}
 });
 
@@ -197,6 +241,7 @@ const star_char = '\u272A';
 const filled_x = '\u274C';
 const warning_sign = '⚠️'; //please work
 const prohibited_symbol = String.fromCodePoint(0x1f232);
+const manga_symbol = String.fromCodePoint(0x1f4d4);
 
 function buildHyperlinksForAnime(anime) {
 	let message = '';
@@ -214,6 +259,12 @@ function buildHyperlinksForAnime(anime) {
 		}
 		else if(DataSource[e] === DataSource.KITSU && exists(anime.hyperlinks.dict[DataSource[e]])) {
 			message += '<a href=\"'+anime.hyperlinks.dict[DataSource[e]]+'\">KIT</a>, ';
+		}
+		else if(DataSource[e] === DataSource.MANGAUPDATES && exists(anime.hyperlinks.dict[DataSource[e]])) {
+			message += '<a href=\"'+anime.hyperlinks.dict[DataSource[e]]+'\">MU</a>, ';
+		}
+		else if(DataSource[e] === DataSource.ANIMEPLANET && exists(anime.hyperlinks.dict[DataSource[e]])) {
+			message += '<a href=\"'+anime.hyperlinks.dict[DataSource[e]]+'\">A-P</a>, ';
 		}
 	}
 	return message.substring(0,message.length-2); //remove trailing comma and space
@@ -237,16 +288,23 @@ function buildAnimeChatMessage(anime, options) {
 	message += '\n' + anime['synopsis'];
 	return message;
 }
-
-function buildMangaChatMessage(manga) {
+function buildMangaChatMessage(anime, options) {
+	options = options || {};
 	let message = '';
-	if (manga['english'] !== null && manga['english'] !== '') {
-		message += '<b>' + manga['english'] + '</b>';
-	} else {
-		message += '<b>' + manga['title'] + '</b>';
+	message += '<b>' + anime['title'] + '</b>';
+	message += ' ('+buildHyperlinksForAnime(anime)+')\n';
+	if(anime['nsfw'] === true) {
+		message += prohibited_symbol+' | ';
 	}
-	message += ' (<a href=\"https://myanimelist.net/manga/' + manga['id'] + '\">MAL</a>)\n';
-	message += manga['score'] + star_char + ' | ' + manga['type'] + ' | Status: ' + manga['status'] + ' | Volumes: ' + manga['volumes'];
+	if(anime['score_str'] !== null) {
+		message += anime['score_str'] + star_char + ' | ';
+	}
+	if(anime['rating'] !== null) {
+		message += anime['rating'] + '%' + ' | ';
+	}
+	message += anime['media_type'] + ', ' + anime['status'] + '\n';
+	message += 'Volumes: ' + anime['volumes'] + ' | Chapters: ' + anime['chapters'];
+	message += '\n' + anime['synopsis'];
 	return message;
 }
 
