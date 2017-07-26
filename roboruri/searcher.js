@@ -739,7 +739,7 @@ _.matchMangaFromDatabase = (query) => {
 	return new Promise((resolve, reject) => {
 		db.serialize(() => {
             let found_in_db = false;
-			db.each('SELECT name, dbLinks from synonyms WHERE type = \'Manga\'', (err, row) => {
+			db.each('SELECT name, dbLinks from synonyms WHERE type = \'Manga\' OR type = \'LN\'', (err, row) => {
                 //callback for each row
                 if (err) throw err;
 				if (query.toLowerCase() === row.name.toLowerCase()) {
@@ -755,7 +755,7 @@ _.matchMangaFromDatabase = (query) => {
 					if(dbLinks['mal'] !== undefined && dbLinks['mal'][0] !== '') {
                         promises.push(new Promise((resolve, reject) => {
     						//Queries MAL, 0th index is the title, 1st index is the id
-    						MAL.searchMangas(dbLinks['mal'][0].replace(/[^\x00-\x7F]/g, '')).then((results) => {
+    						MAL.searchMangas(dbLinks['mal'][0]).then((results) => {
     							resolve(new Resolved(DataSource.MAL, results));
     						}).catch((err) => {
     							logger.ind().log('mal error caught');
@@ -796,6 +796,9 @@ _.matchMangaFromDatabase = (query) => {
 						//not *technically* an Anime but all the code we wrote uses Anime objects
 						//just fucking go with it, let's make this work
 						var the_manga = new Anime(); //an empty anime object to consolidate others to
+						function no_volumes(whatever) {
+							return String(whatever) === '0' || String(whatever) === 'undefined';
+						}
 						/*
 						Store search results into anime objects, from their proper tags
 						per DataSource
@@ -808,7 +811,7 @@ _.matchMangaFromDatabase = (query) => {
 										//ResolvedArray[r].data[c] is the object
                                         let a_result = ResolvedArray[r].data[c];
                                         if(String(a_result['id']) === String(dbLinks['mal'][1])) {
-                                            //logger.log('found a MAL result with the intended id');
+                                            logger.log('found a MAL result with the intended id');
                                             let temp_dict = {};
     										temp_dict[ResolvedArray[r].DataSource] = 'https://myanimelist.net/manga/' + a_result['id'];
 											if(dbLinks['mu'] !== undefined || dbLinks['mu'] !== '') {
@@ -817,6 +820,7 @@ _.matchMangaFromDatabase = (query) => {
 											if(dbLinks['ap'] !== undefined || dbLinks['ap'] !== '') {
 												temp_dict[DataSource.ANIMEPLANET] = 'https://www.anime-planet.com/manga/' + dbLinks['ap'];
 											}
+											logger.log(ResolvedArray[r].DataSource,' ',a_result['volumes'],' | ',a_result['chapters']);
                                             the_manga = Anime.consolidate(new Anime({
     											title_romaji: a_result['title'],
     											title_english: a_result['english'],
@@ -824,8 +828,8 @@ _.matchMangaFromDatabase = (query) => {
     											score_str: a_result['score'],
     											media_type: MalMediaTypeMap[a_result['type']],
     											status: MalStatusMap[a_result['status']],
-    											volumes: a_result['volumes'],
-												chapters: a_result['chapters'],
+    											volumes: no_volumes(a_result['volumes']) ? 'Unknown' : a_result['volumes'],
+												chapters: no_volumes(a_result['chapters']) === '0' ? 'Unknown' : a_result['chapters'],
     											synopsis_full: a_result['synopsis'],
     											start_date: a_result['start_date'],
     											end_date: a_result['end_date'],
@@ -833,6 +837,7 @@ _.matchMangaFromDatabase = (query) => {
     											synonyms: new Synonyms(a_result['synonyms'])
     										}), the_manga);
                                         }
+										//logger.log(String(a_result['id']) === String(dbLinks['mal'][1]));
 									}
 								} else {
 									//mal returned no results
@@ -842,6 +847,7 @@ _.matchMangaFromDatabase = (query) => {
 								//confirm there were results
 								if (typeof ResolvedArray[r].data['error'] !== 'object') {
 									let a_result = ResolvedArray[r].data;
+									logger.log(ResolvedArray[r].DataSource,' ',a_result['volumes'],' | ',a_result['chapters']);
 									let temp_dict = {};
 									temp_dict[ResolvedArray[r].DataSource] = 'https://anilist.co/anime/' + a_result['id'] + '/';
 									if(dbLinks['mu'] !== undefined || dbLinks['mu'] !== '') {
@@ -856,8 +862,8 @@ _.matchMangaFromDatabase = (query) => {
 										hyperlinks: new Hyperlinks(temp_dict),
 										media_type: AnilistMediaTypeMap[a_result['type']],
 										status: AnilistStatusMap[a_result['publishing_status']],
-										volumes: a_result['total_volumes'],
-										chapters: a_result['total_chapters'],
+										volumes: no_volumes(a_result['total_volumes']) ? 'Unknown' : a_result['total_volumes'],
+										chapters: no_volumes(a_result['total_chapters']) ? 'Unknown' : a_result['total_chapters'],
 										synopsis_full: a_result['description'],
 										start_date: a_result['start_date_fuzzy'],
 										end_date: a_result['end_date_fuzzy'],
@@ -877,6 +883,7 @@ _.matchMangaFromDatabase = (query) => {
 									for (let c in ResolvedArray[r].data.data) {
 										//ResolvedArray[r].data[c] is the object
 										let a_result = ResolvedArray[r].data.data[c];
+										logger.log(ResolvedArray[r].DataSource,' ',a_result['volumes'],' | ',a_result['chapters']);
 										logger.log(a_result);
 										let temp_dict = {};
 										temp_dict[ResolvedArray[r].DataSource] = 'https://kitsu.io/manga/' + a_result['id'] + '/';
