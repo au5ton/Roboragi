@@ -12,7 +12,14 @@ const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
 let loc = path.dirname(require.main.filename) + '/synonyms.db';
 logger.log('Synonym DB: ', loc);
-var db = new sqlite3.Database(loc, sqlite3.OPEN_READONLY);
+var db;
+try {
+	db = new sqlite3.Database(loc, sqlite3.OPEN_READONLY);
+}
+catch(err) {
+	logger.warn('db won\'t be available, couldn\'t find .db file at ',loc);
+	db = null;
+}
 
 // Anime APIs
 const popura = require('popura');
@@ -847,6 +854,9 @@ dbLinks: (JSON string, needs parsing)
 
 _.matchAnimeFromDatabase = (query) => {
 	return new Promise((resolve, reject) => {
+		if(db === null) {
+			reject('db failed to initialize.');
+		}
 		db.serialize(() => {
             let found_in_db = false;
 			db.each('SELECT name, dbLinks from synonyms WHERE type = \'Anime\'', (err, row) => {
