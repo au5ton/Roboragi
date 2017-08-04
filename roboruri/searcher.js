@@ -64,7 +64,8 @@ _.searchAnimes = (query, query_format) => {
 				resolve(new Resolved(DataSource.MAL, results));
 			}).catch((err) => {
 				logger.ind().log('mal error caught');
-				reject(new Rejected(DataSource.MAL, err));
+				//"resolving an error is a good idea" -Austin, August 4, 2017
+				resolve(new Rejected(DataSource.MAL, err));
 			});
 		}));
 		promises.push(new Promise((resolve, reject) => {
@@ -76,7 +77,8 @@ _.searchAnimes = (query, query_format) => {
 				resolve(new Resolved(DataSource.ANILIST, results));
 			}).catch((err) => {
 				logger.ind().log('anilist error caught');
-				reject(new Rejected(DataSource.ANILIST, err));
+				//"resolving an error is a good idea" -Austin, August 4, 2017
+				resolve(new Rejected(DataSource.ANILIST, err));
 			});
 		}));
 		promises.push(new Promise((resolve, reject) => {
@@ -89,10 +91,22 @@ _.searchAnimes = (query, query_format) => {
 				resolve(new Resolved(DataSource.KITSU, response));
 			}).catch((err) => {
 				logger.ind().log('kitsu error caught');
-				reject(new Rejected(DataSource.KITSU, err)); //something needs to be done around here
+				//"resolving an error is a good idea" -Austin, August 4, 2017
+				resolve(new Rejected(DataSource.KITSU, err)); //something needs to be done around here
 			});
 		}));
 		Promise.all(promises).then((ResolvedArray) => {
+
+			//Removes all instances of Rejected (catch the "resolved" errors)
+			for(let i in ResolvedArray) {
+				if(ResolvedArray[i] instanceof Rejected) {
+					logger.ind().error(ResolvedArray[i]['DataSource'],' error caught: ',ResolvedArray[i]['data'])
+					ResolvedArray.splice(i,1);
+				}
+			}
+			if(ResolvedArray.length === 0) {
+				throw 'insufficient results: ResolvedArray empty';
+			}
 
 			/*
 
