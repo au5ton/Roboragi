@@ -146,9 +146,11 @@ _.searchAnimes = (query, query_format) => {
 						for (let c in ResolvedArray[r].data) {
 							//ResolvedArray[r].data[c] is the object
 							let a_result = ResolvedArray[r].data[c];
+							//logger.log(a_result);
 							let temp_dict = {};
 							temp_dict[ResolvedArray[r].DataSource] = 'https://myanimelist.net/anime/' + a_result['id'];
 							anime_arrays[ResolvedArray[r].DataSource].push(new Anime({
+								MAL_ID: a_result['id'],
 								title_romaji: a_result['title'],
 								title_english: a_result['english'],
 								hyperlinks: new Hyperlinks(temp_dict),
@@ -173,9 +175,11 @@ _.searchAnimes = (query, query_format) => {
 						for (let c in ResolvedArray[r].data) {
 							//ResolvedArray[r].data[c] is the object
 							let a_result = ResolvedArray[r].data[c];
+							//logger.log(a_result);
 							let temp_dict = {};
 							temp_dict[ResolvedArray[r].DataSource] = 'https://anilist.co/anime/' + a_result['id'] + '/';
 							let some_anime = new Anime({
+								ANILIST_ID: a_result['id'],
 								title_romaji: a_result['title_romaji'],
 								title_english: a_result['title_english'],
 								hyperlinks: new Hyperlinks(temp_dict),
@@ -201,6 +205,7 @@ _.searchAnimes = (query, query_format) => {
 						for (let c in ResolvedArray[r].data.data) {
 							//ResolvedArray[r].data[c] is the object
 							let a_result = ResolvedArray[r].data.data[c];
+							//logger.log(a_result);
 							let temp_dict = {};
 							temp_dict[ResolvedArray[r].DataSource] = 'https://kitsu.io/anime/' + a_result['id'] + '/';
 							let synonyms_try = a_result['abbreviatedTitles'];
@@ -217,6 +222,7 @@ _.searchAnimes = (query, query_format) => {
 							// logger.log('OR: ', a_result['titles']['en'] || a_result['titles']['en_us']);
 
 							let some_anime = new Anime({
+								KITSU_ID: a_result['id'],
 								title_romaji: a_result['titles']['en_jp'] || a_result['titles']['ja_jp'] || a_result['titles']['en'] || a_result['titles']['en_us'], //just fuckin put a title there, consider the title_romaji the canonical title. no telling what this will do for Kitsu recognition.
 								title_english: a_result['titles']['en'] || a_result['titles']['en_us'], //for shows originating in the US??? see: https://github.com/au5ton/Roboruri/issues/19
 								title_japanese: a_result['titles']['ja_jp'],
@@ -382,10 +388,36 @@ _.searchAnimes = (query, query_format) => {
 			//logger.error('------------------------------------');
 			//logger.nl(2);
 
-			logger.log('search: {' + query + '} => ' + very_best_match.flattened.title);
-			matchingCache.set('{'+query+'}', very_best_match.flattened);
-			//THIS IS WHAT IT ALL BOILS DOWN TO
-			resolve(very_best_match.flattened);
+			//very_best_match is an anime object, now we have to populate a couple of last-minute things
+			logger.log(very_best_match.status)
+			if(very_best_match.status === 'Currently Airing' && very_best_match.flattened.ANILIST_ID !== null) {
+				//grab some info
+				ANILIST.get('anime/'+very_best_match.ANILIST_ID).then((results) => {
+				    if(results['airing'] !== undefined) {
+
+						//append some last-minute info
+						very_best_match.next_episode_number = results['airing']['next_episode'];
+						very_best_match.next_episode_countdown = results['airing']['countdown'];
+
+						logger.log('search: {' + query + '} => ' + very_best_match.flattened.title);
+						matchingCache.set('{'+query+'}', very_best_match.flattened);
+						//THIS IS WHAT IT ALL BOILS DOWN TO
+						resolve(very_best_match.flattened);
+					}
+				}).catch((err) => {
+				    logger.warn('failed to append airing info: ', err);
+					logger.log('search: {' + query + '} => ' + very_best_match.flattened.title);
+					matchingCache.set('{'+query+'}', very_best_match.flattened);
+					//THIS IS WHAT IT ALL BOILS DOWN TO
+					resolve(very_best_match.flattened);
+				});
+			}
+			else {
+				logger.log('search: {' + query + '} => ' + very_best_match.flattened.title);
+				matchingCache.set('{'+query+'}', very_best_match.flattened);
+				//THIS IS WHAT IT ALL BOILS DOWN TO
+				resolve(very_best_match.flattened);
+			}
 
 		}).catch((Rejected) => {
 			//err occured

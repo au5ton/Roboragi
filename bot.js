@@ -5,6 +5,7 @@ logger.setOption('prefix_date',true);
 const util = require('util');
 const fs = require('fs');
 const git = require('git-last-commit');
+const prettyMs = require('pretty-ms');
 const VERSION = require('./package').version;
 var BOT_USERNAME;
 
@@ -303,8 +304,14 @@ function buildAnimeChatMessage(anime, options) {
 	if(anime['rating'] !== null) {
 		message += anime['rating'] + '%' + ' | ';
 	}
-	message += anime['media_type'] + ' | Status: ' + anime['status'] + ' | Episodes: ' + anime['episode_count'];
-	message += '\n' + anime['synopsis'];
+	message += anime['media_type'] + ' | Status: ' + anime['status'] + ' | Episodes: ' + anime['episode_count'] + '\n';
+	if(anime['next_episode_number'] !== null && anime['next_episode_countdown'] !== null) {
+		let temp = parseInt(anime['next_episode_countdown']);
+		temp = temp - (temp % 60); //remove extra seconds, so prettyMs doesn't get annoyingly specific
+		temp *= 1000; //seconds -> milliseconds
+		message += '<i>Episode '+anime['next_episode_number']+' airs in '+prettyMs(temp)+'</i>\n';
+	}
+	message += anime['synopsis'];
 	return message;
 }
 function buildMangaChatMessage(anime, options) {

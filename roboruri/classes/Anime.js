@@ -188,6 +188,38 @@ class Anime {
         else {
             //this.rating = null;
         }
+        if(non_empty(options.next_episode_countdown)) {
+            this.next_episode_countdown = options.next_episode_countdown;
+        }
+        else {
+            //this.next_episode_countdown = null;
+        }
+        if(non_empty(options.next_episode_number)) {
+            this.next_episode_number = options.next_episode_number;
+        }
+        else {
+            //this.next_episode_number = null;
+        }
+
+        //Indentifiers
+        if(non_empty(options.MAL_ID)) {
+            this.MAL_ID = options.MAL_ID;
+        }
+        else {
+            //this.MAL_ID = null;
+        }
+        if(non_empty(options.ANILIST_ID)) {
+            this.ANILIST_ID = options.ANILIST_ID;
+        }
+        else {
+            //this.ANILIST_ID = null;
+        }
+        if(non_empty(options.KITSU_ID)) {
+            this.KITSU_ID = options.KITSU_ID;
+        }
+        else {
+            //this.KITSU_ID = null;
+        }
 
         //Printed media stuff
         if(non_empty(options.chapters)) {
@@ -408,6 +440,24 @@ class Anime {
         //rating
         if(non_def(copy.rating)) {
             copy.rating = null;
+        }
+        //next_episode_number
+        if(non_def(copy.next_episode_number)) {
+            copy.next_episode_number = null;
+        }
+        //next_episode_countdown
+        if(non_def(copy.next_episode_countdown)) {
+            copy.next_episode_countdown = null;
+        }
+        //Identifers
+        if(non_def(copy.MAL_ID)) {
+            copy.MAL_ID = null;
+        }
+        if(non_def(copy.ANILIST_ID)) {
+            copy.ANILIST_ID = null;
+        }
+        if(non_def(copy.KITSU_ID)) {
+            copy.KITSU_ID = null;
         }
 
         //Printed media stuff

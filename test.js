@@ -110,34 +110,32 @@ const non_empty = (val) => {
 // let other = show.flattened
 // logger.log('after flat: ',show);
 
-kitsu.auth({
-    clientId: process.env.KITSU_CLIENT_ID,
-    clientSecret: process.env.KITSU_CLIENT_SECRET,
-    username: process.env.KITSU_USER,
-    password: process.env.KITSU_PASSWORD
-}).then((what) => {
-    //logger.log(what);
-
-    if (kitsu.isAuth) console.log('Authenticated')
-    else console.log('Not authenticated')
-
-    kitsu.get('manga', {
-        filter: {
-            text: 'eromanga',
-            subtype: 'novel'
-        }
-    }).then((response) => {
-        logger.log(response.meta.count);
-        for(let i in response.data) {
-            logger.log(response.data[i]);
-        }
-    });
-    // kitsu.get('anime', {
-    //     filter: { text: 'jahsdiouahsidasuduyasgduyagsuydgauys' }
-    // }).then((response) => {
-    //     logger.warn(response.meta);
-    // });
-});
+// kitsu.auth({
+//     clientId: process.env.KITSU_CLIENT_ID,
+//     clientSecret: process.env.KITSU_CLIENT_SECRET,
+//     username: process.env.KITSU_USER,
+//     password: process.env.KITSU_PASSWORD
+// }).then((what) => {
+//     //logger.log(what);
+//
+//     if (kitsu.isAuth) console.log('Authenticated')
+//     else console.log('Not authenticated')
+//
+//     kitsu.get('manga', {
+//         filter: {
+//             text: 'eromanga',
+//             subtype: 'novel'
+//         }
+//     }).then((response) => {
+//         logger.log(response.meta.count);
+//         for(let i in response.data) {
+//             logger.log(response.data[i]);
+//         }
+//     });
+//     kitsu.get('anime/12761/episodes', {}).then((response) => {
+//         logger.warn(response);
+//     });
+// });
 
 // MAL.verifyAuth().then((r) => {
 // 	logger.success('MAL authenticated. ');
@@ -160,6 +158,15 @@ kitsu.auth({
 // 	process.exit();
 // });
 
+
+ANILIST.get('anime/97863').then((results) => {
+    logger.log(results['airing'])
+    let x = new Anime();
+    x.unrelated_tag = 'doot';
+    logger.log(x);
+}).catch((err) => {
+    logger.error(err);
+});
 
 
 //logger.log('access_token: ', access_token);
