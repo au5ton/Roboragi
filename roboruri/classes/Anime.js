@@ -188,6 +188,52 @@ class Anime {
         else {
             //this.rating = null;
         }
+        if(non_empty(options.next_episode_countdown)) {
+            this.next_episode_countdown = options.next_episode_countdown;
+        }
+        else {
+            //this.next_episode_countdown = null;
+        }
+        if(non_empty(options.next_episode_number)) {
+            this.next_episode_number = options.next_episode_number;
+        }
+        else {
+            //this.next_episode_number = null;
+        }
+
+        //Indentifiers
+        if(non_empty(options.MAL_ID)) {
+            this.MAL_ID = options.MAL_ID;
+        }
+        else {
+            //this.MAL_ID = null;
+        }
+        if(non_empty(options.ANILIST_ID)) {
+            this.ANILIST_ID = options.ANILIST_ID;
+        }
+        else {
+            //this.ANILIST_ID = null;
+        }
+        if(non_empty(options.KITSU_ID)) {
+            this.KITSU_ID = options.KITSU_ID;
+        }
+        else {
+            //this.KITSU_ID = null;
+        }
+
+        //Printed media stuff
+        if(non_empty(options.chapters)) {
+            this.chapters = options.chapters;
+        }
+        else {
+            //this.chapters = null;
+        }
+        if(non_empty(options.volumes)) {
+            this.volumes = options.volumes;
+        }
+        else {
+            //this.volumes = null;
+        }
 
         //synonyms
         if(non_empty(options.synonyms) && options.synonyms instanceof Synonyms){
@@ -234,6 +280,57 @@ class Anime {
         }
         else {
             logger.warn('Anime.title invoked without being flattened first');
+            return undefined
+        }
+    }
+    //Returns 'Anime', 'Manga', 'LN', or 'Other' depending on whatever the media_type is
+    get format() {
+        if(this._flattened) {
+            if(this.media_type === null) {
+                return null
+            }
+            else if(this.media_type === 'TV') {
+                return 'Anime'
+            }
+            else if(this.media_type === 'Movie') {
+                return 'Anime'
+            }
+            else if(this.media_type === 'Special') {
+                return 'Anime'
+            }
+            else if(this.media_type === 'OVA') {
+                return 'Anime'
+            }
+            else if(this.media_type === 'ONA') {
+                return 'Anime'
+            }
+            else if(this.media_type === 'Music') {
+                return 'Other'
+            }
+            else if(this.media_type === 'Doujinshi') {
+                return 'Manga'
+            }
+            else if(this.media_type === 'Manga') {
+                return 'Manga'
+            }
+            else if(this.media_type === 'Manhua') {
+                return 'Manga'
+            }
+            else if(this.media_type === 'Manhwa') {
+                return 'Manga'
+            }
+            else if(this.media_type === 'OEL') {
+                return 'Manga'
+            }
+            else if(this.media_type === 'One-shot') {
+                return 'Manga'
+            }
+            else if(this.media_type === 'Light Novel') {
+                return 'LN'
+            }
+        }
+        else {
+            logger.warn('Anime.format invoked without being flattened first');
             return undefined
         }
     }
@@ -343,6 +440,34 @@ class Anime {
         //rating
         if(non_def(copy.rating)) {
             copy.rating = null;
+        }
+        //next_episode_number
+        if(non_def(copy.next_episode_number)) {
+            copy.next_episode_number = null;
+        }
+        //next_episode_countdown
+        if(non_def(copy.next_episode_countdown)) {
+            copy.next_episode_countdown = null;
+        }
+        //Identifers
+        if(non_def(copy.MAL_ID)) {
+            copy.MAL_ID = null;
+        }
+        if(non_def(copy.ANILIST_ID)) {
+            copy.ANILIST_ID = null;
+        }
+        if(non_def(copy.KITSU_ID)) {
+            copy.KITSU_ID = null;
+        }
+
+        //Printed media stuff
+        //chapters
+        if(non_def(copy.chapters)) {
+            copy.chapters = null;
+        }
+        //volumes
+        if(non_def(copy.volumes)) {
+            copy.volumes = null;
         }
 
         //synonyms

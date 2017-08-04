@@ -12,7 +12,14 @@ const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
 let loc = path.dirname(require.main.filename) + '/synonyms.db';
 logger.log('Synonym DB: ', loc);
-var db = new sqlite3.Database(loc, sqlite3.OPEN_READONLY);
+var db;
+try {
+	db = new sqlite3.Database(loc, sqlite3.OPEN_READONLY);
+}
+catch(err) {
+	logger.warn('db won\'t be available, couldn\'t find .db file at ',loc);
+	db = null;
+}
 
 // Anime APIs
 const popura = require('popura');
@@ -64,7 +71,8 @@ _.searchAnimes = (query, query_format) => {
 				resolve(new Resolved(DataSource.MAL, results));
 			}).catch((err) => {
 				logger.ind().log('mal error caught');
-				reject(new Rejected(DataSource.MAL, err));
+				//"resolving an error is a good idea" -Austin, August 4, 2017
+				resolve(new Rejected(DataSource.MAL, err));
 			});
 		}));
 		promises.push(new Promise((resolve, reject) => {
@@ -76,7 +84,8 @@ _.searchAnimes = (query, query_format) => {
 				resolve(new Resolved(DataSource.ANILIST, results));
 			}).catch((err) => {
 				logger.ind().log('anilist error caught');
-				reject(new Rejected(DataSource.ANILIST, err));
+				//"resolving an error is a good idea" -Austin, August 4, 2017
+				resolve(new Rejected(DataSource.ANILIST, err));
 			});
 		}));
 		promises.push(new Promise((resolve, reject) => {
@@ -89,10 +98,22 @@ _.searchAnimes = (query, query_format) => {
 				resolve(new Resolved(DataSource.KITSU, response));
 			}).catch((err) => {
 				logger.ind().log('kitsu error caught');
-				reject(new Rejected(DataSource.KITSU, err));
+				//"resolving an error is a good idea" -Austin, August 4, 2017
+				resolve(new Rejected(DataSource.KITSU, err)); //something needs to be done around here
 			});
 		}));
 		Promise.all(promises).then((ResolvedArray) => {
+
+			//Removes all instances of Rejected (catch the "resolved" errors)
+			for(let i in ResolvedArray) {
+				if(ResolvedArray[i] instanceof Rejected) {
+					logger.ind().error(ResolvedArray[i]['DataSource'],' error caught: ',ResolvedArray[i]['data'])
+					ResolvedArray.splice(i,1);
+				}
+			}
+			if(ResolvedArray.length === 0) {
+				throw 'insufficient results: ResolvedArray empty';
+			}
 
 			/*
 
@@ -132,9 +153,11 @@ _.searchAnimes = (query, query_format) => {
 						for (let c in ResolvedArray[r].data) {
 							//ResolvedArray[r].data[c] is the object
 							let a_result = ResolvedArray[r].data[c];
+							//logger.log(a_result);
 							let temp_dict = {};
 							temp_dict[ResolvedArray[r].DataSource] = 'https://myanimelist.net/anime/' + a_result['id'];
 							anime_arrays[ResolvedArray[r].DataSource].push(new Anime({
+								MAL_ID: a_result['id'],
 								title_romaji: a_result['title'],
 								title_english: a_result['english'],
 								hyperlinks: new Hyperlinks(temp_dict),
@@ -159,9 +182,11 @@ _.searchAnimes = (query, query_format) => {
 						for (let c in ResolvedArray[r].data) {
 							//ResolvedArray[r].data[c] is the object
 							let a_result = ResolvedArray[r].data[c];
+							//logger.log(a_result);
 							let temp_dict = {};
 							temp_dict[ResolvedArray[r].DataSource] = 'https://anilist.co/anime/' + a_result['id'] + '/';
 							let some_anime = new Anime({
+								ANILIST_ID: a_result['id'],
 								title_romaji: a_result['title_romaji'],
 								title_english: a_result['title_english'],
 								hyperlinks: new Hyperlinks(temp_dict),
@@ -187,6 +212,7 @@ _.searchAnimes = (query, query_format) => {
 						for (let c in ResolvedArray[r].data.data) {
 							//ResolvedArray[r].data[c] is the object
 							let a_result = ResolvedArray[r].data.data[c];
+							//logger.log(a_result);
 							let temp_dict = {};
 							temp_dict[ResolvedArray[r].DataSource] = 'https://kitsu.io/anime/' + a_result['id'] + '/';
 							let synonyms_try = a_result['abbreviatedTitles'];
@@ -197,13 +223,19 @@ _.searchAnimes = (query, query_format) => {
 								synonyms_try = synonyms_try.concat([a_result['canonicalTitle']]);
 							}
 
+							// logger.log('title: ',a_result['title']);
+							// logger.log('en: ', a_result['titles']['en']);
+							// logger.log('en_us: ', a_result['titles']['en_us']);
+							// logger.log('OR: ', a_result['titles']['en'] || a_result['titles']['en_us']);
+
 							let some_anime = new Anime({
-								title_romaji: a_result['titles']['en_jp'],
-								title_english: a_result['titles']['en'],
+								KITSU_ID: a_result['id'],
+								title_romaji: a_result['titles']['en_jp'] || a_result['titles']['ja_jp'] || a_result['titles']['en'] || a_result['titles']['en_us'], //just fuckin put a title there, consider the title_romaji the canonical title. no telling what this will do for Kitsu recognition.
+								title_english: a_result['titles']['en'] || a_result['titles']['en_us'], //for shows originating in the US??? see: https://github.com/au5ton/Roboruri/issues/19
 								title_japanese: a_result['titles']['ja_jp'],
 								hyperlinks: new Hyperlinks(temp_dict),
 								rating: a_result['averageRating'], //preserve kitsu rating AND mal score
-								media_type: KitsuMediaTypeMap[a_result['showType']],
+								media_type: KitsuMediaTypeMap[a_result['subtype']],
 								status: KitsuStatusMap[a_result['status']],
 								episode_count: a_result['episodeCount'],
 								synopsis_full: a_result['synopsis'],
@@ -213,6 +245,7 @@ _.searchAnimes = (query, query_format) => {
 								nsfw: a_result['nsfw'], //confirmed bool 👍
 								synonyms: new Synonyms(synonyms_try) //maybe this'll be good enough, please work ^
 							});
+							//logger.log(some_anime);
 							anime_arrays[ResolvedArray[r].DataSource].push(some_anime);
 						}
 					} else {
@@ -350,6 +383,7 @@ _.searchAnimes = (query, query_format) => {
 					} else {
 						logger.warn('`', best_match[r].flattened.title_romaji, '` ('+r+') was NOT CONSOLIDATED with `', SuperART['bestMatch']['target'], '`');
                         logger.warn('why? title match: ',SuperART['bestMatch']['target'].toLowerCase().trim() === best_match[r].flattened.title_romaji.toLowerCase().trim(), ', media_type match: ',SuperARTMediaType === best_match[r].flattened.media_type);
+						logger.warn(best_match[r].flattened.media_type, ' versus ', SuperARTMediaType);
 					}
 				} else {
 					//this is confirmed by the previous loop not to happen
@@ -361,8 +395,281 @@ _.searchAnimes = (query, query_format) => {
 			//logger.error('------------------------------------');
 			//logger.nl(2);
 
-			logger.log('search: {' + query + '} => ' + very_best_match.flattened.title);
-			matchingCache.set(query, very_best_match.flattened);
+			//very_best_match is an anime object, now we have to populate a couple of last-minute things
+			logger.log(very_best_match.status)
+			if(very_best_match.status === 'Currently Airing' && very_best_match.flattened.ANILIST_ID !== null) {
+				//grab some info
+				ANILIST.get('anime/'+very_best_match.ANILIST_ID).then((results) => {
+				    if(results['airing'] !== undefined) {
+
+						//append some last-minute info
+						very_best_match.next_episode_number = results['airing']['next_episode'];
+						very_best_match.next_episode_countdown = results['airing']['countdown'];
+
+						logger.log('search: {' + query + '} => ' + very_best_match.flattened.title);
+						matchingCache.set('{'+query+'}', very_best_match.flattened);
+						//THIS IS WHAT IT ALL BOILS DOWN TO
+						resolve(very_best_match.flattened);
+					}
+				}).catch((err) => {
+				    logger.warn('failed to append airing info: ', err);
+					logger.log('search: {' + query + '} => ' + very_best_match.flattened.title);
+					matchingCache.set('{'+query+'}', very_best_match.flattened);
+					//THIS IS WHAT IT ALL BOILS DOWN TO
+					resolve(very_best_match.flattened);
+				});
+			}
+			else {
+				logger.log('search: {' + query + '} => ' + very_best_match.flattened.title);
+				matchingCache.set('{'+query+'}', very_best_match.flattened);
+				//THIS IS WHAT IT ALL BOILS DOWN TO
+				resolve(very_best_match.flattened);
+			}
+
+		}).catch((Rejected) => {
+			//err occured
+			reject(Rejected)
+		});
+	});
+};
+
+_.searchManga = (query, MangaOrLN) => {
+	if(MangaOrLN !== 'Manga' && MangaOrLN !== 'LN') {
+		throw 'supply MangaOrLN, no ifs ands or buts! supplied: '+MangaOrLN;
+	}
+	//logger.log('searchAnimes() with \'', query, '\'');
+	return new Promise((resolve, reject) => {
+		var promises = [];
+		promises.push(new Promise((resolve, reject) => {
+			//Queries MAL
+			MAL.searchMangas(query).then((results) => {
+				resolve(new Resolved(DataSource.MAL, results));
+			}).catch((err) => {
+				logger.ind().log('mal error caught');
+				reject(new Rejected(DataSource.MAL, err));
+			});
+		}));
+		promises.push(new Promise((resolve, reject) => {
+			//Queries ANILIST
+			ANILIST.get('manga/search/' + encodeURIComponent(query.replace(new RegExp('/', 'g'), ''))).then((results) => {
+				resolve(new Resolved(DataSource.ANILIST, results));
+			}).catch((err) => {
+				logger.ind().log('anilist error caught');
+				reject(new Rejected(DataSource.ANILIST, err));
+			});
+		}));
+		promises.push(new Promise((resolve, reject) => {
+			//Queries KITSU
+			if(MangaOrLN === 'Manga') {
+				kitsu.get('manga', {
+					filter: {
+						text: query
+					}
+				}).then((response) => {
+					resolve(new Resolved(DataSource.KITSU, response));
+				}).catch((err) => {
+					logger.ind().log('kitsu error caught');
+					reject(new Rejected(DataSource.KITSU, err));
+				});
+			}
+			else if(MangaOrLN === 'LN') {
+				kitsu.get('manga', {
+					filter: {
+						text: query,
+						subtype: 'novel'
+					}
+				}).then((response) => {
+					resolve(new Resolved(DataSource.KITSU, response));
+				}).catch((err) => {
+					logger.ind().log('kitsu error caught');
+					reject(new Rejected(DataSource.KITSU, err));
+				});
+			}
+		}));
+		Promise.all(promises).then((ResolvedArray) => {
+			var best_match = {}; //dictionary
+			var anime_arrays = {}; //dictionary
+
+			function no_volumes(whatever) {
+				return String(whatever) === '0' || String(whatever) === 'undefined' || String(whatever) === 'null';
+			}
+
+			//Put empty arrays inside of anime_arrays for every DataSource
+			for (let e in DataSource) {
+				anime_arrays[DataSource[e]] = [];
+			}
+			for (let r in ResolvedArray) {
+				if (ResolvedArray[r].DataSource === DataSource.MAL) {
+					//confirm there were results
+					if (ResolvedArray[r].data[0] !== null) {
+						for (let c in ResolvedArray[r].data) {
+							//ResolvedArray[r].data[c] is the object
+							let a_result = ResolvedArray[r].data[c];
+							let temp_dict = {};
+							temp_dict[ResolvedArray[r].DataSource] = 'https://myanimelist.net/manga/' + a_result['id'];
+							anime_arrays[ResolvedArray[r].DataSource].push(new Anime({
+								title_romaji: a_result['title'],
+								title_english: a_result['english'],
+								hyperlinks: new Hyperlinks(temp_dict),
+								score_str: a_result['score'],
+								media_type: MalMediaTypeMap[a_result['type']],
+								status: MalStatusMap[a_result['status']],
+								volumes: no_volumes(a_result['volumes']) ? 'Unknown' : a_result['volumes'],
+								chapters: no_volumes(a_result['chapters']) === '0' ? 'Unknown' : a_result['chapters'],
+								synopsis_full: a_result['synopsis'],
+								start_date: a_result['start_date'],
+								end_date: a_result['end_date'],
+								image: a_result['image'],
+								synonyms: new Synonyms(a_result['synonyms'])
+							}));
+						}
+					} else {
+						//mal returned no results
+						logger.warn('mal returned no results');
+					}
+				} else if (ResolvedArray[r].DataSource === DataSource.ANILIST) {
+					//confirm there were results
+					if (typeof ResolvedArray[r].data['error'] !== 'object') {
+						for (let c in ResolvedArray[r].data) {
+							//ResolvedArray[r].data[c] is the object
+							let a_result = ResolvedArray[r].data[c];
+							let temp_dict = {};
+							temp_dict[ResolvedArray[r].DataSource] = 'https://anilist.co/manga/' + a_result['id'] + '/';
+							let some_anime = new Anime({
+								title_romaji: a_result['title_romaji'],
+								title_english: a_result['title_english'],
+								hyperlinks: new Hyperlinks(temp_dict),
+								media_type: AnilistMediaTypeMap[a_result['type']],
+								status: AnilistStatusMap[a_result['publishing_status']],
+								volumes: no_volumes(a_result['total_volumes']) ? 'Unknown' : a_result['total_volumes'],
+								chapters: no_volumes(a_result['total_chapters']) ? 'Unknown' : a_result['total_chapters'],
+								synopsis_full: a_result['description'],
+								start_date: a_result['start_date_fuzzy'],
+								end_date: a_result['end_date_fuzzy'],
+								image: a_result['image_url_lge'],
+								nsfw: a_result['adult'], //confirmed bool 👍
+								synonyms: new Synonyms(a_result['synonyms'])
+							});
+							anime_arrays[ResolvedArray[r].DataSource].push(some_anime);
+						}
+					} else {
+						//anilist returned no results or an error
+						logger.warn('anilist returned no results');
+					}
+				} else if (ResolvedArray[r].DataSource === DataSource.KITSU) {
+					//confirm there were results (kitsu makes this so easy)
+					if (ResolvedArray[r].data.meta.count > 0) {
+						for (let c in ResolvedArray[r].data.data) {
+							//ResolvedArray[r].data[c] is the object
+							let a_result = ResolvedArray[r].data.data[c];
+							let temp_dict = {};
+							temp_dict[ResolvedArray[r].DataSource] = 'https://kitsu.io/manga/' + a_result['id'] + '/';
+							let synonyms_try = a_result['abbreviatedTitles'];
+							if (synonyms_try === null) {
+								synonyms_try = [];
+							}
+							if (Array.isArray(synonyms_try) && typeof a_result['canonicalTitle'] === 'string') {
+								synonyms_try = synonyms_try.concat([a_result['canonicalTitle']]);
+							}
+
+							let some_anime = new Anime({
+								title_romaji: a_result['titles']['en_jp'] || a_result['titles']['ja_jp'], //just fuckin put a title there, consider the title_romaji the canonical title. no telling what this will do for Kitsu recognition.
+								title_english: a_result['titles']['en'] || a_result['titles']['en_us'], //for books originating in the US??? see: https://github.com/au5ton/Roboruri/issues/19
+								title_japanese: a_result['titles']['ja_jp'],
+								hyperlinks: new Hyperlinks(temp_dict),
+								rating: a_result['averageRating'], //preserve kitsu rating AND mal score
+								media_type: KitsuMediaTypeMap[a_result['subtype']],
+								status: KitsuStatusMap[a_result['status']],
+								volumes: no_volumes(a_result['volumeCount']) ? 'Unknown' : a_result['volumeCount'],
+								chapters: no_volumes(a_result['chapterCount']) ? 'Unknown' : a_result['chapterCount'],
+								synopsis_full: a_result['synopsis'],
+								start_date: a_result['startDate'],
+								end_date: a_result['endDate'],
+								image: a_result['posterImage']['original'],
+								nsfw: a_result['nsfw'], //confirmed bool 👍
+								synonyms: new Synonyms(synonyms_try) //maybe this'll be good enough, please work ^
+							});
+							//logger.log(a_result['subtype']);
+							anime_arrays[ResolvedArray[r].DataSource].push(some_anime);
+						}
+					} else {
+						//anilist returned no results or an error
+						logger.warn('kitsu returned no results');
+					}
+				}
+			}
+
+			//logger.log(anime_arrays);
+			//logger.ind().log('anime_arrays');
+			//`r` should be the DataSource because anime_arrays is a dict
+			//logger.warn('best_match before populating:',best_match);
+			let sufficient_results = false;
+			for (let r in anime_arrays) {
+				//logger.ind().warn(r,' results:');
+				if (anime_arrays[r].length === 0 || anime_arrays[r] === null || anime_arrays[r] === undefined) {
+					//logger.ind().warn(r, ' has no results to offer');
+				} else {
+					best_match[r] = _.findBestMatchForAnimeArray(query, anime_arrays[r]);
+					//logger.ind(1).success('Picked ANIMEOBJ:',best_match[r]);
+					sufficient_results = true;
+				}
+			}
+			if (!sufficient_results) {
+				reject('insufficient results, has no results to offer');
+			}
+			//logger.warn('best_match AFTER populating:',best_match);
+
+			let SuperART; //Super Assumed Real Title (format = romaji)
+			let topRomaji = [];
+			let romaji_to_media_dict = [];
+			let sufficient_results_other = false;
+			var very_best_match = new Anime();
+			//Gather all romaji titles if available
+			for (let r in best_match) {
+				if (best_match[r].flattened.title_romaji !== null) {
+					sufficient_results_other = true;
+					topRomaji.push(best_match[r].title_romaji);
+					//uses the unique romaji titles to make getting the media_type easier from a Dice's Coefficient easier
+					romaji_to_media_dict[best_match[r].title_romaji] = best_match[r].media_type;
+				} else {
+					//fuck this shit, there's no title
+				}
+			}
+			//Reject if we've somehow made it this far without romaji titles
+			if (!sufficient_results_other) {
+				//how tf does this even happen
+				reject('insufficient results: no romaji titles to compare');
+			}
+			//Assign SuperART
+			SuperART = stringSimilarity.findBestMatch(query, topRomaji);
+			SuperARTMediaType = romaji_to_media_dict[SuperART['bestMatch']['target']];
+
+			//Reverse search with SuperART to consolidate results
+			for (let r in best_match) {
+				if (best_match[r].flattened.title_romaji !== null) {
+					//because SuperART is literally from best_match,
+					//there should be at least one instance in very_best_match
+					if (SuperART['bestMatch']['target'].toLowerCase().trim() === best_match[r].flattened.title_romaji.toLowerCase().trim() && SuperARTMediaType === best_match[r].flattened.media_type) {
+						very_best_match = Anime.consolidate(very_best_match, best_match[r]);
+					} else {
+						logger.warn('`', best_match[r].flattened.title_romaji, '` ('+r+') was NOT CONSOLIDATED with `', SuperART['bestMatch']['target'], '`');
+                        logger.warn('why? title match: ',SuperART['bestMatch']['target'].toLowerCase().trim() === best_match[r].flattened.title_romaji.toLowerCase().trim(), ', media_type match: ',SuperARTMediaType === best_match[r].flattened.media_type);
+						logger.warn(best_match[r].flattened.media_type, ' versus ', SuperARTMediaType);
+					}
+				} else {
+					//this is confirmed by the previous loop not to happen
+					reject('insufficient results: LOGIC ERROR');
+				}
+			}
+
+			if(MangaOrLN === 'Manga') {
+				logger.log('search: <' + query + '> => ' + very_best_match.flattened.title);
+				matchingCache.set('<'+query+'>', very_best_match.flattened);
+			}
+			else if(MangaOrLN === 'LN') {
+				logger.log('search: ]' + query + '[ => ' + very_best_match.flattened.title);
+				matchingCache.set(']'+query+'[', very_best_match.flattened);
+			}
 			//THIS IS WHAT IT ALL BOILS DOWN TO
 			resolve(very_best_match.flattened);
 
@@ -374,7 +681,7 @@ _.searchAnimes = (query, query_format) => {
 };
 
 // Receives: query string, array of Anime instances
-// Returns: Anime instance
+// Returns: Anime instance (or more specifically: objects with at least 1 of the 3 titles)
 _.findBestMatchForAnimeArray = (query, animes) => {
 
 	/*
@@ -547,6 +854,9 @@ dbLinks: (JSON string, needs parsing)
 
 _.matchAnimeFromDatabase = (query) => {
 	return new Promise((resolve, reject) => {
+		if(db === null) {
+			reject('db failed to initialize.');
+		}
 		db.serialize(() => {
             let found_in_db = false;
 			db.each('SELECT name, dbLinks from synonyms WHERE type = \'Anime\'', (err, row) => {
@@ -614,7 +924,7 @@ _.matchAnimeFromDatabase = (query) => {
 									for (let c in ResolvedArray[r].data) {
 										//ResolvedArray[r].data[c] is the object
                                         let a_result = ResolvedArray[r].data[c];
-                                        if(a_result['id'] === dbLinks['mal'][1]) {
+                                        if(String(a_result['id']) === String(dbLinks['mal'][1])) {
                                             //logger.log('found a MAL result with the intended id');
                                             let temp_dict = {};
     										temp_dict[ResolvedArray[r].DataSource] = 'https://myanimelist.net/anime/' + a_result['id'];
@@ -652,8 +962,8 @@ _.matchAnimeFromDatabase = (query) => {
 										status: AnilistStatusMap[a_result['airing_status']],
 										episode_count: a_result['total_episodes'],
 										synopsis_full: a_result['description'],
-										start_date: a_result['start_date'],
-										end_date: a_result['end_date'],
+										start_date: a_result['start_date_fuzzy'],
+										end_date: a_result['end_date_fuzzy'],
 										image: a_result['image_url_lge'],
 										nsfw: a_result['adult'], //confirmed bool 👍
 										synonyms: new Synonyms(a_result['synonyms'])
@@ -712,7 +1022,232 @@ _.matchAnimeFromDatabase = (query) => {
 						resolve(the_anime.flattened);
 					}).catch((Rejected) => {
 						//err occured
-                        logger.err('what the hell, why is this? :\n', Rejected); //???
+                        logger.error('what the hell, why is this? :\n', Rejected); //???
+						reject(Rejected)
+					});
+				}
+
+			}, (err, numOfRows) => {
+                //complete call back, when database query completes
+                if(err) throw err;
+                if(!found_in_db) {
+                    reject('couldn\'t find that name in the database');
+                }
+            });
+		});
+
+	});
+};
+
+_.matchMangaFromDatabase = (query, MangaOrLN) => {
+	if(MangaOrLN !== 'Manga' && MangaOrLN !== 'LN') {
+		throw 'supply MangaOrLN, no ifs ands or buts! supplied: '+MangaOrLN;
+	}
+	return new Promise((resolve, reject) => {
+		db.serialize(() => {
+            let found_in_db = false;
+			db.each('SELECT name, dbLinks from synonyms WHERE type = \''+MangaOrLN+'\'', (err, row) => {
+                //callback for each row
+                if (err) throw err;
+				if (query.toLowerCase() === row.name.toLowerCase()) {
+                    found_in_db = true;
+					//grab info about the anime
+					let dbLinks = JSON.parse(row.dbLinks);
+					var promises = [];
+                    //logger.log(dbLinks);
+
+					/*
+					Start an asynchonous snatching of all info from multiple anime services
+					*/
+					if(dbLinks['mal'] !== undefined && dbLinks['mal'][0] !== '') {
+                        promises.push(new Promise((resolve, reject) => {
+    						//Queries MAL, 0th index is the title, 1st index is the id
+    						MAL.searchMangas(dbLinks['mal'][0]).then((results) => {
+    							resolve(new Resolved(DataSource.MAL, results));
+    						}).catch((err) => {
+    							logger.ind().log('mal error caught');
+    							reject(new Rejected(DataSource.MAL, err));
+    						});
+    					}));
+                    }
+					if(dbLinks['ani'] !== undefined && dbLinks['ani'] !== '') {
+                        promises.push(new Promise((resolve, reject) => {
+    						//Queries ANILIST
+    						//GET: anime/{id}
+    						ANILIST.get('manga/' + dbLinks['ani']).then((results) => {
+    							resolve(new Resolved(DataSource.ANILIST, results));
+    						}).catch((err) => {
+    							logger.ind().log('anilist error caught');
+    							reject(new Rejected(DataSource.ANILIST, err));
+    						});
+    					}));
+                    }
+					if(dbLinks['hb'] !== undefined && dbLinks['hb'] !== '') {
+                        promises.push(new Promise((resolve, reject) => {
+    						//Queries KITSU
+    						kitsu.get('manga', {
+    							filter: {
+    								slug: dbLinks['hb']
+    							}
+    						}).then((response) => {
+								logger.log(response);
+    							resolve(new Resolved(DataSource.KITSU, response));
+    						}).catch((err) => {
+    							logger.ind().log('kitsu error caught');
+    							reject(new Rejected(DataSource.KITSU, err));
+    						});
+    					}));
+                    }
+					Promise.all(promises).then((ResolvedArray) => {
+                        //we got a bunch of search results
+						//not *technically* an Anime but all the code we wrote uses Anime objects
+						//just fucking go with it, let's make this work
+						var the_manga = new Anime(); //an empty anime object to consolidate others to
+						function no_volumes(whatever) {
+							return String(whatever) === '0' || String(whatever) === 'undefined';
+						}
+						/*
+						Store search results into anime objects, from their proper tags
+						per DataSource
+						*/
+						for (let r in ResolvedArray) {
+							if (ResolvedArray[r].DataSource === DataSource.MAL) {
+								//confirm there were results
+								if (ResolvedArray[r].data[0] !== null) {
+									for (let c in ResolvedArray[r].data) {
+										//ResolvedArray[r].data[c] is the object
+                                        let a_result = ResolvedArray[r].data[c];
+                                        if(String(a_result['id']) === String(dbLinks['mal'][1])) {
+                                            //logger.log('found a MAL result with the intended id');
+                                            let temp_dict = {};
+    										temp_dict[ResolvedArray[r].DataSource] = 'https://myanimelist.net/manga/' + a_result['id'];
+											if(dbLinks['mu'] !== undefined || dbLinks['mu'] !== '') {
+												temp_dict[DataSource.MANGAUPDATES] = 'https://www.mangaupdates.com/series.html?id=' + dbLinks['mu'];
+											}
+											if(dbLinks['ap'] !== undefined || dbLinks['ap'] !== '') {
+												temp_dict[DataSource.ANIMEPLANET] = 'https://www.anime-planet.com/manga/' + dbLinks['ap'];
+											}
+											//logger.log(ResolvedArray[r].DataSource,' ',a_result['volumes'],' | ',a_result['chapters']);
+                                            the_manga = Anime.consolidate(new Anime({
+    											title_romaji: a_result['title'],
+    											title_english: a_result['english'],
+    											hyperlinks: new Hyperlinks(temp_dict),
+    											score_str: a_result['score'],
+    											media_type: MalMediaTypeMap[a_result['type']],
+    											status: MalStatusMap[a_result['status']],
+    											volumes: no_volumes(a_result['volumes']) ? 'Unknown' : a_result['volumes'],
+												chapters: no_volumes(a_result['chapters']) === '0' ? 'Unknown' : a_result['chapters'],
+    											synopsis_full: a_result['synopsis'],
+    											start_date: a_result['start_date'],
+    											end_date: a_result['end_date'],
+    											image: a_result['image'],
+    											synonyms: new Synonyms(a_result['synonyms'])
+    										}), the_manga);
+                                        }
+										//logger.log(String(a_result['id']) === String(dbLinks['mal'][1]));
+									}
+								} else {
+									//mal returned no results
+									logger.warn('mal returned no results');
+								}
+							} else if (ResolvedArray[r].DataSource === DataSource.ANILIST) {
+								//confirm there were results
+								if (typeof ResolvedArray[r].data['error'] !== 'object') {
+									let a_result = ResolvedArray[r].data;
+									//logger.log(ResolvedArray[r].DataSource,' ',a_result['volumes'],' | ',a_result['chapters']);
+									let temp_dict = {};
+									temp_dict[ResolvedArray[r].DataSource] = 'https://anilist.co/manga/' + a_result['id'] + '/';
+									if(dbLinks['mu'] !== undefined || dbLinks['mu'] !== '') {
+										temp_dict[DataSource.MANGAUPDATES] = 'https://www.mangaupdates.com/series.html?id=' + dbLinks['mu'];
+									}
+									if(dbLinks['ap'] !== undefined || dbLinks['ap'] !== '') {
+										temp_dict[DataSource.ANIMEPLANET] = 'https://www.anime-planet.com/manga/' + dbLinks['ap'];
+									}
+									let some_manga = new Anime({
+										title_romaji: a_result['title_romaji'],
+										title_english: a_result['title_english'],
+										hyperlinks: new Hyperlinks(temp_dict),
+										media_type: AnilistMediaTypeMap[a_result['type']],
+										status: AnilistStatusMap[a_result['publishing_status']],
+										volumes: no_volumes(a_result['total_volumes']) ? 'Unknown' : a_result['total_volumes'],
+										chapters: no_volumes(a_result['total_chapters']) ? 'Unknown' : a_result['total_chapters'],
+										synopsis_full: a_result['description'],
+										start_date: a_result['start_date_fuzzy'],
+										end_date: a_result['end_date_fuzzy'],
+										image: a_result['image_url_lge'],
+										nsfw: a_result['adult'], //confirmed bool 👍
+										synonyms: new Synonyms(a_result['synonyms'])
+									});
+									the_manga = Anime.consolidate(the_manga, some_manga);
+
+								} else {
+									//anilist returned no results or an error
+									logger.warn('anilist returned no results');
+								}
+							} else if (ResolvedArray[r].DataSource === DataSource.KITSU) {
+								//confirm there were results (kitsu makes this so easy)
+								if (ResolvedArray[r].data.meta.count > 0) {
+									for (let c in ResolvedArray[r].data.data) {
+										//ResolvedArray[r].data[c] is the object
+										let a_result = ResolvedArray[r].data.data[c];
+										//logger.log(ResolvedArray[r].DataSource,' ',a_result['volumes'],' | ',a_result['chapters']);
+										//logger.log(a_result);
+										let temp_dict = {};
+										temp_dict[ResolvedArray[r].DataSource] = 'https://kitsu.io/manga/' + a_result['id'] + '/';
+										if(dbLinks['mu'] !== undefined || dbLinks['mu'] !== '') {
+											temp_dict[DataSource.MANGAUPDATES] = 'https://www.mangaupdates.com/series.html?id=' + dbLinks['mu'];
+										}
+										if(dbLinks['ap'] !== undefined || dbLinks['ap'] !== '') {
+											temp_dict[DataSource.ANIMEPLANET] = 'https://www.anime-planet.com/manga/' + dbLinks['ap'];
+										}
+										let synonyms_try = a_result['abbreviatedTitles'];
+										if (synonyms_try === null) {
+											synonyms_try = [];
+										}
+										if (Array.isArray(synonyms_try) && typeof a_result['canonicalTitle'] === 'string') {
+											synonyms_try = synonyms_try.concat([a_result['canonicalTitle']]);
+										}
+
+										let some_manga = new Anime({
+											title_romaji: a_result['titles']['en_jp'],
+											title_english: a_result['titles']['en'],
+											title_japanese: a_result['titles']['ja_jp'],
+											hyperlinks: new Hyperlinks(temp_dict),
+											rating: a_result['averageRating'], //preserve kitsu rating AND mal score
+											media_type: KitsuMediaTypeMap[a_result['subtype']],
+											status: KitsuStatusMap[a_result['status']],
+											volumes: no_volumes(a_result['volumeCount']) ? 'Unknown' : a_result['volumeCount'],
+											chapters: no_volumes(a_result['chapterCount']) ? 'Unknown' : a_result['chapterCount'],
+											synopsis_full: a_result['synopsis'],
+											start_date: a_result['startDate'],
+											end_date: a_result['endDate'],
+											image: a_result['posterImage']['original'],
+											nsfw: a_result['nsfw'], //confirmed bool 👍
+											synonyms: new Synonyms(synonyms_try) //maybe this'll be good enough, please work ^
+										});
+										the_manga = Anime.consolidate(the_manga, some_manga);
+									}
+								} else {
+									//anilist returned no results or an error
+									logger.warn('kitsu returned no results');
+								}
+							}
+						}
+
+                        //the_anime is the correct anime, no sorting matching bullshit left to do :D
+                        if(MangaOrLN === 'Manga') {
+							logger.log('database: <' + query + '> => ' + the_manga.flattened.title);
+							matchingCache.set('<'+query+'>', the_manga.flattened);
+						}
+						else if(MangaOrLN === 'LN') {
+							logger.log('database: ]' + query + '[ => ' + the_manga.flattened.title);
+							matchingCache.set(']'+query+'[', the_manga.flattened);
+						}
+						//THIS IS WHAT IT ALL BOILS DOWN TO
+						resolve(the_manga.flattened);
+					}).catch((Rejected) => {
+						//err occured
+                        logger.error('what the hell, why is this? :\n', Rejected); //???
 						reject(Rejected)
 					});
 				}
@@ -735,7 +1270,7 @@ _.matchFromCache = (query) => {
 		if (value === undefined) {
 			reject('nothing cached for this query');
 		} else {
-			logger.log('cache: {' + query + '} => ' + value.title);
+			logger.log('cache: ' + query + ' => ' + value.title);
 			resolve(value);
 		}
 	});

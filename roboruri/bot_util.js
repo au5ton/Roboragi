@@ -39,7 +39,7 @@ _.isValidBraceSummon = (message_str) => {
 	});
 };
 
-_.isValidBracketSummon = (message_str) => {
+_.isValidReverseBracketSummon = (message_str) => {
 	return new Promise((resolve, reject) => {
 		let l_cnt = r_cnt = 0,
 			result = false;
@@ -52,6 +52,27 @@ _.isValidBracketSummon = (message_str) => {
 				r_cnt++;
 		}
 		let attempt = message_str.match(/\]([^)]+)\[/);
+		if (attempt !== null && l_cnt == 1 && r_cnt == 1) {
+			resolve(attempt[1]);
+		} else {
+			reject();
+		}
+	});
+};
+
+_.isValidBracketSummon = (message_str) => {
+	return new Promise((resolve, reject) => {
+		let l_cnt = r_cnt = 0,
+			result = false;
+		for (let i = 0; i < message_str.length; i++) {
+			//Correctly tally the braces
+			let next = message_str.charAt(i);
+			if (next === '[')
+				l_cnt++;
+			if (next === ']')
+				r_cnt++;
+		}
+		let attempt = message_str.match(/\[([^)]+)\]/);
 		if (attempt !== null && l_cnt == 1 && r_cnt == 1) {
 			resolve(attempt[1]);
 		} else {
@@ -81,6 +102,27 @@ _.isValidLTGTSummon = (message_str) => {
 	});
 };
 
+_.isValidReverseLTGTSummon = (message_str) => {
+	return new Promise((resolve, reject) => {
+		let l_cnt = r_cnt = 0,
+			result = false;
+		for (let i = 0; i < message_str.length; i++) {
+			//Correctly tally the braces
+			let next = message_str.charAt(i);
+			if (next === '<')
+				l_cnt++;
+			if (next === '>')
+				r_cnt++;
+		}
+		let attempt = message_str.match(/\>([^)]+)\</);
+		if (attempt !== null && l_cnt == 1 && r_cnt == 1) {
+			resolve(attempt[1]);
+		} else {
+			reject();
+		}
+	});
+};
+
 _.isValidPipeSummon = (message_str) => {
 	return new Promise((resolve, reject) => {
 		let cnt = 0,
@@ -97,6 +139,40 @@ _.isValidPipeSummon = (message_str) => {
 			reject();
 		}
 	});
+};
+
+// Stolen from: https://stackoverflow.com/a/8212878
+_.millisecondsToStr = (milliseconds) => {
+    // TIP: to find current time in milliseconds, use:
+    // var  current_time_milliseconds = new Date().getTime();
+
+    function numberEnding (number) {
+        return (number > 1) ? 's' : '';
+    }
+
+    var temp = Math.floor(milliseconds / 1000);
+    var years = Math.floor(temp / 31536000);
+    if (years) {
+        return years + ' year' + numberEnding(years);
+    }
+    //TODO: Months! Maybe weeks?
+    var days = Math.floor((temp %= 31536000) / 86400);
+    if (days) {
+        return days + ' day' + numberEnding(days);
+    }
+    var hours = Math.floor((temp %= 86400) / 3600);
+    if (hours) {
+        return hours + ' hour' + numberEnding(hours);
+    }
+    var minutes = Math.floor((temp %= 3600) / 60);
+    if (minutes) {
+        return minutes + ' minute' + numberEnding(minutes);
+    }
+    // var seconds = temp % 60;
+    // if (seconds) {
+    //     return seconds + ' second' + numberEnding(seconds);
+    // }
+    return 'less than a second'; //'just now' //or other string you like;
 };
 
 module.exports = _;
