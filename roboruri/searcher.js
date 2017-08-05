@@ -396,7 +396,7 @@ _.searchAnimes = (query, query_format) => {
 			//logger.nl(2);
 
 			//very_best_match is an anime object, now we have to populate a couple of last-minute things
-			logger.log(very_best_match.status)
+			//logger.log(very_best_match.status)
 			if(very_best_match.status === 'Currently Airing' && very_best_match.flattened.ANILIST_ID !== null) {
 				//grab some info
 				ANILIST.get('anime/'+very_best_match.ANILIST_ID).then((results) => {
