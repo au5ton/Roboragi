@@ -235,24 +235,7 @@ bot.on('text', (context) => {
 			});
 		}).catch(()=>{});
 		bot_util.isValidBracketSummon(message_str).then((query) => {
-			context.reply('TheTVDb support coming soon!');
-		}).catch(()=>{});
-		bot_util.isValidPipeSummon(message_str).then((query) => {
-			MAL.searchAnimes(query).then((animes) => {
-				if (animes[0] !== null) {
-					for (let i = 0; i < animes.length; i++) {
-						if (attempt[1].toLowerCase() === animes[i]['title'].toLowerCase() || attempt[1].toLowerCase() === animes[i]['english'].toLowerCase()) {
-							context.reply(buildAnimeChatMessage(animes[i]), {
-								parse_mode: 'html',
-								disable_web_page_preview: true
-							});
-						}
-					}
-				}
-			}).catch((r) => {
-				//well that sucks
-				logger.error('failed to search mal: ', r);
-			});
+			//context.reply('TheTVDb support coming soon!');
 		}).catch(()=>{});
 	}
 });
