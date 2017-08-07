@@ -7,6 +7,9 @@ const fs = require('fs');
 const git = require('git-last-commit');
 const prettyMs = require('pretty-ms');
 const VERSION = require('./package').version;
+
+//
+const START_TIME = new Date();
 var BOT_USERNAME;
 
 // Anime APIs
@@ -54,6 +57,9 @@ bot.hears(new RegExp('\/start|\/start@' + BOT_USERNAME), (context) => {
 
 bot.hears(new RegExp('\/ping|\/ping@' + BOT_USERNAME), (context) => {
 	context.reply('pong');
+});
+bot.hears(new RegExp('\/uptime|\/uptime@' + BOT_USERNAME), (context) => {
+	context.reply(''+prettyMs(new Date() - START_TIME));
 });
 
 bot.hears(new RegExp('\/version|\/version@' + BOT_USERNAME), (context) => {
