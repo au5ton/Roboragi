@@ -243,6 +243,22 @@ bot.on('text', (context) => {
 		bot_util.isValidBracketSummon(message_str).then((query) => {
 			//context.reply('TheTVDb support coming soon!');
 		}).catch(()=>{});
+		bot_util.isValidPipeSummon(message_str).then((query) => {
+			Searcher.searchWesternMovie(query).then((result) => {
+				//logger.log(result);
+				context.reply(result);
+				console.timeEnd('execution time');
+			}).catch((r) => {
+				//well that sucks
+				if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
+					logger.warn('q: |'+query+'| => '+filled_x)
+				}
+				else {
+					logger.error('failed to search with Searcher: ', r);
+				}
+				console.timeEnd('execution time');
+			});
+		}).catch(()=>{});
 	}
 });
 

@@ -4,7 +4,7 @@ const _ = {};
 const logger = require('au5ton-logger');
 const stringSimilarity = require('string-similarity');
 const querystring = require('querystring');
-const NodeCache = require("node-cache");
+const NodeCache = require('node-cache');
 const matchingCache = new NodeCache({ //3 hour check period, make that cache last
 	checkperiod: 10800
 });
@@ -33,6 +33,8 @@ kitsu.auth({
 	username: process.env.KITSU_USER,
 	password: process.env.KITSU_PASSWORD
 });
+const imdb = require('imdb-api');
+const IMDB_TOKEN = {apiKey: process.env.OMDB_API_KEY};
 
 // Custom enums
 const DataSource = require('./enums').DataSource;
@@ -1275,5 +1277,20 @@ _.matchFromCache = (query) => {
 		}
 	});
 }
+
+_.searchWesternMovie = (query) => {
+	return new Promise((resolve, reject) => {
+		imdb.search({
+			title: query
+		}, token).then((search)=> {
+			let movies = search.results;
+			for(let i in movies) {
+				if(movies[i].type === 'movie') {
+					logger.log(movies[i].title);
+				}
+			}
+		}).catch(console.log);
+	});
+};
 
 module.exports = _;
