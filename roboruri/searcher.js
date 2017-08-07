@@ -34,7 +34,7 @@ kitsu.auth({
 	password: process.env.KITSU_PASSWORD
 });
 const imdb = require('imdb-api');
-const IMDB_TOKEN = {apiKey: process.env.OMDB_API_KEY};
+const IMDB_TOKEN = {apiKey: process.env.OMDB_API_KEY, timeout: 5000};
 
 // Custom enums
 const DataSource = require('./enums').DataSource;
@@ -1280,16 +1280,49 @@ _.matchFromCache = (query) => {
 
 _.searchWesternMovie = (query) => {
 	return new Promise((resolve, reject) => {
+		let result_dict = {};
+		let just_titles = [];
+		let the_match = query.match(/\(([^)]+)\)/);
+		let the_year = the_match === null ? undefined : the_match[1]; //no_volumes(a_result['chapters']) === '0' ? 'Unknown' : a_result['chapters']
+		let the_query = String(query.toLowerCase());
+		if(the_year) {
+			logger.warn('the_year: `', the_year,'`');
+			the_query = the_query.replace(the_match[0], '').trim();
+			logger.warn('the_query: `',the_query,'`')
+		}
 		imdb.search({
-			title: query
-		}, token).then((search)=> {
+			title: the_query
+		}, IMDB_TOKEN).then((search)=> {
 			let movies = search.results;
+			logger.log(movies)
 			for(let i in movies) {
 				if(movies[i].type === 'movie') {
-					logger.log(movies[i].title);
+					if(the_year !== undefined) {
+						if(the_year === String(movies[i].year)) {
+							result_dict[movies[i]['title']] = movies[i]['imdbid'];
+							just_titles.push(movies[i]['title']);
+						}
+					}
+					else {
+						result_dict[movies[i]['title']] = movies[i]['imdbid'];
+						just_titles.push(movies[i]['title']);
+					}
 				}
 			}
-		}).catch(console.log);
+			logger.log(just_titles);
+			let likely_pick = stringSimilarity.findBestMatch(query, just_titles);
+			for(let i in result_dict) {
+				if(i === likely_pick['bestMatch']['target']) {
+					imdb.getById(result_dict[i], IMDB_TOKEN).then((movie) => {
+						resolve(movie);
+					}).catch((err) => {
+						reject(err);
+					});
+				}
+			}
+		}).catch((err) => {
+			reject(err);
+		});
 	});
 };
 

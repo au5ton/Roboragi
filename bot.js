@@ -244,9 +244,14 @@ bot.on('text', (context) => {
 			//context.reply('TheTVDb support coming soon!');
 		}).catch(()=>{});
 		bot_util.isValidPipeSummon(message_str).then((query) => {
+			logger.log('Summon: |', query, '|');
+			console.time('execution time');
 			Searcher.searchWesternMovie(query).then((result) => {
 				//logger.log(result);
-				context.reply(result);
+				context.reply(buildMovieChatMessage(result),{
+					parse_mode: 'html',
+					disable_web_page_preview: true
+				});
 				console.timeEnd('execution time');
 			}).catch((r) => {
 				//well that sucks
@@ -258,7 +263,7 @@ bot.on('text', (context) => {
 				}
 				console.timeEnd('execution time');
 			});
-		}).catch(()=>{});
+		}).catch((err)=>{logger.error(err)});
 	}
 });
 
@@ -267,6 +272,8 @@ const filled_x = '\u274C';
 const warning_sign = '⚠️'; //please work
 const prohibited_symbol = String.fromCodePoint(0x1f232);
 const manga_symbol = String.fromCodePoint(0x1f4d4);
+const tomato_symbol = String.fromCodePoint(0x1f345); //fresh
+const rotten_symbol = String.fromCodePoint(0x1F922); //rotten
 
 function buildHyperlinksForAnime(anime) {
 	let message = '';
@@ -309,8 +316,11 @@ function buildAnimeChatMessage(anime, options) {
 	if(anime['rating'] !== null) {
 		message += anime['rating'] + '%' + ' | ';
 	}
+	if(anime['rotten_rating'] !== null) {
+		message += anime['rotten_rating'] + tomato_symbol + ' | ';
+	}
 	message += anime['media_type'] + ' | Status: ' + anime['status'] + ' | Episodes: ' + anime['episode_count'] + '\n';
-	if(anime['next_episode_number'] !== null && anime['next_episode_countdown'] !== null) {
+	if(anime['next_episode_number'] !== null && anime['next_episode_countdown'] !== null && anime['format'] !== 'Western TV' && anime['format'] !== 'Western Movie') {
 		let temp = parseInt(anime['next_episode_countdown']);
 		temp = temp - (temp % 60); //remove extra seconds, so prettyMs doesn't get annoyingly specific
 		temp *= 1000; //seconds -> milliseconds
@@ -336,6 +346,115 @@ function buildMangaChatMessage(anime, options) {
 	message += anime['media_type'] + ', ' + anime['status'] + '\n';
 	message += 'Volumes: ' + anime['volumes'] + ' | Chapters: ' + anime['chapters'];
 	message += '\n' + anime['synopsis'];
+	return message;
+}
+function buildMovieChatMessage(movie, options) {
+	options = options || {};
+	let url = 'http://www.imdb.com/title/' + movie['imdbid'] + '/'
+	let message = '';
+	let unreleased = false;
+	message += '<b>' + movie['title'] + '</b>';
+	message += ' ('+movie['_year_data']+') (<a href=\"'+url+'\">IMDB</a>)\n';
+	if(movie['director']) {
+		message += '<i>Director(s): ' + movie['director'] + '</i>\n';
+	}
+	if(movie['released']) {
+		if(new Date() < new Date(movie['released']) && movie['released'] !== 'N/A') {
+			unreleased = true;
+			message += 'Expected release: '+new Date(movie['released']).toDateString()+'\n';
+		}
+	}
+	if(movie.ratings && !unreleased) {
+		logger.warn(movie.ratings);
+		let rate_string;
+		let rate_source;
+		for(let i in movie.ratings) {
+			if(movie.ratings[i]['Source'] === 'Internet Movie Database') {
+				if(rate_source === undefined) {
+					let a_rating = movie.ratings[i]['Value']; //8.1/10
+					rate_string = a_rating + ' on IMDb | ';
+					rate_source = movie.ratings[i]['Source'];
+				}
+			}
+			else if(movie.ratings[i]['Source'] === 'Rotten Tomatoes') {
+				let a_rating = movie.ratings[i]['Value']; //92%
+				rate_string = a_rating + ' on ' + tomato_symbol + ' | ';
+				rate_source = movie.ratings[i]['Source'];
+			}
+			else if(movie.ratings[i]['Source'] === 'Metacritic') {
+				if(rate_source !== 'Rotten Tomatoes') {
+					let a_rating = movie.ratings[i]['Value']; //69/100
+					rate_string = a_rating + ' on Metacritic | ';
+					rate_source = movie.ratings[i]['Source'];
+				}
+			}
+			else {
+				// let a_rating = movie.ratings[i]['Value'];
+				// rate_source = movie.ratings[i]['Source'];
+				// rate_string = a_rating + ' on '+rate_source+' | ';
+			}
+		}
+		if(rate_string) {
+			message += rate_string;
+		}
+	}
+	if(movie['rated'] && !unreleased) {
+		message += movie['rated'] + ' | ';
+	}
+	if(movie['runtime']) {
+		if(unreleased) {
+			if(movie['runtime'] !== 'N/A') {
+				message += movie['runtime'] + ' | ';
+			}
+			else {
+				//do nothing
+			}
+		}
+		else {
+			message += movie['runtime'] + ' | ';
+		}
+
+	}
+	if(movie['genres']) {
+		if(unreleased) {
+			if(movie['genres'] !== 'N/A') {
+				message += movie['genres'];
+			}
+			else {
+				//do nothing
+			}
+		}
+		else {
+			message += movie['genres'];
+		}
+	}
+	if(movie['plot']) {
+		if(unreleased) {
+			if(movie['plot'] !== 'N/A') {
+				const txtLimit = 220;
+				let the_plot = movie['plot'].replace(new RegExp('<br>', 'g'), '')
+				if (the_plot.length > txtLimit) {
+					message += '\n'+the_plot.substring(0, txtLimit - 3) + '...';
+				}
+				else {
+					message += '\n'+the_plot;
+				}
+			}
+			else {
+				//do nothing
+			}
+		}
+		else {
+			const txtLimit = 220;
+			let the_plot = movie['plot'].replace(new RegExp('<br>', 'g'), '')
+			if (the_plot.length > txtLimit) {
+				message += '\n'+the_plot.substring(0, txtLimit - 3) + '...';
+			}
+			else {
+				message += '\n'+the_plot;
+			}
+		}
+	}
 	return message;
 }
 

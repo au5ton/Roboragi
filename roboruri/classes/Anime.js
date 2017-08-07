@@ -200,6 +200,18 @@ class Anime {
         else {
             //this.next_episode_number = null;
         }
+        if(non_empty(options.rotten_rating)) {
+            this.rotten_rating = options.rotten_rating;
+        }
+        else {
+            //this.rotten_rating = null;
+        }
+        if(non_empty(options.hard_format)) {
+            this.hard_format = options.hard_format;
+        }
+        else {
+            //this.hard_format = null;
+        }
 
         //Indentifiers
         if(non_empty(options.MAL_ID)) {
@@ -219,6 +231,18 @@ class Anime {
         }
         else {
             //this.KITSU_ID = null;
+        }
+        if(non_empty(options.IMDB_ID)) {
+            this.IMDB_ID = options.IMDB_ID;
+        }
+        else {
+            //this.IMDB_ID = null;
+        }
+        if(non_empty(options.TVDB_ID)) {
+            this.TVDB_ID = options.TVDB_ID;
+        }
+        else {
+            //this.TVDB_ID = null;
         }
 
         //Printed media stuff
@@ -286,6 +310,12 @@ class Anime {
     //Returns 'Anime', 'Manga', 'LN', or 'Other' depending on whatever the media_type is
     get format() {
         if(this._flattened) {
+            if(this.hard_format === 'Western Movie') {
+                return 'Western Movie';
+            }
+            if(this.hard_format === 'Western TV') {
+                return 'Western TV';
+            }
             if(this.media_type === null) {
                 return null
             }
@@ -449,6 +479,10 @@ class Anime {
         if(non_def(copy.next_episode_countdown)) {
             copy.next_episode_countdown = null;
         }
+        //rotten_rating
+        if(non_def(copy.rotten_rating)) {
+            copy.rotten_rating = null;
+        }
         //Identifers
         if(non_def(copy.MAL_ID)) {
             copy.MAL_ID = null;
@@ -458,6 +492,12 @@ class Anime {
         }
         if(non_def(copy.KITSU_ID)) {
             copy.KITSU_ID = null;
+        }
+        if(non_def(copy.IMDB_ID)) {
+            copy.IMDB_ID = null;
+        }
+        if(non_def(copy.TVDB_ID)) {
+            copy.TVDB_ID = null;
         }
 
         //Printed media stuff

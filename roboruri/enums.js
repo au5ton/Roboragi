@@ -14,6 +14,7 @@ _.DataSource = {
     'KITSU':'DataSource.KITSU',
     'MANGAUPDATES':'DataSource.MANGAUPDATES',
     'ANIMEPLANET':'DataSource.ANIMEPLANET',
+    'IMDB':'DataSource.OMDB_API'
 };
 _.MalMediaTypeMap = {
     'TV': 'TV',
@@ -58,6 +59,11 @@ _.KitsuMediaTypeMap = {
     'manhwa': 'Manhwa',
     'oel': 'OEL',
     'oneshot': 'One-shot'
+}
+
+_.IMDBMediaTypeMap = {
+    'movie': 'Movie',
+    'series': 'TV'
 }
 /*
 'TV',
