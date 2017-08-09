@@ -309,7 +309,7 @@ bot.on('text', (context) => {
 					console.timeEnd('execution time');
 				});
 			});
-		}).catch((err)=>{logger.error(err)});
+		}).catch(()=>{});
 	}
 });
 
