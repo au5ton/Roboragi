@@ -414,21 +414,21 @@ _.searchAnimes = (query, query_format) => {
 						very_best_match.next_episode_countdown = results['airing']['countdown'];
 
 						logger.log('search: {' + query + '} => ' + very_best_match.flattened.title);
-						matchingCache.set('{'+query+'}', very_best_match.flattened);
+						matchingCache.set('{'+query.toLowerCase()+'}', very_best_match.flattened);
 						//THIS IS WHAT IT ALL BOILS DOWN TO
 						resolve(very_best_match.flattened);
 					}
 				}).catch((err) => {
 					logger.warn('failed to append airing info: ', err);
 					logger.log('search: {' + query + '} => ' + very_best_match.flattened.title);
-					matchingCache.set('{'+query+'}', very_best_match.flattened);
+					matchingCache.set('{'+query.toLowerCase()+'}', very_best_match.flattened);
 					//THIS IS WHAT IT ALL BOILS DOWN TO
 					resolve(very_best_match.flattened);
 				});
 			}
 			else {
 				logger.log('search: {' + query + '} => ' + very_best_match.flattened.title);
-				matchingCache.set('{'+query+'}', very_best_match.flattened);
+				matchingCache.set('{'+query.toLowerCase()+'}', very_best_match.flattened);
 				//THIS IS WHAT IT ALL BOILS DOWN TO
 				resolve(very_best_match.flattened);
 			}
@@ -1030,7 +1030,7 @@ _.matchAnimeFromDatabase = (query) => {
 
 						//the_anime is the correct anime, no sorting matching bullshit left to do :D
 						logger.log('database: {' + query + '} => ' + the_anime.flattened.title);
-						matchingCache.set(query, the_anime.flattened);
+						matchingCache.set(query.toLowerCase(), the_anime.flattened);
 						//THIS IS WHAT IT ALL BOILS DOWN TO
 						resolve(the_anime.flattened);
 					}).catch((Rejected) => {
@@ -1250,11 +1250,11 @@ _.matchMangaFromDatabase = (query, MangaOrLN) => {
 						//the_anime is the correct anime, no sorting matching bullshit left to do :D
 						if(MangaOrLN === 'Manga') {
 							logger.log('database: <' + query + '> => ' + the_manga.flattened.title);
-							matchingCache.set('<'+query+'>', the_manga.flattened);
+							matchingCache.set('<'+query.toLowerCase()+'>', the_manga.flattened);
 						}
 						else if(MangaOrLN === 'LN') {
 							logger.log('database: ]' + query + '[ => ' + the_manga.flattened.title);
-							matchingCache.set(']'+query+'[', the_manga.flattened);
+							matchingCache.set(']'+query.toLowerCase()+'[', the_manga.flattened);
 						}
 						//THIS IS WHAT IT ALL BOILS DOWN TO
 						resolve(the_manga.flattened);
@@ -1279,7 +1279,7 @@ _.matchMangaFromDatabase = (query, MangaOrLN) => {
 
 _.matchFromCache = (query) => {
 	return new Promise((resolve, reject) => {
-		let value = matchingCache.get(query);
+		let value = matchingCache.get(query.toLowerCase());
 		if (value === undefined) {
 			reject('nothing cached for this query');
 		} else {
@@ -1337,7 +1337,7 @@ _.searchWesternMovie = (query) => {
 				if(i === likely_pick['bestMatch']['target']) {
 					setTimeout(()=>{
 						imdb.getById(result_dict[i], IMDB_TOKEN).then((movie) => {
-							matchingCache.set('>'+query+'<', movie);
+							matchingCache.set('>'+query.toLowerCase()+'<', movie);
 							resolve(movie);
 						}).catch((err) => {
 							reject(err);
@@ -1429,7 +1429,7 @@ _.searchWesternTelevision = (query) => {
 
 					best_match = Anime.consolidate(best_match, imdb_anime);
 					//logger.success(best_match);
-					matchingCache.set('|'+query+'|', best_match.flattened);
+					matchingCache.set('|'+query.toLowerCase()+'|', best_match.flattened);
 					resolve(best_match.flattened);
 				}).catch((err) => {
 					reject(err);
