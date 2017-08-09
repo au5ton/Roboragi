@@ -243,25 +243,34 @@ bot.on('text', (context) => {
 		bot_util.isValidBracketSummon(message_str).then((query) => {
 			//context.reply('TheTVDb support coming soon!');
 		}).catch(()=>{});
-		bot_util.isValidPipeSummon(message_str).then((query) => {
-			logger.log('Summon: |', query, '|');
+		bot_util.isValidReverseLTGTSummon(message_str).then((query) => {
+			logger.log('Summon: >', query, '<');
 			console.time('execution time');
-			Searcher.searchWesternMovie(query).then((result) => {
-				//logger.log(result);
+			Searcher.matchFromCache('>'+query+'<').then((result) => {
 				context.reply(buildMovieChatMessage(result),{
 					parse_mode: 'html',
 					disable_web_page_preview: true
 				});
 				console.timeEnd('execution time');
-			}).catch((r) => {
-				//well that sucks
-				if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
-					logger.warn('q: |'+query+'| => '+filled_x)
-				}
-				else {
-					logger.error('failed to search with Searcher: ', r);
-				}
-				console.timeEnd('execution time');
+			}).catch((err) => {
+				logger.warn('cache empty: ', err);
+				Searcher.searchWesternMovie(query).then((result) => {
+					//logger.log(result);
+					context.reply(buildMovieChatMessage(result),{
+						parse_mode: 'html',
+						disable_web_page_preview: true
+					});
+					console.timeEnd('execution time');
+				}).catch((r) => {
+					//well that sucks
+					if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
+						logger.warn('q: >'+query+'< => '+filled_x)
+					}
+					else {
+						logger.error('failed to search with Searcher: ', r);
+					}
+					console.timeEnd('execution time');
+				});
 			});
 		}).catch((err)=>{logger.error(err)});
 	}
@@ -349,6 +358,7 @@ function buildMangaChatMessage(anime, options) {
 	return message;
 }
 function buildMovieChatMessage(movie, options) {
+	logger.success(movie)
 	options = options || {};
 	let url = 'http://www.imdb.com/title/' + movie['imdbid'] + '/'
 	let message = '';
@@ -356,7 +366,17 @@ function buildMovieChatMessage(movie, options) {
 	message += '<b>' + movie['title'] + '</b>';
 	message += ' ('+movie['_year_data']+') (<a href=\"'+url+'\">IMDB</a>)\n';
 	if(movie['director']) {
-		message += '<i>Director(s): ' + movie['director'] + '</i>\n';
+		message += '<i>Director(s): ' + movie['director'] + '</i>';
+		if(movie['actors']) {
+			message += ' ; ';
+		}
+	}
+	if(movie['actors']) {
+		message += '<i>Actor(s): ' + movie['actors'] + '</i>\n';
+	}
+	else if(movie['director']) {
+		//if there are no actors listed, but there was a director listed
+		message += '\n';
 	}
 	if(movie['released']) {
 		if(new Date() < new Date(movie['released']) && movie['released'] !== 'N/A') {

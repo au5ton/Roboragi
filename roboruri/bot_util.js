@@ -162,7 +162,7 @@ _.isValidReverseLTGTSummon = (message_str) => {
 			if (next === '>')
 				r_cnt++;
 		}
-		let attempt = message_str.match(/\>([^)]+)\</);
+		let attempt = message_str.match(/\>([^|]+)\</);
 		if (attempt !== null && l_cnt == 1 && r_cnt == 1) {
 			let cleaned_up = attempt[1];
 			cleaned_up = cleaned_up.replace(/\u2018|\u2019|\u201A|\uFFFD/g, "\'");

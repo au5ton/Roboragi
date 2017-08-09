@@ -1310,14 +1310,25 @@ _.searchWesternMovie = (query) => {
 				}
 			}
 			logger.log(just_titles);
+			if(just_titles.length === 0) {
+				if(the_year) {
+					reject('no results to report, WITH year restriction')
+				}
+				else {
+					reject('no results to report, WITHOUT year restriction')
+				}
+			}
 			let likely_pick = stringSimilarity.findBestMatch(query, just_titles);
 			for(let i in result_dict) {
 				if(i === likely_pick['bestMatch']['target']) {
-					imdb.getById(result_dict[i], IMDB_TOKEN).then((movie) => {
-						resolve(movie);
-					}).catch((err) => {
-						reject(err);
-					});
+					setTimeout(()=>{
+						imdb.getById(result_dict[i], IMDB_TOKEN).then((movie) => {
+							matchingCache.set('>'+query+'<', movie);
+							resolve(movie);
+						}).catch((err) => {
+							reject(err);
+						});
+					},1000);
 				}
 			}
 		}).catch((err) => {
