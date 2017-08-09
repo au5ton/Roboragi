@@ -229,10 +229,11 @@ _.searchAnimes = (query, query_format) => {
 								synonyms_try = synonyms_try.concat([a_result['canonicalTitle']]);
 							}
 
-							// logger.log('title: ',a_result['title']);
-							// logger.log('en: ', a_result['titles']['en']);
-							// logger.log('en_us: ', a_result['titles']['en_us']);
-							// logger.log('OR: ', a_result['titles']['en'] || a_result['titles']['en_us']);
+							logger.log('title: ',a_result['title']);
+							logger.log('en: ', a_result['titles']['en']);
+							logger.log('en_us: ', a_result['titles']['en_us']);
+							logger.log('OR: ', a_result['titles']['en'] || a_result['titles']['en_us']);
+							logger.log('ALL:', a_result['titles']);
 
 							let some_anime = new Anime({
 								KITSU_ID: a_result['id'],
@@ -996,9 +997,15 @@ _.matchAnimeFromDatabase = (query) => {
 											synonyms_try = synonyms_try.concat([a_result['canonicalTitle']]);
 										}
 
+										// logger.log('title: ',a_result['title']);
+										// logger.log('en: ', a_result['titles']['en']);
+										// logger.log('en_us: ', a_result['titles']['en_us']);
+										// logger.log('OR: ', a_result['titles']['en'] || a_result['titles']['en_us']);
+										// logger.log('ALL:', a_result['titles']);
+
 										let some_anime = new Anime({
-											title_romaji: a_result['titles']['en_jp'],
-											title_english: a_result['titles']['en'],
+											title_romaji: a_result['titles']['en_jp'] || a_result['titles']['ja_jp'] || a_result['titles']['en'] || a_result['titles']['en_us'], //just fuckin put a title there, consider the title_romaji the canonical title. no telling what this will do for Kitsu recognition.
+											title_english: a_result['titles']['en'] || a_result['titles']['en_us'], //for shows originating in the US??? see: https://github.com/au5ton/Roboruri/issues/19
 											title_japanese: a_result['titles']['ja_jp'],
 											hyperlinks: new Hyperlinks(temp_dict),
 											rating: a_result['averageRating'], //preserve kitsu rating AND mal score
