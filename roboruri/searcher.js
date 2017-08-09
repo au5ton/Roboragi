@@ -229,11 +229,11 @@ _.searchAnimes = (query, query_format) => {
 								synonyms_try = synonyms_try.concat([a_result['canonicalTitle']]);
 							}
 
-							logger.log('title: ',a_result['title']);
-							logger.log('en: ', a_result['titles']['en']);
-							logger.log('en_us: ', a_result['titles']['en_us']);
-							logger.log('OR: ', a_result['titles']['en'] || a_result['titles']['en_us']);
-							logger.log('ALL:', a_result['titles']);
+							// logger.log('title: ',a_result['title']);
+							// logger.log('en: ', a_result['titles']['en']);
+							// logger.log('en_us: ', a_result['titles']['en_us']);
+							// logger.log('OR: ', a_result['titles']['en'] || a_result['titles']['en_us']);
+							// logger.log('ALL:', a_result['titles']);
 
 							let some_anime = new Anime({
 								KITSU_ID: a_result['id'],
