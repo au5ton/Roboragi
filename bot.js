@@ -3,6 +3,7 @@ const Telegraf = require('telegraf')
 const logger = require('au5ton-logger');
 logger.setOption('prefix_date',true);
 const util = require('util');
+const path = require('path');
 const fs = require('fs');
 const git = require('git-last-commit');
 const prettyMs = require('pretty-ms');
@@ -18,6 +19,10 @@ const MAL = popura(process.env.MAL_USER, process.env.MAL_PASSWORD);
 const nani = require('nani').init(process.env.ANILIST_CLIENT_ID, process.env.ANILIST_CLIENT_SECRET);
 const Kitsu = require('kitsu');
 const kitsu = new Kitsu();
+const imdb = require('imdb-api');
+const IMDB_TOKEN = {apiKey: process.env.OMDB_API_KEY, timeout: 5000};
+const TVDB = require('node-tvdb');
+const tvdb = new TVDB(process.env.THETVDB_API_KEY);
 
 // Custom modules
 const bot_util = require('./roboruri/bot_util');
@@ -31,6 +36,7 @@ const Rejected = require('./roboruri/classes/Rejected');
 const Anime = require('./roboruri/classes/Anime');
 const Hyperlinks = require('./roboruri/classes/Hyperlinks');
 const Synonyms = require('./roboruri/classes/Synonyms');
+const Genres = require('./roboruri/classes/Genres');
 
 // Create a bot that uses 'polling' to fetch new updates
 
@@ -78,6 +84,10 @@ bot.hears(new RegExp('\/commit|\/commit@' + BOT_USERNAME), (context) => {
 			disable_web_page_preview: true
 		});
 	});
+})
+
+bot.hears(new RegExp('\/flipcoin|\/flipcoin@' + BOT_USERNAME), (context) => {
+	context.reply(Math.random() <= 0.5 ? 'Heads' : 'Tails');
 })
 
 // Listen for regex
@@ -240,17 +250,77 @@ bot.on('text', (context) => {
 				})
 			});
 		}).catch(()=>{});
-		bot_util.isValidBracketSummon(message_str).then((query) => {
-			//context.reply('TheTVDb support coming soon!');
+		bot_util.isValidReverseLTGTSummon(message_str).then((query) => {
+			logger.log('Summon: >', query, '<');
+			console.time('execution time');
+			Searcher.matchFromCache('>'+query+'<').then((result) => {
+				context.reply(buildMovieChatMessage(result),{
+					parse_mode: 'html',
+					disable_web_page_preview: true
+				});
+				console.timeEnd('execution time');
+			}).catch((err) => {
+				logger.warn('cache empty: ', err);
+				Searcher.searchWesternMovie(query).then((result) => {
+					//logger.log(result);
+					context.reply(buildMovieChatMessage(result),{
+						parse_mode: 'html',
+						disable_web_page_preview: true
+					});
+					console.timeEnd('execution time');
+				}).catch((r) => {
+					//well that sucks
+					if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
+						logger.warn('q: >'+query+'< => '+filled_x)
+					}
+					else {
+						logger.error('failed to search with Searcher: ', r);
+					}
+					console.timeEnd('execution time');
+				});
+			});
 		}).catch(()=>{});
+		bot_util.isValidPipeSummon(message_str).then((query) => {
+			logger.log('Summon: |', query, '|');
+			console.time('execution time');
+			Searcher.matchFromCache('|'+query+'|').then((result) => {
+				context.reply(buildAnimeChatMessage(result),{
+					parse_mode: 'html',
+					disable_web_page_preview: true
+				});
+				console.timeEnd('execution time');
+			}).catch((err) => {
+				logger.warn('cache empty: ', err);
+				Searcher.searchWesternTelevision(query).then((result) => {
+					//logger.log(result);
+					context.reply(buildAnimeChatMessage(result),{
+						parse_mode: 'html',
+						disable_web_page_preview: true
+					});
+					console.timeEnd('execution time');
+				}).catch((r) => {
+					//well that sucks
+					if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
+						logger.warn('q: |'+query+'| => '+filled_x)
+					}
+					else {
+						logger.error('failed to search with Searcher: ', r);
+					}
+					console.timeEnd('execution time');
+				});
+			});
+		}).catch((err)=>{logger.error(err)});
 	}
 });
 
 const star_char = '\u272A';
+const star_char_alt = '\u2605';
 const filled_x = '\u274C';
 const warning_sign = '⚠️'; //please work
 const prohibited_symbol = String.fromCodePoint(0x1f232);
 const manga_symbol = String.fromCodePoint(0x1f4d4);
+const tomato_symbol = String.fromCodePoint(0x1f345); //fresh
+const rotten_symbol = String.fromCodePoint(0x1F922); //rotten
 
 function buildHyperlinksForAnime(anime) {
 	let message = '';
@@ -275,8 +345,48 @@ function buildHyperlinksForAnime(anime) {
 		else if(DataSource[e] === DataSource.ANIMEPLANET && exists(anime.hyperlinks.dict[DataSource[e]])) {
 			message += '<a href=\"'+anime.hyperlinks.dict[DataSource[e]]+'\">A-P</a>, ';
 		}
+		else if(DataSource[e] === DataSource.IMDB && exists(anime.hyperlinks.dict[DataSource[e]])) {
+			message += '<a href=\"'+anime.hyperlinks.dict[DataSource[e]]+'\">IMDB</a>, ';
+		}
+		else if(DataSource[e] === DataSource.TVDB && exists(anime.hyperlinks.dict[DataSource[e]])) {
+			message += '<a href=\"'+anime.hyperlinks.dict[DataSource[e]]+'\">TVDB</a>, ';
+		}
 	}
 	return message.substring(0,message.length-2); //remove trailing comma and space
+}
+
+function getIdealIMDBRating(IMDBRatings) {
+	let rate_string;
+	let rate_source;
+	for(let i in IMDBRatings) {
+		if(IMDBRatings[i]['Source'] === 'Internet Movie Database') {
+			if(rate_source === undefined) {
+				let a_rating = IMDBRatings[i]['Value']; //8.1/10
+				rate_string = a_rating + ' on IMDb';
+				rate_source = IMDBRatings[i]['Source'];
+			}
+		}
+		else if(IMDBRatings[i]['Source'] === 'Rotten Tomatoes') {
+			let a_rating = IMDBRatings[i]['Value']; //92%
+			rate_string = a_rating + ' on ' + tomato_symbol + '';
+			rate_source = IMDBRatings[i]['Source'];
+		}
+		else if(IMDBRatings[i]['Source'] === 'Metacritic') {
+			if(rate_source !== 'Rotten Tomatoes') {
+				let a_rating = IMDBRatings[i]['Value']; //69/100
+				rate_string = a_rating + ' on Metacritic';
+				rate_source = IMDBRatings[i]['Source'];
+			}
+		}
+		else {
+			// let a_rating = movie.ratings[i]['Value'];
+			// rate_source = movie.ratings[i]['Source'];
+			// rate_string = a_rating + ' on '+rate_source+' | ';
+		}
+	}
+	if(rate_string) {
+		return rate_string;
+	}
 }
 
 function buildAnimeChatMessage(anime, options) {
@@ -284,6 +394,22 @@ function buildAnimeChatMessage(anime, options) {
 	let message = '';
 	message += '<b>' + anime['title'] + '</b>';
 	message += ' ('+buildHyperlinksForAnime(anime)+')\n';
+
+	//Western shit
+	if(anime['actors_str'] !== null) {
+		message += '<i>Actor(s): ' + anime['actors_str'] + '</i>\n';
+	}
+	if(anime['tvdb_score'] !== null) {
+		message += anime['tvdb_score'] + star_char_alt + ' | ';
+	}
+	if(anime['imdb_ratings'] !== null) {
+		let rate_string = getIdealIMDBRating(anime['imdb_ratings']);
+		if(rate_string) {
+			message += rate_string + ' | ';
+		}
+	}
+
+	//Weeb/general shit
 	if(anime['nsfw'] === true) {
 		message += prohibited_symbol+' | ';
 	}
@@ -293,8 +419,22 @@ function buildAnimeChatMessage(anime, options) {
 	if(anime['rating'] !== null) {
 		message += anime['rating'] + '%' + ' | ';
 	}
-	message += anime['media_type'] + ' | Status: ' + anime['status'] + ' | Episodes: ' + anime['episode_count'] + '\n';
-	if(anime['next_episode_number'] !== null && anime['next_episode_countdown'] !== null) {
+	if(anime['rotten_rating'] !== null) {
+		message += anime['rotten_rating'] + tomato_symbol + ' | ';
+	}
+	if(anime['media_type'] !== null) {
+		message += anime['media_type'] + ' | ';
+	}
+	if(anime['status'] !== null) {
+		message += 'Status: ' + anime['status'] + ' | ';
+	}
+	if(anime['episode_count'] !== null) {
+		message += 'Episodes: ' + anime['episode_count'] + '\n';
+	}
+	if(anime['total_seasons'] !== null) {
+		message += 'Seasons: ' + anime['total_seasons'] + '\n';
+	}
+	if(anime['next_episode_number'] !== null && anime['next_episode_countdown'] !== null && anime['format'] !== 'Western TV' && anime['format'] !== 'Western Movie') {
 		let temp = parseInt(anime['next_episode_countdown']);
 		temp = temp - (temp % 60); //remove extra seconds, so prettyMs doesn't get annoyingly specific
 		temp *= 1000; //seconds -> milliseconds
@@ -320,6 +460,99 @@ function buildMangaChatMessage(anime, options) {
 	message += anime['media_type'] + ', ' + anime['status'] + '\n';
 	message += 'Volumes: ' + anime['volumes'] + ' | Chapters: ' + anime['chapters'];
 	message += '\n' + anime['synopsis'];
+	return message;
+}
+function buildMovieChatMessage(movie, options) {
+	//logger.success(movie)
+	options = options || {};
+	let url = 'http://www.imdb.com/title/' + movie['imdbid'] + '/'
+	let message = '';
+	let unreleased = false;
+	message += '<b>' + movie['title'] + '</b>';
+	message += ' ('+movie['_year_data']+') (<a href=\"'+url+'\">IMDB</a>)\n';
+	if(movie['director']) {
+		message += '<i>Director(s): ' + movie['director'] + '</i>';
+		if(movie['actors']) {
+			message += ' ; ';
+		}
+	}
+	if(movie['actors']) {
+		message += '<i>Actor(s): ' + movie['actors'] + '</i>\n';
+	}
+	else if(movie['director']) {
+		//if there are no actors listed, but there was a director listed
+		message += '\n';
+	}
+	if(movie['released']) {
+		if(new Date() < new Date(movie['released']) && movie['released'] !== 'N/A') {
+			unreleased = true;
+			message += 'Expected release: '+new Date(movie['released']).toDateString()+'\n';
+		}
+	}
+	if(movie.ratings && !unreleased) {
+		//logger.warn(movie.ratings);
+		let rate_string = getIdealIMDBRating(movie.ratings);
+		if(rate_string) {
+			message += rate_string + ' | ';
+		}
+	}
+	if(movie['rated'] && !unreleased) {
+		message += movie['rated'] + ' | ';
+	}
+	if(movie['runtime']) {
+		if(unreleased) {
+			if(movie['runtime'] !== 'N/A') {
+				message += movie['runtime'] + ' | ';
+			}
+			else {
+				//do nothing
+			}
+		}
+		else {
+			message += movie['runtime'] + ' | ';
+		}
+
+	}
+	if(movie['genres']) {
+		if(unreleased) {
+			if(movie['genres'] !== 'N/A') {
+				message += movie['genres'];
+			}
+			else {
+				//do nothing
+			}
+		}
+		else {
+			message += movie['genres'];
+		}
+	}
+	if(movie['plot']) {
+		if(unreleased) {
+			if(movie['plot'] !== 'N/A') {
+				const txtLimit = 220;
+				let the_plot = movie['plot'].replace(new RegExp('<br>', 'g'), '')
+				if (the_plot.length > txtLimit) {
+					message += '\n'+the_plot.substring(0, txtLimit - 3) + '...';
+				}
+				else {
+					message += '\n'+the_plot;
+				}
+			}
+			else {
+				//do nothing
+			}
+		}
+		else {
+			const txtLimit = 220;
+			let the_plot = movie['plot'].replace(new RegExp('<br>', 'g'), '')
+			if (the_plot.length > txtLimit) {
+				message += '\n'+the_plot.substring(0, txtLimit - 3) + '...';
+			}
+			else {
+				message += '\n'+the_plot;
+			}
+		}
+	}
 	return message;
 }
 
@@ -351,6 +584,55 @@ kitsu.auth({
     username: process.env.KITSU_USER,
     password: process.env.KITSU_PASSWORD
 }).then((access_token) => {
-    if (kitsu.isAuth) logger.success('Kitsu authenticated.');
-    else logger.error('Kitsu failed to authenticate.');
+    if (kitsu.isAuth) {
+		logger.success('Kitsu authenticated.');
+	}
+    else {
+		logger.error('Kitsu failed to authenticate.');
+		process.exit();
+	}
+});
+
+logger.warn('Is synonyms.db operational?');
+const sqlite3 = require('sqlite3').verbose();
+let loc = path.dirname(require.main.filename) + '/synonyms.db';
+var db = new sqlite3.Database(loc, sqlite3.OPEN_READONLY);
+try {
+	db.serialize(() => {
+		setTimeout(() => {
+			//delay so the startup messages look better
+			logger.success('Synonyms.db seems operational.');
+		},1000);
+	});
+	db.close();
+}
+catch(err) {
+	logger.error('Error serializing synonyms.db: ',err);
+	process.exit();
+}
+
+logger.warn('IMDb/OMDb connection operational?');
+imdb.getById('tt0090190', {apiKey: process.env.OMDB_API_KEY, timeout: 5000}).then((movie) => {
+	if(String(movie['imdbid']) === 'tt0090190') {
+		logger.success('IMDb/OMDb connection good.');
+	}
+	else {
+		logger.warn('IMDb/OMDb connection is ... weird.');
+	}
+}).catch((err) => {
+	logger.error('Error testing IMDb/OMDb connection: ',err);
+	process.exit();
+});
+
+logger.warn('TheTVDB connection operational?');
+tvdb.getSeriesById(71663).then((response) => {
+	if(String(response['id']) === '71663') {
+		logger.success('TheTVDB connection good.');
+	}
+	else {
+		logger.warn('TheTVDB connection is ... weird.');
+	}
+}).catch((error) => {
+	logger.error('Error testing TheTVDB connection: ',err);
+	process.exit();
 });

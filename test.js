@@ -21,6 +21,7 @@ const Rejected = require('./roboruri/classes/Rejected');
 const Anime = require('./roboruri/classes/Anime');
 const Hyperlinks = require('./roboruri/classes/Hyperlinks');
 const Synonyms = require('./roboruri/classes/Synonyms');
+const Genres = require('./roboruri/classes/Genres');
 
 const non_empty = (val) => {
     return (val !== null && val !== undefined && val !== '');
@@ -159,14 +160,42 @@ const non_empty = (val) => {
 // });
 
 
-ANILIST.get('anime/97863').then((results) => {
-    logger.log(results['airing'])
-    let x = new Anime();
-    x.unrelated_tag = 'doot';
-    logger.log(x);
-}).catch((err) => {
-    logger.error(err);
-});
+// ANILIST.get('anime/97863').then((results) => {
+//     logger.log(results['airing'])
+//     let x = new Anime();
+//     x.unrelated_tag = 'doot';
+//     logger.log(x);
+// }).catch((err) => {
+//     logger.error(err);
+// });
+
+//tt4731072
+
+const imdb = require('imdb-api');
+const token = {apiKey: process.env.OMDB_API_KEY};
+// imdb.search({
+//     title: process.argv[2]
+// }, token).then((results)=> {
+//     logger.log(results.results);
+// }).catch(console.log);
+imdb.getById('tt2575988', token).then(logger.log).catch(logger.error);
+
+// const TVDB = require('node-tvdb');
+// const tvdb = new TVDB(process.env.THETVDB_API_KEY);
+//
+// //289909
+//
+// tvdb.getSeriesByName(process.argv[2])
+// .then((response) => {
+//     for(let i in response) {
+//         logger.log(response[i]['seriesName'], ' (',response[i]['id'],')',' [',response[i]['status'],']');
+//     }
+// })
+// .catch(logger.error);
+
+// tvdb.getSeriesById(289909)
+// .then(logger.log)
+// .catch(logger.error);
 
 
 //logger.log('access_token: ', access_token);
