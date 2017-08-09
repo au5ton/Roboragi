@@ -14,7 +14,8 @@ _.DataSource = {
     'KITSU':'DataSource.KITSU',
     'MANGAUPDATES':'DataSource.MANGAUPDATES',
     'ANIMEPLANET':'DataSource.ANIMEPLANET',
-    'IMDB':'DataSource.OMDB_API'
+    'IMDB':'DataSource.OMDB_API',
+    'TVDB':'DataSource.THETVDB_API'
 };
 _.MalMediaTypeMap = {
     'TV': 'TV',
@@ -65,6 +66,7 @@ _.IMDBMediaTypeMap = {
     'movie': 'Movie',
     'series': 'TV'
 }
+
 /*
 'TV',
 'Movie',
@@ -109,6 +111,10 @@ _.KitsuStatusMap = {
     'unreleased': 'Unreleased', //this isn't uniform, but fuck it. anilist isn't uniform and
     'upcoming': 'Upcoming', //we have Anime and Manga being forced into the same object for shits and giggles
     'tba': 'TBA'
+}
+_.TVDBStatusMap = {
+    'Continuing': 'Currently Airing', //This is ambiguous because TVDb doesn't seem to have a case for unaired series (at least, that's used as often as it should be)
+    'Ended': 'Finished Airing'
 }
 
 module.exports = _;

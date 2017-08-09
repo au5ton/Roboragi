@@ -46,6 +46,7 @@ const AnilistStatusMap = require('./enums').AnilistStatusMap;
 const AnilistMediaTypeMap = require('./enums').AnilistMediaTypeMap;
 const KitsuStatusMap = require('./enums').KitsuStatusMap;
 const KitsuMediaTypeMap = require('./enums').KitsuMediaTypeMap;
+const TVDBStatusMap = require('./enums').TVDBStatusMap;
 
 // Custom classes
 const Resolved = require('./classes/Resolved');
@@ -53,6 +54,7 @@ const Rejected = require('./classes/Rejected');
 const Anime = require('./classes/Anime');
 const Hyperlinks = require('./classes/Hyperlinks');
 const Synonyms = require('./classes/Synonyms');
+const Genres = require('./classes/Genres');
 
 _.searchAnimes = (query, query_format) => {
 	//logger.log('searchAnimes() with \'', query, '\'');
@@ -1288,18 +1290,18 @@ _.searchWesternMovie = (query) => {
 		let the_year = the_match === null ? undefined : the_match[1]; //no_volumes(a_result['chapters']) === '0' ? 'Unknown' : a_result['chapters']
 		let the_query = String(query.toLowerCase());
 		if(the_year) {
-			logger.warn('the_year: `', the_year,'`',', parsed: ',parseInt(the_year));
+			//logger.warn('the_year: `', the_year,'`',', parsed: ',parseInt(the_year));
 			if(!isNaN(parseInt(the_year))) {
-				logger.warn('removing parenthesised stuff from the_query');
+				//logger.warn('removing parenthesised stuff from the_query');
 				the_query = the_query.replace(the_match[0], '').trim();
 			}
-			logger.warn('the_query: `',the_query,'`')
+			//logger.warn('the_query: `',the_query,'`')
 		}
 		imdb.search({
 			title: the_query
 		}, IMDB_TOKEN).then((search)=> {
 			let movies = search.results;
-			logger.log(movies)
+			//logger.log(movies)
 			for(let i in movies) {
 				if(movies[i].type === 'movie') {
 					if(the_year !== undefined) {
@@ -1314,7 +1316,7 @@ _.searchWesternMovie = (query) => {
 					}
 				}
 			}
-			logger.log(just_titles);
+			//logger.log(just_titles);
 			if(just_titles.length === 0) {
 				if(the_year) {
 					reject('no results to report, WITH year restriction')
@@ -1344,62 +1346,98 @@ _.searchWesternMovie = (query) => {
 
 _.searchWesternTelevision = (query) => {
 	return new Promise((resolve, reject) => {
-		let result_dict = {};
-		let just_titles = [];
-		let the_query = String(query.toLowerCase());
-		tvdb.getSeriesByName(query)
-		.then((response) => {
+		let anime_array = [];
+
+		/*
+
+		anime_arrays[ResolvedArray[r].DataSource].push(new Anime({
+			MAL_ID: a_result['id'],
+			title_romaji: a_result['title'],
+			title_english: a_result['english'],
+			hyperlinks: new Hyperlinks(temp_dict),
+			score_str: a_result['score'],
+			media_type: MalMediaTypeMap[a_result['type']],
+			status: MalStatusMap[a_result['status']],
+			episode_count: a_result['episodes'],
+			synopsis_full: a_result['synopsis'],
+			start_date: a_result['start_date'],
+			end_date: a_result['end_date'],
+			image: a_result['image'],
+			synonyms: new Synonyms(a_result['synonyms'])
+		}));
+
+		*/
+
+		tvdb.getSeriesByName(query).then((response) => {
+
+			//be confident that at least ONE result will be here
+
 			//logger.log(response);
 			for(let i in response) {
-				logger.log(response[i]);
+				//logger.log(response[i]);
+				//AGAIN, not a real anime, but all our existing code
+				//base revolves around the Anime class and let's reuse existing code to our advantage
+				//Shall we?
+				//logger.log('aliases: ',response[i]['aliases']);
+				//logger.log('Synonyms: ',new Synonyms(response[i]['aliases']));
+				let temp_dict = {};
+				temp_dict[DataSource.TVDB] = 'https://thetvdb.com/?tab=series&id=' + response[i]['id'];
+				anime_array.push(new Anime({
+					TVDB_ID: response[i]['id'],
+					title_romaji: response[i]['seriesName'],
+					synopsis_full: response[i]['overview'],
+					status: TVDBStatusMap[response[i]['status']],
+					synonyms: new Synonyms(response[i]['aliases']),
+					hyperlinks: new Hyperlinks(temp_dict),
+					genres: new Genres(response[i]['genre']),
+					start_date: response[i]['firstAired']
+				}));
 				//logger.log(response[i]['seriesName'], ' (',response[i]['id'],')');
 			}
+			let best_match = _.findBestMatchForAnimeArray(query,anime_array); //best guess, including TVDb aliases
+			tvdb.getSeriesById(best_match.TVDB_ID).then((show) => {
+				//update best_match with new info
+				best_match.IMDB_ID = show['imdbId'];
+				best_match.tvdb_score = show['siteRating'];
+
+				imdb.getById(best_match.IMDB_ID, IMDB_TOKEN).then((TVShow) => {
+					let temp_dict = {};
+					temp_dict[DataSource.IMDB] = TVShow['imdburl'];
+
+					//here's where things get a little funny
+					//IMDb (OMDb) provides genres in: 'Animation, Comedy, Drama'
+					//IMDb also confirms there are no genres that have spaces: http://www.imdb.com/genre/
+
+					let temp_genres = TVShow['genres'].replace(' ','').split(',');
+					temp_genres.splice(temp_genres.indexOf('N/A'),1); //remove any (or probably one of) 'N/A'
+
+					let imdb_anime = new Anime({
+						imdb_ratings: TVShow['ratings'],
+						hyperlinks: new Hyperlinks(temp_dict),
+						genres: new Genres(temp_genres),
+						total_seasons: TVShow['totalseasons'],
+						year_of_release: TVShow['year'],
+						actors_str: TVShow['actors']
+					});
+
+					best_match = Anime.consolidate(best_match, imdb_anime);
+					//logger.success(best_match);
+					matchingCache.set('|'+query+'|', best_match.flattened);
+					resolve(best_match.flattened);
+				}).catch((err) => {
+					reject(err);
+				});
+
+			})
+			.catch((err) => {
+				// ¯\_(ツ)_/¯
+				reject(err);
+			});
 		})
-		.catch(logger.error);
-		// imdb.search({
-		// 	title: the_query
-		// }, IMDB_TOKEN).then((search)=> {
-		// 	let movies = search.results;
-		// 	logger.log(movies)
-		// 	for(let i in movies) {
-		// 		if(movies[i].type === 'movie') {
-		// 			if(the_year !== undefined) {
-		// 				if(the_year === String(movies[i].year)) {
-		// 					result_dict[movies[i]['title']] = movies[i]['imdbid'];
-		// 					just_titles.push(movies[i]['title']);
-		// 				}
-		// 			}
-		// 			else {
-		// 				result_dict[movies[i]['title']] = movies[i]['imdbid'];
-		// 				just_titles.push(movies[i]['title']);
-		// 			}
-		// 		}
-		// 	}
-		// 	logger.log(just_titles);
-		// 	if(just_titles.length === 0) {
-		// 		if(the_year) {
-		// 			reject('no results to report, WITH year restriction')
-		// 		}
-		// 		else {
-		// 			reject('no results to report, WITHOUT year restriction')
-		// 		}
-		// 	}
-		// 	let likely_pick = stringSimilarity.findBestMatch(query, just_titles);
-		// 	for(let i in result_dict) {
-		// 		if(i === likely_pick['bestMatch']['target']) {
-		// 			setTimeout(()=>{
-		// 				imdb.getById(result_dict[i], IMDB_TOKEN).then((movie) => {
-		// 					matchingCache.set('>'+query+'<', movie);
-		// 					resolve(movie);
-		// 				}).catch((err) => {
-		// 					reject(err);
-		// 				});
-		// 			},1000);
-		// 		}
-		// 	}
-		// }).catch((err) => {
-		// 	reject(err);
-		// });
+		.catch((err) => {
+			//and error with be thrown if nothing is found
+			reject(err);
+		});
 	});
 };
 

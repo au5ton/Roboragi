@@ -31,6 +31,7 @@ const Rejected = require('./roboruri/classes/Rejected');
 const Anime = require('./roboruri/classes/Anime');
 const Hyperlinks = require('./roboruri/classes/Hyperlinks');
 const Synonyms = require('./roboruri/classes/Synonyms');
+const Genres = require('./roboruri/classes/Genres');
 
 // Create a bot that uses 'polling' to fetch new updates
 
@@ -277,7 +278,7 @@ bot.on('text', (context) => {
 			logger.log('Summon: |', query, '|');
 			console.time('execution time');
 			Searcher.matchFromCache('|'+query+'|').then((result) => {
-				context.reply(buildTelevisionChatMessage(result),{
+				context.reply(buildAnimeChatMessage(result),{
 					parse_mode: 'html',
 					disable_web_page_preview: true
 				});
@@ -286,7 +287,7 @@ bot.on('text', (context) => {
 				logger.warn('cache empty: ', err);
 				Searcher.searchWesternTelevision(query).then((result) => {
 					//logger.log(result);
-					context.reply(buildTelevisionChatMessage(result),{
+					context.reply(buildAnimeChatMessage(result),{
 						parse_mode: 'html',
 						disable_web_page_preview: true
 					});
@@ -307,6 +308,7 @@ bot.on('text', (context) => {
 });
 
 const star_char = '\u272A';
+const star_char_alt = '\u2605';
 const filled_x = '\u274C';
 const warning_sign = '⚠️'; //please work
 const prohibited_symbol = String.fromCodePoint(0x1f232);
@@ -337,8 +339,48 @@ function buildHyperlinksForAnime(anime) {
 		else if(DataSource[e] === DataSource.ANIMEPLANET && exists(anime.hyperlinks.dict[DataSource[e]])) {
 			message += '<a href=\"'+anime.hyperlinks.dict[DataSource[e]]+'\">A-P</a>, ';
 		}
+		else if(DataSource[e] === DataSource.IMDB && exists(anime.hyperlinks.dict[DataSource[e]])) {
+			message += '<a href=\"'+anime.hyperlinks.dict[DataSource[e]]+'\">IMDB</a>, ';
+		}
+		else if(DataSource[e] === DataSource.TVDB && exists(anime.hyperlinks.dict[DataSource[e]])) {
+			message += '<a href=\"'+anime.hyperlinks.dict[DataSource[e]]+'\">TVDB</a>, ';
+		}
 	}
 	return message.substring(0,message.length-2); //remove trailing comma and space
+}
+
+function getIdealIMDBRating(IMDBRatings) {
+	let rate_string;
+	let rate_source;
+	for(let i in IMDBRatings) {
+		if(IMDBRatings[i]['Source'] === 'Internet Movie Database') {
+			if(rate_source === undefined) {
+				let a_rating = IMDBRatings[i]['Value']; //8.1/10
+				rate_string = a_rating + ' on IMDb';
+				rate_source = IMDBRatings[i]['Source'];
+			}
+		}
+		else if(IMDBRatings[i]['Source'] === 'Rotten Tomatoes') {
+			let a_rating = IMDBRatings[i]['Value']; //92%
+			rate_string = a_rating + ' on ' + tomato_symbol + '';
+			rate_source = IMDBRatings[i]['Source'];
+		}
+		else if(IMDBRatings[i]['Source'] === 'Metacritic') {
+			if(rate_source !== 'Rotten Tomatoes') {
+				let a_rating = IMDBRatings[i]['Value']; //69/100
+				rate_string = a_rating + ' on Metacritic';
+				rate_source = IMDBRatings[i]['Source'];
+			}
+		}
+		else {
+			// let a_rating = movie.ratings[i]['Value'];
+			// rate_source = movie.ratings[i]['Source'];
+			// rate_string = a_rating + ' on '+rate_source+' | ';
+		}
+	}
+	if(rate_string) {
+		return rate_string;
+	}
 }
 
 function buildAnimeChatMessage(anime, options) {
@@ -346,6 +388,22 @@ function buildAnimeChatMessage(anime, options) {
 	let message = '';
 	message += '<b>' + anime['title'] + '</b>';
 	message += ' ('+buildHyperlinksForAnime(anime)+')\n';
+
+	//Western shit
+	if(anime['actors_str'] !== null) {
+		message += '<i>Actor(s): ' + anime['actors_str'] + '</i>\n';
+	}
+	if(anime['tvdb_score'] !== null) {
+		message += anime['tvdb_score'] + star_char_alt + ' | ';
+	}
+	if(anime['imdb_ratings'] !== null) {
+		let rate_string = getIdealIMDBRating(anime['imdb_ratings']);
+		if(rate_string) {
+			message += rate_string + ' | ';
+		}
+	}
+
+	//Weeb/general shit
 	if(anime['nsfw'] === true) {
 		message += prohibited_symbol+' | ';
 	}
@@ -358,7 +416,18 @@ function buildAnimeChatMessage(anime, options) {
 	if(anime['rotten_rating'] !== null) {
 		message += anime['rotten_rating'] + tomato_symbol + ' | ';
 	}
-	message += anime['media_type'] + ' | Status: ' + anime['status'] + ' | Episodes: ' + anime['episode_count'] + '\n';
+	if(anime['media_type'] !== null) {
+		message += anime['media_type'] + ' | ';
+	}
+	if(anime['status'] !== null) {
+		message += 'Status: ' + anime['status'] + ' | ';
+	}
+	if(anime['episode_count'] !== null) {
+		message += 'Episodes: ' + anime['episode_count'] + '\n';
+	}
+	if(anime['total_seasons'] !== null) {
+		message += 'Seasons: ' + anime['total_seasons'] + '\n';
+	}
 	if(anime['next_episode_number'] !== null && anime['next_episode_countdown'] !== null && anime['format'] !== 'Western TV' && anime['format'] !== 'Western Movie') {
 		let temp = parseInt(anime['next_episode_countdown']);
 		temp = temp - (temp % 60); //remove extra seconds, so prettyMs doesn't get annoyingly specific
@@ -388,7 +457,7 @@ function buildMangaChatMessage(anime, options) {
 	return message;
 }
 function buildMovieChatMessage(movie, options) {
-	logger.success(movie)
+	//logger.success(movie)
 	options = options || {};
 	let url = 'http://www.imdb.com/title/' + movie['imdbid'] + '/'
 	let message = '';
@@ -415,37 +484,10 @@ function buildMovieChatMessage(movie, options) {
 		}
 	}
 	if(movie.ratings && !unreleased) {
-		logger.warn(movie.ratings);
-		let rate_string;
-		let rate_source;
-		for(let i in movie.ratings) {
-			if(movie.ratings[i]['Source'] === 'Internet Movie Database') {
-				if(rate_source === undefined) {
-					let a_rating = movie.ratings[i]['Value']; //8.1/10
-					rate_string = a_rating + ' on IMDb | ';
-					rate_source = movie.ratings[i]['Source'];
-				}
-			}
-			else if(movie.ratings[i]['Source'] === 'Rotten Tomatoes') {
-				let a_rating = movie.ratings[i]['Value']; //92%
-				rate_string = a_rating + ' on ' + tomato_symbol + ' | ';
-				rate_source = movie.ratings[i]['Source'];
-			}
-			else if(movie.ratings[i]['Source'] === 'Metacritic') {
-				if(rate_source !== 'Rotten Tomatoes') {
-					let a_rating = movie.ratings[i]['Value']; //69/100
-					rate_string = a_rating + ' on Metacritic | ';
-					rate_source = movie.ratings[i]['Source'];
-				}
-			}
-			else {
-				// let a_rating = movie.ratings[i]['Value'];
-				// rate_source = movie.ratings[i]['Source'];
-				// rate_string = a_rating + ' on '+rate_source+' | ';
-			}
-		}
+		//logger.warn(movie.ratings);
+		let rate_string = getIdealIMDBRating(movie.ratings);
 		if(rate_string) {
-			message += rate_string;
+			message += rate_string + ' | ';
 		}
 	}
 	if(movie['rated'] && !unreleased) {

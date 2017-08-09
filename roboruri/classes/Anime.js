@@ -5,6 +5,7 @@ const logger = require('au5ton-logger');
 const DataSource = require('../enums').DataSource;
 const Hyperlinks = require('./Hyperlinks');
 const Synonyms = require('./Synonyms');
+const Genres = require('./Genres');
 
 /*
 
@@ -211,6 +212,36 @@ class Anime {
         }
         else {
             //this.hard_format = null;
+        }
+        if(non_empty(options.tvdb_score)) {
+            this.tvdb_score = options.tvdb_score;
+        }
+        else {
+            //this.tvdb_score = null;
+        }
+        if(non_empty(options.imdb_ratings)) {
+            this.imdb_ratings = options.imdb_ratings;
+        }
+        else {
+            //this.imdb_ratings = null;
+        }
+        if(non_empty(options.total_seasons)) {
+            this.total_seasons = options.total_seasons;
+        }
+        else {
+            //this.total_seasons = null;
+        }
+        if(non_empty(options.year_of_release)) {
+            this.year_of_release = options.year_of_release;
+        }
+        else {
+            //this.year_of_release = null;
+        }
+        if(non_empty(options.actors_str)) {
+            this.actors_str = options.actors_str;
+        }
+        else {
+            //this.actors_str = null;
         }
 
         //Indentifiers
@@ -483,6 +514,26 @@ class Anime {
         if(non_def(copy.rotten_rating)) {
             copy.rotten_rating = null;
         }
+        //tvdb_score
+        if(non_def(copy.tvdb_score)) {
+            copy.tvdb_score = null;
+        }
+        //imdb_ratings
+        if(non_def(copy.imdb_ratings)) {
+            copy.imdb_ratings = null;
+        }
+        //total_seasons
+        if(non_def(copy.total_seasons)) {
+            copy.total_seasons = null;
+        }
+        //year_of_release
+        if(non_def(copy.year_of_release)) {
+            copy.year_of_release = null;
+        }
+        //actors_str
+        if(non_def(copy.actors_str)) {
+            copy.actors_str = null;
+        }
         //Identifers
         if(non_def(copy.MAL_ID)) {
             copy.MAL_ID = null;
@@ -518,6 +569,10 @@ class Anime {
         if(non_def(copy.hyperlinks)) {
             copy.hyperlinks = null;
         }
+        //genres
+        if(non_def(copy.genres)) {
+            copy.genres = null;
+        }
         copy._flattened = true
         return copy;
     }
@@ -525,10 +580,12 @@ class Anime {
         //consolidate Class objects manually and set aside to re-insert
         let temp_hyperlinks;
         let temp_synonyms;
+        let temp_genres;
         for(let i in arguments) {
             if(arguments[i] instanceof Anime) {
                 temp_hyperlinks = Hyperlinks.consolidate(temp_hyperlinks,arguments[i].hyperlinks);
                 temp_synonyms = Synonyms.consolidate(temp_synonyms,arguments[i].synonyms);
+                temp_genres = Genres.consolidate(temp_genres,arguments[i].genres);
             }
             else {
                 //logger.warn('Anime.consolidate() supplied with non-Anime instance: ', arguments[i])
@@ -537,6 +594,7 @@ class Anime {
         let copy = Object.assign.apply(this, [new Anime()].concat(Array.from(arguments)))
         copy.hyperlinks = temp_hyperlinks;
         copy.synonyms = temp_synonyms;
+        copy.genres = temp_genres;
         return copy;
     }
 }
