@@ -3,6 +3,7 @@ const Telegraf = require('telegraf')
 const logger = require('au5ton-logger');
 logger.setOption('prefix_date',true);
 const util = require('util');
+const path = require('path');
 const fs = require('fs');
 const git = require('git-last-commit');
 const prettyMs = require('pretty-ms');
@@ -18,6 +19,10 @@ const MAL = popura(process.env.MAL_USER, process.env.MAL_PASSWORD);
 const nani = require('nani').init(process.env.ANILIST_CLIENT_ID, process.env.ANILIST_CLIENT_SECRET);
 const Kitsu = require('kitsu');
 const kitsu = new Kitsu();
+const imdb = require('imdb-api');
+const IMDB_TOKEN = {apiKey: process.env.OMDB_API_KEY, timeout: 5000};
+const TVDB = require('node-tvdb');
+const tvdb = new TVDB(process.env.THETVDB_API_KEY);
 
 // Custom modules
 const bot_util = require('./roboruri/bot_util');
@@ -244,9 +249,6 @@ bot.on('text', (context) => {
 					});
 				})
 			});
-		}).catch(()=>{});
-		bot_util.isValidBracketSummon(message_str).then((query) => {
-			//context.reply('TheTVDb support coming soon!');
 		}).catch(()=>{});
 		bot_util.isValidReverseLTGTSummon(message_str).then((query) => {
 			logger.log('Summon: >', query, '<');
@@ -582,6 +584,55 @@ kitsu.auth({
     username: process.env.KITSU_USER,
     password: process.env.KITSU_PASSWORD
 }).then((access_token) => {
-    if (kitsu.isAuth) logger.success('Kitsu authenticated.');
-    else logger.error('Kitsu failed to authenticate.');
+    if (kitsu.isAuth) {
+		logger.success('Kitsu authenticated.');
+	}
+    else {
+		logger.error('Kitsu failed to authenticate.');
+		process.exit();
+	}
+});
+
+logger.warn('Is synonyms.db operational?');
+const sqlite3 = require('sqlite3').verbose();
+let loc = path.dirname(require.main.filename) + '/synonyms.db';
+var db = new sqlite3.Database(loc, sqlite3.OPEN_READONLY);
+try {
+	db.serialize(() => {
+		setTimeout(() => {
+			//delay so the startup messages look better
+			logger.success('Synonyms.db seems operational.');
+		},1000);
+	});
+	db.close();
+}
+catch(err) {
+	logger.error('Error serializing synonyms.db: ',err);
+	process.exit();
+}
+
+logger.warn('IMDb/OMDb connection operational?');
+imdb.getById('tt0090190', {apiKey: process.env.OMDB_API_KEY, timeout: 5000}).then((movie) => {
+	if(String(movie['imdbid']) === 'tt0090190') {
+		logger.success('IMDb/OMDb connection good.');
+	}
+	else {
+		logger.warn('IMDb/OMDb connection is ... weird.');
+	}
+}).catch((err) => {
+	logger.error('Error testing IMDb/OMDb connection: ',err);
+	process.exit();
+});
+
+logger.warn('TheTVDB connection operational?');
+tvdb.getSeriesById(71663).then((response) => {
+	if(String(response['id']) === '71663') {
+		logger.success('TheTVDB connection good.');
+	}
+	else {
+		logger.warn('TheTVDB connection is ... weird.');
+	}
+}).catch((error) => {
+	logger.error('Error testing TheTVDB connection: ',err);
+	process.exit();
 });
