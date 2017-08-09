@@ -168,25 +168,30 @@ const non_empty = (val) => {
 //     logger.error(err);
 // });
 
-const imdb = require('imdb-api');
-const token = {apiKey: process.env.OMDB_API_KEY};
-imdb.search({
-    title: process.argv[2]
-}, token).then((results)=> {
-    logger.log(results.results);
-}).catch(console.log);
+// const imdb = require('imdb-api');
+// const token = {apiKey: process.env.OMDB_API_KEY};
+// imdb.search({
+//     title: process.argv[2]
+// }, token).then((results)=> {
+//     logger.log(results.results);
+// }).catch(console.log);
 
-// const TVDB = require('node-tvdb');
-// const tvdb = new TVDB(process.env.THETVDB_API_KEY);
-//
+const TVDB = require('node-tvdb');
+const tvdb = new TVDB(process.env.THETVDB_API_KEY);
+
+//289909
+
 // tvdb.getSeriesByName(process.argv[2])
-//     .then((response) => {
-//         for(let i in response) {
-//             logger.log(response[i]['seriesName'], ' (',response[i]['id'],')');
-//         }
-//     })
-//     .catch(logger.error);
+// .then((response) => {
+//     for(let i in response) {
+//         logger.log(response[i]['seriesName'], ' (',response[i]['id'],')');
+//     }
+// })
+// .catch(logger.error);
 
+tvdb.getSeriesById(289909)
+.then(logger.log)
+.catch(logger.error);
 
 
 //logger.log('access_token: ', access_token);

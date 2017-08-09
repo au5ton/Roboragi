@@ -272,6 +272,36 @@ bot.on('text', (context) => {
 					console.timeEnd('execution time');
 				});
 			});
+		}).catch(()=>{});
+		bot_util.isValidPipeSummon(message_str).then((query) => {
+			logger.log('Summon: |', query, '|');
+			console.time('execution time');
+			Searcher.matchFromCache('|'+query+'|').then((result) => {
+				context.reply(buildTelevisionChatMessage(result),{
+					parse_mode: 'html',
+					disable_web_page_preview: true
+				});
+				console.timeEnd('execution time');
+			}).catch((err) => {
+				logger.warn('cache empty: ', err);
+				Searcher.searchWesternTelevision(query).then((result) => {
+					//logger.log(result);
+					context.reply(buildTelevisionChatMessage(result),{
+						parse_mode: 'html',
+						disable_web_page_preview: true
+					});
+					console.timeEnd('execution time');
+				}).catch((r) => {
+					//well that sucks
+					if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
+						logger.warn('q: |'+query+'| => '+filled_x)
+					}
+					else {
+						logger.error('failed to search with Searcher: ', r);
+					}
+					console.timeEnd('execution time');
+				});
+			});
 		}).catch((err)=>{logger.error(err)});
 	}
 });
@@ -358,6 +388,127 @@ function buildMangaChatMessage(anime, options) {
 	return message;
 }
 function buildMovieChatMessage(movie, options) {
+	logger.success(movie)
+	options = options || {};
+	let url = 'http://www.imdb.com/title/' + movie['imdbid'] + '/'
+	let message = '';
+	let unreleased = false;
+	message += '<b>' + movie['title'] + '</b>';
+	message += ' ('+movie['_year_data']+') (<a href=\"'+url+'\">IMDB</a>)\n';
+	if(movie['director']) {
+		message += '<i>Director(s): ' + movie['director'] + '</i>';
+		if(movie['actors']) {
+			message += ' ; ';
+		}
+	}
+	if(movie['actors']) {
+		message += '<i>Actor(s): ' + movie['actors'] + '</i>\n';
+	}
+	else if(movie['director']) {
+		//if there are no actors listed, but there was a director listed
+		message += '\n';
+	}
+	if(movie['released']) {
+		if(new Date() < new Date(movie['released']) && movie['released'] !== 'N/A') {
+			unreleased = true;
+			message += 'Expected release: '+new Date(movie['released']).toDateString()+'\n';
+		}
+	}
+	if(movie.ratings && !unreleased) {
+		logger.warn(movie.ratings);
+		let rate_string;
+		let rate_source;
+		for(let i in movie.ratings) {
+			if(movie.ratings[i]['Source'] === 'Internet Movie Database') {
+				if(rate_source === undefined) {
+					let a_rating = movie.ratings[i]['Value']; //8.1/10
+					rate_string = a_rating + ' on IMDb | ';
+					rate_source = movie.ratings[i]['Source'];
+				}
+			}
+			else if(movie.ratings[i]['Source'] === 'Rotten Tomatoes') {
+				let a_rating = movie.ratings[i]['Value']; //92%
+				rate_string = a_rating + ' on ' + tomato_symbol + ' | ';
+				rate_source = movie.ratings[i]['Source'];
+			}
+			else if(movie.ratings[i]['Source'] === 'Metacritic') {
+				if(rate_source !== 'Rotten Tomatoes') {
+					let a_rating = movie.ratings[i]['Value']; //69/100
+					rate_string = a_rating + ' on Metacritic | ';
+					rate_source = movie.ratings[i]['Source'];
+				}
+			}
+			else {
+				// let a_rating = movie.ratings[i]['Value'];
+				// rate_source = movie.ratings[i]['Source'];
+				// rate_string = a_rating + ' on '+rate_source+' | ';
+			}
+		}
+		if(rate_string) {
+			message += rate_string;
+		}
+	}
+	if(movie['rated'] && !unreleased) {
+		message += movie['rated'] + ' | ';
+	}
+	if(movie['runtime']) {
+		if(unreleased) {
+			if(movie['runtime'] !== 'N/A') {
+				message += movie['runtime'] + ' | ';
+			}
+			else {
+				//do nothing
+			}
+		}
+		else {
+			message += movie['runtime'] + ' | ';
+		}
+
+	}
+	if(movie['genres']) {
+		if(unreleased) {
+			if(movie['genres'] !== 'N/A') {
+				message += movie['genres'];
+			}
+			else {
+				//do nothing
+			}
+		}
+		else {
+			message += movie['genres'];
+		}
+	}
+	if(movie['plot']) {
+		if(unreleased) {
+			if(movie['plot'] !== 'N/A') {
+				const txtLimit = 220;
+				let the_plot = movie['plot'].replace(new RegExp('<br>', 'g'), '')
+				if (the_plot.length > txtLimit) {
+					message += '\n'+the_plot.substring(0, txtLimit - 3) + '...';
+				}
+				else {
+					message += '\n'+the_plot;
+				}
+			}
+			else {
+				//do nothing
+			}
+		}
+		else {
+			const txtLimit = 220;
+			let the_plot = movie['plot'].replace(new RegExp('<br>', 'g'), '')
+			if (the_plot.length > txtLimit) {
+				message += '\n'+the_plot.substring(0, txtLimit - 3) + '...';
+			}
+			else {
+				message += '\n'+the_plot;
+			}
+		}
+	}
+	return message;
+}
+
+function buildTelevisionChatMessage(movie, options) {
 	logger.success(movie)
 	options = options || {};
 	let url = 'http://www.imdb.com/title/' + movie['imdbid'] + '/'
