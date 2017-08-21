@@ -347,7 +347,7 @@ setInterval(() => {
 		if(elapsed_time > INLINE_SUMMON_DELAY && elapsed_time < TELEGRAM_SUMMON_TIMEOUT && LastInlineRequest[from_id]['status'] === 'unprocessed') {
 			LastInlineRequest[from_id]['status'] = 'pending';
 			// safe to reply
-			logger.warn('Delay has elapsed, building query answer! ', LastInlineRequest);
+			logger.warn('inline_query: ', LastInlineRequest[from_id]['query']);
 			bot_util.isValidBraceSummon(LastInlineRequest[from_id]['query']).then((query) => {
 				logger.log('Summon: {', query, '}');
 				console.time('execution time');
@@ -556,7 +556,7 @@ setInterval(() => {
 		}
 		if(elapsed_time > TELEGRAM_SUMMON_TIMEOUT) {
 			//stores the user ids of users who cant have their request fullfilled anymore
-			logger.warn('removing '+from_id+' due to timeout')
+			logger.warn('to_be_removed '+from_id+' due to timeout')
 			to_be_removed.push(from_id);
 		}
 	}
