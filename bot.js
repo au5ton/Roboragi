@@ -127,8 +127,9 @@ bot.on('message', (context) => {
 	else if(context.updateType === 'message' && context.updateSubTypes.includes('text')) {
 		//Message was received
 		const message_str = context.update.message.text;
+		const message_id =  context.update.message.message_id;
 		if(typeof message_str === 'string' && message_str.length > 0) {
-
+			//logger.log(context)
 			//summon handlers
 			bot_util.isValidBraceSummon(message_str).then((query) => {
 				logger.log('Summon: {', query, '}');
@@ -139,7 +140,8 @@ bot.on('message', (context) => {
 					context.reply(buildAnimeChatMessage(result), {
 						parse_mode: 'html',
 						disable_web_page_preview: false,
-						disable_notification: true
+						disable_notification: true,
+						reply_to_message_id: message_id
 					});
 					console.timeEnd('execution time');
 				}).catch((err) => {
@@ -150,7 +152,8 @@ bot.on('message', (context) => {
 						context.reply(buildAnimeChatMessage(result), {
 							parse_mode: 'html',
 							disable_web_page_preview: false,
-							disable_notification: true
+							disable_notification: true,
+							reply_to_message_id: message_id
 						});
 						console.timeEnd('execution time');
 					}).catch((err) => {
@@ -161,7 +164,8 @@ bot.on('message', (context) => {
 							context.reply(buildAnimeChatMessage(result), {
 								parse_mode: 'html',
 								disable_web_page_preview: false,
-								disable_notification: true
+								disable_notification: true,
+								reply_to_message_id: message_id
 							});
 							console.timeEnd('execution time');
 						}).catch((r) => {
