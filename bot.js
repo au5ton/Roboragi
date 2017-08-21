@@ -127,11 +127,14 @@ bot.on('message', (context) => {
 
 var LastInlineRequest = {};
 var to_be_removed = [];
+const INLINE_SUMMON_DELAY = 500;
+const TELEGRAM_SUMMON_TIMEOUT = 15000;
 // Regularly checks every second for unresolved queries
 setInterval(() => {
 	for(let from_id in LastInlineRequest) {
 		let elapsed_time = new Date().getTime() - LastInlineRequest[from_id]['time_ms'];
-		if(elapsed_time > 5000 && elapsed_time < 15000) {
+		if(elapsed_time > INLINE_SUMMON_DELAY && elapsed_time < TELEGRAM_SUMMON_TIMEOUT && LastInlineRequest[from_id]['status'] === 'unprocessed') {
+			LastInlineRequest[from_id]['status'] = 'pending';
 			// safe to reply
 			logger.warn('Delay has elapsed, building query answer! ', LastInlineRequest);
 			bot_util.isValidBraceSummon(LastInlineRequest[from_id]['query']).then((query) => {
@@ -141,6 +144,7 @@ setInterval(() => {
 				Searcher.matchFromCache('{'+query+'}').then((result) => {
 					//boo yah
 					bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]);
+					LastInlineRequest[from_id]['status'] = 'done';
 					to_be_removed.push(from_id);
 					console.timeEnd('execution time');
 				}).catch((err) => {
@@ -149,6 +153,7 @@ setInterval(() => {
 					Searcher.matchAnimeFromDatabase(query).then((result) => {
 						//boo yah
 						bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]);
+						LastInlineRequest[from_id]['status'] = 'done';
 						to_be_removed.push(from_id);
 						console.timeEnd('execution time');
 					}).catch((err) => {
@@ -157,6 +162,7 @@ setInterval(() => {
 						Searcher.searchAnimes(query).then((result) => {
 							//logger.log(result);
 							bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]);
+							LastInlineRequest[from_id]['status'] = 'done';
 							to_be_removed.push(from_id);
 							console.timeEnd('execution time');
 						}).catch((r) => {
@@ -167,29 +173,35 @@ setInterval(() => {
 							else {
 								logger.error('failed to search with Searcher: ', r);
 							}
+							LastInlineRequest[from_id]['status'] = 'done';
 							to_be_removed.push(from_id);
 							console.timeEnd('execution time');
 						});
 					})
 				});
-			}).catch(()=>{});
-
-
-			//Invalid requests timeout too
+			}).catch(()=>{
+				LastInlineRequest[from_id]['status'] = 'done';
+				to_be_removed.push(from_id);
+			});
 		}
-		if(elapsed_time > 15000) {
+		if(elapsed_time > TELEGRAM_SUMMON_TIMEOUT) {
 			//stores the user ids of users who cant have their request fullfilled anymore
 			to_be_removed.push(from_id);
 		}
 	}
-	for(let i in to_be_removed) {
+	for(let i = to_be_removed.length-1; i >= 0; i--) {
 		//removes the request info of users who cant have their request fullfilled anymore
+		//logger.log(LastInlineRequest,'\n',to_be_removed);
+		logger.warn('removing ',to_be_removed[i]);
 		delete LastInlineRequest[to_be_removed[i]];
+		to_be_removed.splice(i,1);
+
 	}
-},1000);
+},100);
 
 bot.on('inline_query', (context) => {
 	let from_id = context.update.inline_query.from.id; //telegram user id of requesting user
+	//let from_id = context.update.inline_query.id; //actually use query id instead
 	let time_ms = new Date().getTime(); //epoch time in milliseconds
 	let query = context.update.inline_query.query; //the query the user made
 	let query_id = context.update.inline_query.id; //the telegram inline query id, needed to use answerInlineQuery
@@ -202,9 +214,11 @@ bot.on('inline_query', (context) => {
 	LastInlineRequest[from_id]['time_ms'] = time_ms;
 	LastInlineRequest[from_id]['query'] = query;
 	LastInlineRequest[from_id]['query_id'] = query_id;
+	LastInlineRequest[from_id]['status'] = 'unprocessed'; // unprocessed || pending || done
 });
 
 bot.on('text', (context) => {
+	logger.log('hello');
 	const message_str = context.message.text;
 	if(typeof message_str === 'string' && message_str.length > 0) {
 
