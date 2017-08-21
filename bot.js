@@ -118,10 +118,90 @@ bot.on('message', (context) => {
 		let members = context.update.message.new_chat_members;
 		for(let i in members) {
 			if(members[i]['username'] === BOT_USERNAME) {
-				context.reply('Ohayō, '+context.chat.title+'. '+bowing_symbol);
+				context.reply('Ohayō, '+context.chat.title+'. ');
+				context.telegram.sendVideo(context.chat.id, 'https://a.safe.moe/AAqRJ.mp4');
 			}
 		}
 	}
+});
+
+var LastInlineRequest = {};
+var to_be_removed = [];
+// Regularly checks every second for unresolved queries
+setInterval(() => {
+	for(let from_id in LastInlineRequest) {
+		let elapsed_time = new Date().getTime() - LastInlineRequest[from_id]['time_ms'];
+		if(elapsed_time > 5000 && elapsed_time < 15000) {
+			// safe to reply
+			logger.warn('Delay has elapsed, building query answer! ', LastInlineRequest);
+			bot_util.isValidBraceSummon(LastInlineRequest[from_id]['query']).then((query) => {
+				logger.log('Summon: {', query, '}');
+				console.time('execution time');
+				//logger.log('q: ', query);
+				Searcher.matchFromCache('{'+query+'}').then((result) => {
+					//boo yah
+					bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]);
+					to_be_removed.push(from_id);
+					console.timeEnd('execution time');
+				}).catch((err) => {
+					logger.warn('cache empty: ', err);
+					//nothing in cache
+					Searcher.matchAnimeFromDatabase(query).then((result) => {
+						//boo yah
+						bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]);
+						to_be_removed.push(from_id);
+						console.timeEnd('execution time');
+					}).catch((err) => {
+						logger.warn('database empty: ', err);
+						//nothing in database
+						Searcher.searchAnimes(query).then((result) => {
+							//logger.log(result);
+							bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]);
+							to_be_removed.push(from_id);
+							console.timeEnd('execution time');
+						}).catch((r) => {
+							//well that sucks
+							if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
+								logger.warn('q: {'+query+'} => '+filled_x)
+							}
+							else {
+								logger.error('failed to search with Searcher: ', r);
+							}
+							to_be_removed.push(from_id);
+							console.timeEnd('execution time');
+						});
+					})
+				});
+			}).catch(()=>{});
+
+
+			//Invalid requests timeout too
+		}
+		if(elapsed_time > 15000) {
+			//stores the user ids of users who cant have their request fullfilled anymore
+			to_be_removed.push(from_id);
+		}
+	}
+	for(let i in to_be_removed) {
+		//removes the request info of users who cant have their request fullfilled anymore
+		delete LastInlineRequest[to_be_removed[i]];
+	}
+},1000);
+
+bot.on('inline_query', (context) => {
+	let from_id = context.update.inline_query.from.id; //telegram user id of requesting user
+	let time_ms = new Date().getTime(); //epoch time in milliseconds
+	let query = context.update.inline_query.query; //the query the user made
+	let query_id = context.update.inline_query.id; //the telegram inline query id, needed to use answerInlineQuery
+	if(LastInlineRequest[from_id] === undefined) {
+		LastInlineRequest[from_id] = {};
+	}
+	else {
+		//logger.warn('updated query from ',from_id,': ',query);
+	}
+	LastInlineRequest[from_id]['time_ms'] = time_ms;
+	LastInlineRequest[from_id]['query'] = query;
+	LastInlineRequest[from_id]['query_id'] = query_id;
 });
 
 bot.on('text', (context) => {
@@ -568,6 +648,34 @@ function buildMovieChatMessage(movie, options) {
 	}
 	return message;
 }
+
+function buildInputMessageContentFromAnime(anime) {
+	return {
+		message_text: anime.flattened.format === 'Manga' ? buildMangaChatMessage(anime) : buildAnimeChatMessage(anime),
+		parse_mode: 'html',
+		disable_web_page_preview: true
+	};
+}
+
+function buildInputMessageContentFromMovie(movie) {
+	return {
+		message_text: buildMovieChatMessage(movie),
+		parse_mode: 'html',
+		disable_web_page_preview: true
+	};
+}
+
+function buildInlineQueryResultArticleFromAnime(anime, options) {
+	return {
+		type: 'article',
+		id: anime['original_query'],
+		title: anime['title'],
+		input_message_content: buildInputMessageContentFromAnime(anime),
+		description: anime['synopsis'],
+		thumb_url: anime['image'] !== null ? anime['image'] : undefined
+	};
+}
+
 
 logger.log('Bot active. Performing startup checks.');
 
