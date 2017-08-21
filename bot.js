@@ -138,7 +138,8 @@ bot.on('message', (context) => {
 					//boo yah
 					context.reply(buildAnimeChatMessage(result), {
 						parse_mode: 'html',
-						disable_web_page_preview: true
+						disable_web_page_preview: false,
+						disable_notification: true
 					});
 					console.timeEnd('execution time');
 				}).catch((err) => {
@@ -148,7 +149,8 @@ bot.on('message', (context) => {
 						//boo yah
 						context.reply(buildAnimeChatMessage(result), {
 							parse_mode: 'html',
-							disable_web_page_preview: true
+							disable_web_page_preview: false,
+							disable_notification: true
 						});
 						console.timeEnd('execution time');
 					}).catch((err) => {
@@ -158,7 +160,8 @@ bot.on('message', (context) => {
 							//logger.log(result);
 							context.reply(buildAnimeChatMessage(result), {
 								parse_mode: 'html',
-								disable_web_page_preview: true
+								disable_web_page_preview: false,
+								disable_notification: true
 							});
 							console.timeEnd('execution time');
 						}).catch((r) => {
@@ -429,6 +432,7 @@ const manga_symbol = String.fromCodePoint(0x1f4d4);
 const tomato_symbol = String.fromCodePoint(0x1f345); //fresh
 const rotten_symbol = String.fromCodePoint(0x1F922); //rotten
 const bowing_symbol = String.fromCodePoint(0x1F647);
+const empty_char = '&#8203;';
 
 function buildHyperlinksForAnime(anime) {
 	let message = '';
@@ -500,6 +504,10 @@ function getIdealIMDBRating(IMDBRatings) {
 function buildAnimeChatMessage(anime, options) {
 	options = options || {};
 	let message = '';
+	if(anime['image'] !== null) {
+		logger.log(anime['image'])
+		message += '\n<a href=\"'+anime['image']+'\">'+empty_char+'</a>';
+	}
 	message += '<b>' + anime['title'] + '</b>';
 	message += ' ('+buildHyperlinksForAnime(anime)+')\n';
 
@@ -668,7 +676,8 @@ function buildInputMessageContentFromAnime(anime) {
 	return {
 		message_text: anime.flattened.format === 'Manga' ? buildMangaChatMessage(anime) : buildAnimeChatMessage(anime),
 		parse_mode: 'html',
-		disable_web_page_preview: true
+		disable_web_page_preview: false,
+		disable_notification: true
 	};
 }
 
@@ -676,7 +685,8 @@ function buildInputMessageContentFromMovie(movie) {
 	return {
 		message_text: buildMovieChatMessage(movie),
 		parse_mode: 'html',
-		disable_web_page_preview: true
+		disable_web_page_preview: false,
+		disable_notification: true
 	};
 }
 
