@@ -113,7 +113,15 @@ bot.hears(/anime_irl/gi, (context) => {
 });
 
 bot.on('message', (context) => {
-	logger.log(context.update);
+	//New members were added
+	if(context.update.message.new_chat_members){
+		let members = context.update.message.new_chat_members;
+		for(let i in members) {
+			if(members[i]['username'] === BOT_USERNAME) {
+				context.reply('Ohayō, '+context.chat.title+'. '+bowing_symbol);
+			}
+		}
+	}
 });
 
 bot.on('text', (context) => {
@@ -325,6 +333,7 @@ const prohibited_symbol = String.fromCodePoint(0x1f232);
 const manga_symbol = String.fromCodePoint(0x1f4d4);
 const tomato_symbol = String.fromCodePoint(0x1f345); //fresh
 const rotten_symbol = String.fromCodePoint(0x1F922); //rotten
+const bowing_symbol = String.fromCodePoint(0x1F647);
 
 function buildHyperlinksForAnime(anime) {
 	let message = '';
