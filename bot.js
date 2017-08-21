@@ -112,6 +112,10 @@ bot.hears(/anime_irl/gi, (context) => {
 	}
 });
 
+bot.on('message', (context) => {
+	logger.log(context.update);
+});
+
 bot.on('text', (context) => {
 	const message_str = context.message.text;
 	if(typeof message_str === 'string' && message_str.length > 0) {
