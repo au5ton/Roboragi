@@ -133,7 +133,21 @@ bot.on('message', (context) => {
 		if(typeof message_str === 'string' && message_str.length > 0) {
 			//logger.log(context)
 			//summon handlers
+			//logger.log(JSON.parse(JSON.stringify(context.update)));
+			//logger.log(JSON.parse(JSON.stringify(context.update.message.entities)))
+
+			let god_damnit_fluff = [
+				'smh'
+			];
+
 			bot_util.isValidBraceSummon(message_str).then((query) => {
+
+				if(god_damnit_fluff.includes(query)) {
+					//fucking give up
+					logger.warn('damnit fluff');
+					throw 'fuck this shit';
+				}
+
 				logger.log('Summon: {', query, '}');
 				console.time('execution time');
 				//logger.log('q: ', query);
