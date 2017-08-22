@@ -364,6 +364,24 @@ setInterval(() => {
 			LastInlineRequest[from_id]['status'] = 'pending';
 			// safe to reply
 			logger.warn('inline_query: ', LastInlineRequest[from_id]['query']);
+
+			if(LastInlineRequest[from_id]['query'] === 'block the bot') {
+				logger.log('do it')
+				bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [{
+					type: 'article',
+					id: String(Math.floor(Math.random()*10000)+1),
+					title: 'easter egg',
+					input_message_content: {
+						message_text: '<b>ｙｏｕ ｃａｎｔ ｂｌｏｃｋ ｔｈｅ ｂｏｔ</b>',
+						parse_mode: 'html',
+						disable_web_page_preview: false,
+						disable_notification: true
+					},
+					description: 'do it',
+					thumb_url: 'https://fluff.world/img/profile/soot.jpg'
+				}]).catch((err) => {logger.error('answerInlineQuery failed to send: ',err)});
+			}
+
 			bot_util.isValidBraceSummon(LastInlineRequest[from_id]['query']).then((query) => {
 				logger.log('Summon: {', query, '}');
 				console.time('execution time');
