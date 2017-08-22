@@ -44,6 +44,8 @@ const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 
 const DEV_TELEGRAM_ID = parseInt(process.env.DEV_TELEGRAM_ID) || 0;
 
+process.on('unhandledRejection', r => logger.error(r));
+
 // Basic commands
 
 bot.hears(new RegExp('\/start|\/start@' + BOT_USERNAME), (context) => {
@@ -354,7 +356,7 @@ setInterval(() => {
 				//logger.log('q: ', query);
 				Searcher.matchFromCache('{'+query+'}').then((result) => {
 					//boo yah
-					bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]);
+					bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]).catch((err) => {logger.error('answerInlineQuery failed to send: ',err)});
 					LastInlineRequest[from_id]['status'] = 'done';
 					to_be_removed.push(from_id);
 					console.timeEnd('execution time');
@@ -363,7 +365,7 @@ setInterval(() => {
 					//nothing in cache
 					Searcher.matchAnimeFromDatabase(query).then((result) => {
 						//boo yah
-						bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]);
+						bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]).catch((err) => {logger.error('answerInlineQuery failed to send: ',err)});
 						LastInlineRequest[from_id]['status'] = 'done';
 						to_be_removed.push(from_id);
 						console.timeEnd('execution time');
@@ -372,7 +374,7 @@ setInterval(() => {
 						//nothing in database
 						Searcher.searchAnimes(query).then((result) => {
 							//logger.log(result);
-							bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]);
+							bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]).catch((err) => {logger.error('answerInlineQuery failed to send: ',err)});
 							LastInlineRequest[from_id]['status'] = 'done';
 							to_be_removed.push(from_id);
 							console.timeEnd('execution time');
@@ -401,7 +403,7 @@ setInterval(() => {
 			    //logger.log('q: ', query);
 			    Searcher.matchFromCache('<'+query+'>').then((result) => {
 			        //boo yah
-			        bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]);
+			        bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]).catch((err) => {logger.error('answerInlineQuery failed to send: ',err)});
 					LastInlineRequest[from_id]['status'] = 'done';
 					to_be_removed.push(from_id);
 					console.timeEnd('execution time');
@@ -410,7 +412,7 @@ setInterval(() => {
 			        //nothing in cache
 			        Searcher.matchMangaFromDatabase(query, 'Manga').then((result) => {
 			            //boo yah
-			            bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]);
+						bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]).catch((err) => {logger.error('answerInlineQuery failed to send: ',err)});
 						LastInlineRequest[from_id]['status'] = 'done';
 						to_be_removed.push(from_id);
 						console.timeEnd('execution time');
@@ -419,7 +421,7 @@ setInterval(() => {
 			            //nothing in database
 			            Searcher.searchManga(query, 'Manga').then((result) => {
 			                //logger.log(result);
-			                bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]);
+			                bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]).catch((err) => {logger.error('answerInlineQuery failed to send: ',err)});
 							LastInlineRequest[from_id]['status'] = 'done';
 							to_be_removed.push(from_id);
 							console.timeEnd('execution time');
@@ -447,7 +449,7 @@ setInterval(() => {
 			    //logger.log('q: ', query);
 			    Searcher.matchFromCache(']'+query+'[').then((result) => {
 			        //boo yah
-					bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]);
+					bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]).catch((err) => {logger.error('answerInlineQuery failed to send: ',err)});
 					LastInlineRequest[from_id]['status'] = 'done';
 					to_be_removed.push(from_id);
 			        console.timeEnd('execution time');
@@ -456,7 +458,7 @@ setInterval(() => {
 			        //nothing in cache
 			        Searcher.matchMangaFromDatabase(query, 'LN').then((result) => {
 			            //boo yah
-						bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]);
+						bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]).catch((err) => {logger.error('answerInlineQuery failed to send: ',err)});
 						LastInlineRequest[from_id]['status'] = 'done';
 						to_be_removed.push(from_id);
 			            console.timeEnd('execution time');
@@ -465,7 +467,7 @@ setInterval(() => {
 			            //nothing in database
 			            Searcher.searchManga(query, 'LN').then((result) => {
 			                //logger.log(result);
-							bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]);
+							bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]).catch((err) => {logger.error('answerInlineQuery failed to send: ',err)});
 							LastInlineRequest[from_id]['status'] = 'done';
 							to_be_removed.push(from_id);
 			                console.timeEnd('execution time');
@@ -491,7 +493,7 @@ setInterval(() => {
 			    logger.log('Summon: >', query, '<');
 			    console.time('execution time');
 			    Searcher.matchFromCache('>'+query+'<').then((result) => {
-			        bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromMovie(result)]);
+			        bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromMovie(result)]).catch((err) => {logger.error('answerInlineQuery failed to send: ',err)});
 					LastInlineRequest[from_id]['status'] = 'done';
 					to_be_removed.push(from_id);
 					console.timeEnd('execution time');
@@ -499,7 +501,7 @@ setInterval(() => {
 			        logger.warn('cache empty: ', err);
 			        Searcher.searchWesternMovie(query).then((result) => {
 			            //logger.log(result);
-			            bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromMovie(result)]);
+			            bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromMovie(result)]).catch((err) => {logger.error('answerInlineQuery failed to send: ',err)});
 						LastInlineRequest[from_id]['status'] = 'done';
 						to_be_removed.push(from_id);
 			            console.timeEnd('execution time');
@@ -524,7 +526,7 @@ setInterval(() => {
 			    logger.log('Summon: |', query, '|');
 			    console.time('execution time');
 			    Searcher.matchFromCache('|'+query+'|').then((result) => {
-					bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]);
+					bot.telegram.answerInlineQuery(Object.assign({}, LastInlineRequest[from_id]['query_id']), [buildInlineQueryResultArticleFromAnime(result)]).catch((err) => {logger.error('answerInlineQuery failed to send: ',err)});
 					LastInlineRequest[from_id]['status'] = 'done';
 					to_be_removed.push(from_id);
 			        console.timeEnd('execution time');
@@ -532,7 +534,7 @@ setInterval(() => {
 			        logger.warn('cache empty: ', err);
 			        Searcher.searchWesternTelevision(query).then((result) => {
 			            //logger.log(result);
-						bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]);
+						bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]).catch((err) => {logger.error('answerInlineQuery failed to send: ',err)});
 						LastInlineRequest[from_id]['status'] = 'done';
 						to_be_removed.push(from_id);
 			            console.timeEnd('execution time');
@@ -860,7 +862,7 @@ function buildInputMessageContentFromMovie(movie) {
 function buildInlineQueryResultArticleFromAnime(anime, options) {
 	return {
 		type: 'article',
-		id: anime['original_query'],
+		id: String(Math.floor(Math.random()*10000)+1),
 		title: anime['title'],
 		input_message_content: buildInputMessageContentFromAnime(anime),
 		description: anime['synopsis'],
