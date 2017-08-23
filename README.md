@@ -34,6 +34,15 @@ Using the ART, the search results are consolidated into one `Anime` instance and
 
 ![roboruri-kouhai](img/Screenshot_02.png)
 
+
+### Inline summons
+In addition to automatically "jumping in" when being summoned (identical to /u/Roboragi), Roboruri can be summoned as an inline bot to chats she's not even a part of:
+
+#### [[demo video]](https://www.youtube.com/watch?v=tTV7xkHvmr8)
+
+<img height="400px" src="img/inline_demo_clip.gif">
+
+
 ## What's with the name?
 There were already existing bots on Telegram named 'roboragi' and other renditions (all of them seemed dead), so I decided on an alternative name that follows the naming tradition that /u/Roboragi set.
 
