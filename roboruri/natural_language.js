@@ -45,9 +45,9 @@ const ANIME_REFRENCES = {
     'I\'ll do anything!': {response:'Anything, Right? You\'ll obey me like a dog? You\'ll do anything to the extreme?', case_sensitive: true}, //Toradora
     'good morning': {response: 'Selamat pagi.', case_sensitive: false, random_chance: 0.5}, //Nichijou
     'goodnight': {response: 'Selamat malam.', case_sensitive: false, random_chance: 0.5}, //Nichijou
-    'good night': {response: 'Selamat malam.', case_sensitive: false, random_chance: 0.5},
-    'Why didn\'t you tell us you were the Avatar?': {response: 'Because I never wanted to be.', case_sensitive: true},
-    'cactus juice': {responses: ['<i>It\'s the quenchiest!</i>','<i>It\'ll quench ya!</i>'], case_sensitive: false, includes_only: true}
+    'good night': {response: 'Selamat malam.', case_sensitive: false, random_chance: 0.5}, //Nichijou
+    'Why didn\'t you tell us you were the Avatar?': {response: 'Because I never wanted to be.', case_sensitive: true}, //Avatar: TLA
+    'cactus juice': {responses: ['<i>It\'s the quenchiest!</i>','<i>It\'ll quench ya!</i>'], case_sensitive: false, includes_only: true} //Avatar: TLA
 }
 //build valid mention tokens
 
