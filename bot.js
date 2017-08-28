@@ -346,11 +346,13 @@ bot.on('message', (context) => {
 				});
 			}).catch(()=>{});
 
+			//will only response if she should respond
 			natural_language.respond(message_str).then((response_str) => {
 				context.reply(response_str, {
+					parse_mode: 'html',
 					reply_to_message_id: message_id
 				});
-			}).catch((err)=>{/*logger.error('error with natural response: ',err)*/});
+			}).catch((err)=>{/* shouldRespond returned false */});
 		}
 	}
 });

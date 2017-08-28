@@ -38,6 +38,16 @@ const ENGLISH_SENTENCE_ENDERS = [
     'is trying her best',
     'is trying hard'
 ]
+const ANIME_REFRENCES = {
+    'I love Emilia!': {response:'You are a cruel man, Subaru-kun.', case_sensitive: true}, //Re:Zero
+    'Omae Wa Mou Shindeiru': {response:'<b>Nani?!</b>', case_sensitive: false}, //meme
+    'I\'ll do anything!': {response:'Anything, Right? You\'ll obey me like a dog? You\'ll do anything to the extreme?', case_sensitive: true}, //Toradora
+    'good morning': {response: 'Selamat pagi.', case_sensitive: false, random_chance: 0.5}, //Nichijou
+    'goodnight': {response: 'Selamat malam.', case_sensitive: false, random_chance: 0.5}, //Nichijou
+    'good night': {response: 'Selamat malam.', case_sensitive: false, random_chance: 0.5},
+    'Why didn\'t you tell us you were the Avatar?': {response: 'Because I never wanted to be.', case_sensitive: true},
+    'cactus juice': {responses: ['<i>It\'s the quenchiest!</i>','<i>It\'ll quench ya!</i>'], case_sensitive: true, includes_only: true}
+}
 //build valid mention tokens
 
 /*
@@ -91,9 +101,36 @@ _.shouldRespond = (message_str) => {
     //should respond if BOT_NAMES is present and isn't a summon
     let tokens = tokenizer.tokenize(message_str.toLowerCase());
     for(let n in SUMMON_SYMBOLS) {
-        if(!tokens.includes(SUMMON_SYMBOLS[n])) {
-            for(let i in BOT_NAMES) {
-                if(tokens.includes(BOT_NAMES[i])) {
+        if(tokens.includes(SUMMON_SYMBOLS[n])) {
+            return false;
+        }
+    }
+    for(let i in BOT_NAMES) {
+        if(tokens.includes(BOT_NAMES[i])) {
+            return true;
+        }
+    }
+    for(let key in ANIME_REFRENCES) {
+        if(ANIME_REFRENCES[key]['case_sensitive']) {
+            if(ANIME_REFRENCES[key]['includes_only']) {
+                if(message_str.includes(key)) {
+                    return true;
+                }
+            }
+            else {
+                if(message_str === key) {
+                    return true;
+                }
+            }
+        }
+        else {
+            if(ANIME_REFRENCES[key]['includes_only']) {
+                if(message_str.toLowerCase().includes(key.toLowerCase())) {
+                    return true;
+                }
+            }
+            else {
+                if(message_str.toLowerCase() === key.toLowerCase()) {
                     return true;
                 }
             }
@@ -164,6 +201,114 @@ _.respond = (message_str) => {
     return new Promise((resolve, reject) => {
         if(_.shouldRespond(message_str)) {
             let the_message = tokenizer.tokenize(message_str);
+
+            for(let key in ANIME_REFRENCES) {
+                if(ANIME_REFRENCES[key]['case_sensitive']) {
+                    if(ANIME_REFRENCES[key]['includes_only']) {
+                        if(message_str.includes(key)) {
+                            if(ANIME_REFRENCES[key]['random_chance']) {
+                                if(Math.random() < ANIME_REFRENCES[key]['random_chance']) {
+                                    if(ANIME_REFRENCES[key]['responses']) {
+                                        let random_index = Math.floor(Math.random()*ANIME_REFRENCES[key]['responses'].length);
+                                        resolve(ANIME_REFRENCES[key]['responses'][random_index])
+                                    }
+                                    else {
+                                        resolve(ANIME_REFRENCES[key]['response']);
+                                    }
+                                }
+                                else {
+                                    //do nothing
+                                }
+                            }
+                            else if(ANIME_REFRENCES[key]['responses']) {
+                                let random_index = Math.floor(Math.random()*ANIME_REFRENCES[key]['responses'].length);
+                                resolve(ANIME_REFRENCES[key]['responses'][random_index])
+                            }
+                            else {
+                                resolve(ANIME_REFRENCES[key]['response']);
+                            }
+                        }
+                    }
+                    else {
+                        if(message_str === key) {
+                            if(ANIME_REFRENCES[key]['random_chance']) {
+                                if(Math.random() < ANIME_REFRENCES[key]['random_chance']) {
+                                    if(ANIME_REFRENCES[key]['responses']) {
+                                        let random_index = Math.floor(Math.random()*ANIME_REFRENCES[key]['responses'].length);
+                                        resolve(ANIME_REFRENCES[key]['responses'][random_index])
+                                    }
+                                    else {
+                                        resolve(ANIME_REFRENCES[key]['response']);
+                                    }
+                                }
+                                else {
+                                    //do nothing
+                                }
+                            }
+                            else if(ANIME_REFRENCES[key]['responses']) {
+                                let random_index = Math.floor(Math.random()*ANIME_REFRENCES[key]['responses'].length);
+                                resolve(ANIME_REFRENCES[key]['responses'][random_index])
+                            }
+                            else {
+                                resolve(ANIME_REFRENCES[key]['response']);
+                            }
+                        }
+                    }
+                }
+                else {
+                    if(ANIME_REFRENCES[key]['includes_only']) {
+                        if(message_str.toLowerCase().includes(key.toLowerCase())) {
+                            if(ANIME_REFRENCES[key]['random_chance']) {
+                                if(Math.random() < ANIME_REFRENCES[key]['random_chance']) {
+                                    if(ANIME_REFRENCES[key]['responses']) {
+                                        let random_index = Math.floor(Math.random()*ANIME_REFRENCES[key]['responses'].length);
+                                        resolve(ANIME_REFRENCES[key]['responses'][random_index])
+                                    }
+                                    else {
+                                        resolve(ANIME_REFRENCES[key]['response']);
+                                    }
+                                }
+                                else {
+                                    //do nothing
+                                }
+                            }
+                            else if(ANIME_REFRENCES[key]['responses']) {
+                                let random_index = Math.floor(Math.random()*ANIME_REFRENCES[key]['responses'].length);
+                                resolve(ANIME_REFRENCES[key]['responses'][random_index])
+                            }
+                            else {
+                                resolve(ANIME_REFRENCES[key]['response']);
+                            }
+                        }
+                    }
+                    else {
+                        if(message_str.toLowerCase() === key.toLowerCase()) {
+                            if(ANIME_REFRENCES[key]['random_chance']) {
+                                if(Math.random() < ANIME_REFRENCES[key]['random_chance']) {
+                                    if(ANIME_REFRENCES[key]['responses']) {
+                                        let random_index = Math.floor(Math.random()*ANIME_REFRENCES[key]['responses'].length);
+                                        resolve(ANIME_REFRENCES[key]['responses'][random_index])
+                                    }
+                                    else {
+                                        resolve(ANIME_REFRENCES[key]['response']);
+                                    }
+                                }
+                                else {
+                                    //do nothing
+                                }
+                            }
+                            else if(ANIME_REFRENCES[key]['responses']) {
+                                let random_index = Math.floor(Math.random()*ANIME_REFRENCES[key]['responses'].length);
+                                resolve(ANIME_REFRENCES[key]['responses'][random_index])
+                            }
+                            else {
+                                resolve(ANIME_REFRENCES[key]['response']);
+                            }
+                        }
+                    }
+                }
+            }
+            //logger.warn('no ANIME_REFRENCES')
 
             for(let i in VALID_MENTIONS) {
                 for(let n in the_message) {
