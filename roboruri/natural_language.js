@@ -6,6 +6,7 @@ const natural = require('natural');
 const speak = require('speakeasy-nlp');
 const tokenizer = new natural.WordTokenizer();
 const logger = require('au5ton-logger');
+const bot_util = require('./bot_util');
 
 // globals
 const BOT_NAMES = ['roboruri', 'bot', 'roboragi'];
@@ -98,6 +99,7 @@ for(let n in ENGLISH_GREETINGS) {
 
 //synchronous, return true or false
 _.shouldRespond = (message_str) => {
+    message_str = bot_util.cleanUpString(message_str);
     //should respond if BOT_NAMES is present and isn't a summon
     let tokens = tokenizer.tokenize(message_str.toLowerCase());
     for(let n in SUMMON_SYMBOLS) {
@@ -199,6 +201,7 @@ _.replaceWildcard = (ray) => {
 //asynchonous, return promise
 _.respond = (message_str) => {
     return new Promise((resolve, reject) => {
+        message_str = bot_util.cleanUpString(message_str);
         if(_.shouldRespond(message_str)) {
             let the_message = tokenizer.tokenize(message_str);
 
