@@ -47,7 +47,7 @@ const ANIME_REFRENCES = {
     'goodnight': {response: 'Selamat malam.', case_sensitive: false, random_chance: 0.5}, //Nichijou
     'good night': {response: 'Selamat malam.', case_sensitive: false, random_chance: 0.5},
     'Why didn\'t you tell us you were the Avatar?': {response: 'Because I never wanted to be.', case_sensitive: true},
-    'cactus juice': {responses: ['<i>It\'s the quenchiest!</i>','<i>It\'ll quench ya!</i>'], case_sensitive: true, includes_only: true}
+    'cactus juice': {responses: ['<i>It\'s the quenchiest!</i>','<i>It\'ll quench ya!</i>'], case_sensitive: false, includes_only: true}
 }
 //build valid mention tokens
 
