@@ -352,7 +352,10 @@ bot.on('message', (context) => {
 					parse_mode: 'html',
 					reply_to_message_id: message_id
 				});
-			}).catch((err)=>{/* shouldRespond returned false */});
+			}).catch((err)=>{
+				// shouldRespond returned false
+				//logger.error(err); 
+			});
 		}
 	}
 });

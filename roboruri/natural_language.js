@@ -37,7 +37,9 @@ const ENGLISH_SENTENCE_STARTERS = [
 const ENGLISH_SENTENCE_ENDERS = [
     'is doing her best',
     'is trying her best',
-    'is trying hard'
+    'is trying hard',
+    'you the best',
+    'you\'re the best'
 ]
 const ANIME_REFRENCES = {
     'I love Emilia!': {response:'You are a cruel man, Subaru-kun.', case_sensitive: true}, //Re:Zero
@@ -46,7 +48,7 @@ const ANIME_REFRENCES = {
     'good morning': {response: 'Selamat pagi.', case_sensitive: false, random_chance: 0.5}, //Nichijou
     'goodnight': {response: 'Selamat malam.', case_sensitive: false, random_chance: 0.5}, //Nichijou
     'good night': {response: 'Selamat malam.', case_sensitive: false, random_chance: 0.5}, //Nichijou
-    'Why didn\'t you tell us you were the Avatar?': {response: 'Because I never wanted to be.', case_sensitive: true}, //Avatar: TLA
+    'Why didn\'t you tell us you were the Avatar?': {response: 'Because I never wanted to be.', case_sensitive: false}, //Avatar: TLA
     'cactus juice': {responses: ['<i>It\'s the quenchiest!</i>','<i>It\'ll quench ya!</i>'], case_sensitive: false, includes_only: true} //Avatar: TLA
 }
 //build valid mention tokens
