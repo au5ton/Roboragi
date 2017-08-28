@@ -178,7 +178,7 @@ const token = {apiKey: process.env.OMDB_API_KEY};
 // }, token).then((results)=> {
 //     logger.log(results.results);
 // }).catch(console.log);
-imdb.getById('tt2575988', token).then(logger.log).catch(logger.error);
+//imdb.getById('tt2575988', token).then(logger.log).catch(logger.error);
 
 // const TVDB = require('node-tvdb');
 // const tvdb = new TVDB(process.env.THETVDB_API_KEY);
@@ -199,3 +199,16 @@ imdb.getById('tt2575988', token).then(logger.log).catch(logger.error);
 
 
 //logger.log('access_token: ', access_token);
+
+const natural = require('natural'); //NLP
+// logger.log(natural.PorterStemmer.stem('good job roboruri')); // stem a single word
+//
+var tokenizer = new natural.WordTokenizer();
+// let tokens = tokenizer.tokenize(process.argv[2]);
+// logger.log(tokens);
+
+let small = tokenizer.tokenize('good bot'); //is this
+let bigger = tokenizer.tokenize('woah nice, what a good bot'); //inside this
+
+const natural_language = require('./roboruri/natural_language');
+logger.log(natural_language.arrayInsideArrayWithSameOrder(small,bigger));

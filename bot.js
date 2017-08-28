@@ -136,6 +136,7 @@ bot.on('message', (context) => {
 			//logger.log(JSON.parse(JSON.stringify(context.update)));
 			//logger.log(JSON.parse(JSON.stringify(context.update.message.entities)))
 
+			// {} queries to ignore because a certain someone wont stop using them
 			let god_damnit_fluff = [
 				'smh'
 			];
@@ -346,8 +347,13 @@ bot.on('message', (context) => {
 					});
 				});
 			}).catch(()=>{});
-		}
 
+			natural_language.respond(message_str).then((response_str) => {
+				context.reply(response_str, {
+					reply_to_message_id: message_id
+				});
+			}).catch(()=>{});
+		}
 	}
 });
 
