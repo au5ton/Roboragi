@@ -28,6 +28,7 @@ const tvdb = new TVDB(process.env.THETVDB_API_KEY);
 const bot_util = require('./roboruri/bot_util');
 const Searcher = require('./roboruri/searcher');
 const DataSource = require('./roboruri/enums').DataSource;
+const natural_language = require('./roboruri/natural_language');
 
 
 // Custom classes
@@ -93,19 +94,19 @@ bot.hears(new RegExp('\/flipcoin|\/flipcoin@' + BOT_USERNAME), (context) => {
 })
 
 // Listen for regex
-bot.hears(/thanks roboruri|good bot/gi, (context) => {
-	let catchphrases = [
-		'I\'ll try my best',
-		'I don\'t know anyone by that name.',
-		'( ´ ∀ `)',
-		'( ＾ワ＾)',
-		'(* ◡‿◡)',
-		'(￢_￢;)',
-		'Arigatō',
-		'I aim to please.'
-	];
-	context.reply(catchphrases[Math.floor(Math.random() * catchphrases.length)]);
-});
+// bot.hears(/thanks roboruri|good bot/gi, (context) => {
+// 	let catchphrases = [
+// 		'I\'ll try my best',
+// 		'I don\'t know anyone by that name.',
+// 		'( ´ ∀ `)',
+// 		'( ＾ワ＾)',
+// 		'(* ◡‿◡)',
+// 		'(￢_￢;)',
+// 		'Arigatō',
+// 		'I aim to please.'
+// 	];
+// 	context.reply(catchphrases[Math.floor(Math.random() * catchphrases.length)]);
+// });
 
 bot.hears(/anime_irl/gi, (context) => {
 	//1 in 100 chance
