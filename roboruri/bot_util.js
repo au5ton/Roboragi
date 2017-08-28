@@ -2,6 +2,56 @@
 
 const _ = {};
 
+_.genEasterEggAnswerArticle = (title, desc) => {
+	return [{
+		type: 'article',
+		id: String(Math.floor(Math.random()*10000)+1),
+		title: title,
+		input_message_content: {
+			message_text: desc,
+			parse_mode: 'html',
+			disable_web_page_preview: false,
+			disable_notification: true
+		},
+		description: 'do it',
+		thumb_url: 'https://sooot.github.io/repo/roboruri/egg.png'
+	}];
+};
+
+_.genEasterEggAnswerVoice = (title, url, desc) => {
+	return [{
+		type: 'voice',
+		id: String(Math.floor(Math.random()*10000)+1),
+		title: title,
+		voice_url: url
+	}];
+}
+
+_.genEasterEggAnswerAudio = (title, url, desc) => {
+	return [{
+		type: 'audio',
+		id: String(Math.floor(Math.random()*10000)+1),
+		title: title,
+		audio_url: url,
+		caption: title,
+	}];
+}
+
+_.isEasterEgg = (message_str) => {
+	return new Promise((resolve, reject) => {
+		if(message_str.toLowerCase() === 'audio xfiles') {
+			resolve(_.genEasterEggAnswerVoice('X-Files Theme','https://sooot.github.io/repo/roboruri/xfiles.mp3'));
+		}
+		else if(message.toLowerCase() === 'block the bot') {
+			resolve(_.genEasterEggAnswerArticle('block the bot','<b>ｙｏｕ ｃａｎｔ ｂｌｏｃｋ ｔｈｅ ｂｏｔ</b>'));
+		}
+		else {
+			reject('nothing');
+		}
+	});
+};
+
+
 _.isValidBraceSummon = (message_str) => {
 	return new Promise((resolve, reject) => {
 		let l_cnt = r_cnt = 0,

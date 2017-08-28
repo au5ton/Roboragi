@@ -82,7 +82,7 @@ for(let n in ENGLISH_GREETINGS) {
     }
 }
 
-logger.log(VALID_MENTIONS);
+//logger.log(VALID_MENTIONS);
 
 //synchronous, return true or false
 _.shouldRespond = (message_str) => {
