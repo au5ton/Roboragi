@@ -157,8 +157,7 @@ bot.on('message', (context) => {
 					//boo yah
 					context.reply(buildAnimeChatMessage(result), {
 						parse_mode: 'html',
-						disable_web_page_preview: false,
-						disable_notification: true,
+						disable_web_page_preview: result['image'].startsWith('http') ? false : true,
 						reply_to_message_id: message_id
 					});
 					console.timeEnd('execution time');
@@ -169,8 +168,7 @@ bot.on('message', (context) => {
 						//boo yah
 						context.reply(buildAnimeChatMessage(result), {
 							parse_mode: 'html',
-							disable_web_page_preview: false,
-							disable_notification: true,
+							disable_web_page_preview: result['image'].startsWith('http') ? false : true,
 							reply_to_message_id: message_id
 						});
 						console.timeEnd('execution time');
@@ -181,8 +179,7 @@ bot.on('message', (context) => {
 							//logger.log(result);
 							context.reply(buildAnimeChatMessage(result), {
 								parse_mode: 'html',
-								disable_web_page_preview: false,
-								disable_notification: true,
+								disable_web_page_preview: result['image'].startsWith('http') ? false : true,
 								reply_to_message_id: message_id
 							});
 							console.timeEnd('execution time');
@@ -208,7 +205,7 @@ bot.on('message', (context) => {
 					//boo yah
 					context.reply(buildMangaChatMessage(result), {
 						parse_mode: 'html',
-						disable_web_page_preview: true
+						disable_web_page_preview: result['image'].startsWith('http') ? false : true
 					});
 					console.timeEnd('execution time');
 				}).catch((err) => {
@@ -218,7 +215,7 @@ bot.on('message', (context) => {
 						//boo yah
 						context.reply(buildMangaChatMessage(result), {
 							parse_mode: 'html',
-							disable_web_page_preview: true
+							disable_web_page_preview: result['image'].startsWith('http') ? false : true
 						});
 						console.timeEnd('execution time');
 					}).catch((err) => {
@@ -228,7 +225,7 @@ bot.on('message', (context) => {
 							//logger.log(result);
 							context.reply(buildMangaChatMessage(result), {
 								parse_mode: 'html',
-								disable_web_page_preview: true
+								disable_web_page_preview: result['image'].startsWith('http') ? false : true
 							});
 							console.timeEnd('execution time');
 						}).catch((r) => {
@@ -252,7 +249,7 @@ bot.on('message', (context) => {
 					//boo yah
 					context.reply(buildMangaChatMessage(result), {
 						parse_mode: 'html',
-						disable_web_page_preview: true
+						disable_web_page_preview: result['image'].startsWith('http') ? false : true
 					});
 					console.timeEnd('execution time');
 				}).catch((err) => {
@@ -262,7 +259,7 @@ bot.on('message', (context) => {
 						//boo yah
 						context.reply(buildMangaChatMessage(result), {
 							parse_mode: 'html',
-							disable_web_page_preview: true
+							disable_web_page_preview: result['image'].startsWith('http') ? false : true
 						});
 						console.timeEnd('execution time');
 					}).catch((err) => {
@@ -272,7 +269,7 @@ bot.on('message', (context) => {
 							//logger.log(result);
 							context.reply(buildMangaChatMessage(result), {
 								parse_mode: 'html',
-								disable_web_page_preview: true
+								disable_web_page_preview: result['image'].startsWith('http') ? false : true
 							});
 							console.timeEnd('execution time');
 						}).catch((r) => {
@@ -294,7 +291,7 @@ bot.on('message', (context) => {
 				Searcher.matchFromCache('>'+query+'<').then((result) => {
 					context.reply(buildMovieChatMessage(result),{
 						parse_mode: 'html',
-						disable_web_page_preview: false
+						disable_web_page_preview: result['poster'].startsWith('http') ? false : true
 					});
 					console.timeEnd('execution time');
 				}).catch((err) => {
@@ -303,7 +300,7 @@ bot.on('message', (context) => {
 						//logger.log(result);
 						context.reply(buildMovieChatMessage(result),{
 							parse_mode: 'html',
-							disable_web_page_preview: false
+							disable_web_page_preview: result['poster'].startsWith('http') ? false : true
 						});
 						console.timeEnd('execution time');
 					}).catch((r) => {
@@ -324,7 +321,7 @@ bot.on('message', (context) => {
 				Searcher.matchFromCache('|'+query+'|').then((result) => {
 					context.reply(buildAnimeChatMessage(result),{
 						parse_mode: 'html',
-						disable_web_page_preview: true
+						disable_web_page_preview: result['image'].startsWith('http') ? false : true
 					});
 					console.timeEnd('execution time');
 				}).catch((err) => {
@@ -333,7 +330,7 @@ bot.on('message', (context) => {
 						//logger.log(result);
 						context.reply(buildAnimeChatMessage(result),{
 							parse_mode: 'html',
-							disable_web_page_preview: true
+							disable_web_page_preview: result['image'].startsWith('http') ? false : true
 						});
 						console.timeEnd('execution time');
 					}).catch((r) => {
@@ -353,7 +350,7 @@ bot.on('message', (context) => {
 				context.reply(response_str, {
 					reply_to_message_id: message_id
 				});
-			}).catch((err)=>{logger.error('error with natural response: ',err)});
+			}).catch((err)=>{/*logger.error('error with natural response: ',err)*/});
 		}
 	}
 });
@@ -715,7 +712,7 @@ function truncatePlot(plot_str) {
 function buildAnimeChatMessage(anime, options) {
 	options = options || {};
 	let message = '';
-	if(anime['image'] !== null) {
+	if(anime['image'].startsWith('http')) {
 		message += '\n<a href=\"'+anime['image']+'\">'+empty_char+'</a>';
 	}
 	message += '<b>' + anime['title'] + '</b>';
