@@ -353,7 +353,7 @@ bot.on('message', (context) => {
 				context.reply(response_str, {
 					reply_to_message_id: message_id
 				});
-			}).catch(()=>{});
+			}).catch((err)=>{logger.error('error with natural response: ',err)});
 		}
 	}
 });

@@ -8,8 +8,8 @@ const tokenizer = new natural.WordTokenizer();
 const logger = require('au5ton-logger');
 
 // globals
-//const BOT_NAMES = ['roboruri', 'bot', 'roboragi'];
-const BOT_NAMES = ['bot'];
+const BOT_NAMES = ['roboruri', 'bot', 'roboragi'];
+//const BOT_NAMES = ['bot'];
 const SUMMON_SYMBOLS = ['{','}','[',']','<','>','|'];
 var VALID_MENTIONS = [];
 const MENTION_WILDCARD = 'dea5d6976f7c54b48ff5d6c539121232f52092ef'; //sha1 hash of 'WILDCARD'
@@ -28,7 +28,13 @@ const ENGLISH_SENTENCE_STARTERS = [
     'bad',
     'who\'s a good',
     'who is a good',
-    'thanks'
+    'thanks',
+    'die'
+];
+const ENGLISH_SENTENCE_ENDERS = [
+    'is doing her best',
+    'is trying her best',
+    'is trying hard'
 ]
 //build valid mention tokens
 
@@ -54,9 +60,20 @@ Roboruri you the best
 for(let i in BOT_NAMES) {
     VALID_MENTIONS.push(tokenizer.tokenize('wrong '+MENTION_WILDCARD+' '+BOT_NAMES[i]));
 }
+for(let i in BOT_NAMES) {
+    VALID_MENTIONS.push(tokenizer.tokenize(BOT_NAMES[i]+' is '+MENTION_WILDCARD));
+}
+for(let i in BOT_NAMES) {
+    VALID_MENTIONS.push(tokenizer.tokenize(BOT_NAMES[i]+' is a '+MENTION_WILDCARD));
+}
 for(let n in ENGLISH_SENTENCE_STARTERS) {
     for(let i in BOT_NAMES) {
         VALID_MENTIONS.push(tokenizer.tokenize(ENGLISH_SENTENCE_STARTERS[n]+' '+BOT_NAMES[i]));
+    }
+}
+for(let n in ENGLISH_SENTENCE_STARTERS) {
+    for(let i in BOT_NAMES) {
+        VALID_MENTIONS.push(tokenizer.tokenize(BOT_NAMES[i]+' '+ENGLISH_SENTENCE_ENDERS[n]));
     }
 }
 for(let n in ENGLISH_GREETINGS) {
@@ -87,7 +104,7 @@ _.arrayInsideArrayWithSameOrder = (small, bigger) => {
     let indexes = [];
 
     if(bigger.length < small.length) {
-        logger.error('BADSIZE, small: ',small,'\nbigger: ',bigger);
+        //logger.error('BADSIZE, small: ',small,'\nbigger: ',bigger);
         return false;
     }
 
@@ -99,7 +116,7 @@ _.arrayInsideArrayWithSameOrder = (small, bigger) => {
     }
 
     if(indexes.length === 0) {
-        logger.error('NOTTHERE, small: ',small,'\nbigger: ',bigger);
+        //logger.error('NOTTHERE, small: ',small,'\nbigger: ',bigger);
         return false;
     }
     //logger.warn('indexes: ',indexes);
@@ -118,12 +135,12 @@ _.arrayInsideArrayWithSameOrder = (small, bigger) => {
             }
             else {
                 //logger.warn('bad');
-                logger.error('MISMATCH, small: ',small,'\nbigger: ',bigger);
+                //logger.error('MISMATCH, small: ',small,'\nbigger: ',bigger);
                 return false; //'small' not complete
             }
         }
     }
-    logger.success('PERMITTED, small: ',small,'\nbigger: ',bigger);
+    //logger.success('PERMITTED, small: ',small,'\nbigger: ',bigger);
     return true;
 };
 
@@ -131,12 +148,13 @@ _.replaceWildcard = (ray) => {
     let arr = [];
     for(let i in ray) {
         if(ray[i] === MENTION_WILDCARD) {
-            arr[parseInt(i)] = '*';
+            arr[parseInt(i)] = '____';
         }
         else {
             arr[parseInt(i)] = ray[i];
         }
     }
+    return arr;
 }
 
 //asynchonous, return promise
@@ -149,7 +167,7 @@ _.respond = (message_str) => {
                 for(let n in the_message) {
                     //arrayInsideArrayWithSameOrder
                     if(_.arrayInsideArrayWithSameOrder(VALID_MENTIONS[i],the_message)) {
-                        resolve('VALID_MENTION: '+JSON.stringify(replaceWildcard(VALID_MENTIONS[i])));
+                        resolve(JSON.stringify(_.replaceWildcard(VALID_MENTIONS[i])));
                     }
                 }
             }
