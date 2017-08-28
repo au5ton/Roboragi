@@ -29,7 +29,9 @@ const ENGLISH_SENTENCE_STARTERS = [
     'who\'s a good',
     'who is a good',
     'thanks',
-    'die'
+    'die',
+    'you the best',
+    'you\'re the best'
 ];
 const ENGLISH_SENTENCE_ENDERS = [
     'is doing her best',
