@@ -101,6 +101,9 @@ _.arrayInsideArrayWithSameOrder = (small, bigger) => {
             if(bigger[indexes[i]+parseInt(n)] === small[parseInt(n)]) {
                 logger.success('good');
             }
+            else if(small[parseInt(n)] === MENTION_WILDCARD) {
+                logger.success('wildcard');
+            }
             else {
                 logger.warn('bad');
                 return false; //'small' not complete

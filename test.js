@@ -207,8 +207,10 @@ var tokenizer = new natural.WordTokenizer();
 // let tokens = tokenizer.tokenize(process.argv[2]);
 // logger.log(tokens);
 
-let small = tokenizer.tokenize('good bot'); //is this
-let bigger = tokenizer.tokenize('woah nice, what a good bot'); //inside this
+const MENTION_WILDCARD = 'dea5d6976f7c54b48ff5d6c539121232f52092ef';
+
+let small = tokenizer.tokenize('wrong '+MENTION_WILDCARD+' bot'); //is this
+let bigger = tokenizer.tokenize('you mentione the wrong thing bot'); //inside this
 
 const natural_language = require('./roboruri/natural_language');
 logger.log(natural_language.arrayInsideArrayWithSameOrder(small,bigger));
