@@ -347,15 +347,18 @@ bot.on('message', (context) => {
 			}).catch(()=>{});
 
 			//will only response if she should respond
-			natural_language.respond(message_str).then((response_str) => {
-				context.reply(response_str, {
-					parse_mode: 'html',
-					reply_to_message_id: message_id
+			//logger.log(context.update.message);
+			if(context.update.message.from.username !== BOT_USERNAME || !context.update.message.from.is_bot) {
+				natural_language.respond(message_str).then((response_str) => {
+					context.reply(response_str, {
+						parse_mode: 'html',
+						reply_to_message_id: message_id
+					});
+				}).catch((err)=>{
+					// shouldRespond returned false
+					//logger.error(err);
 				});
-			}).catch((err)=>{
-				// shouldRespond returned false
-				//logger.error(err); 
-			});
+			}
 		}
 	}
 });

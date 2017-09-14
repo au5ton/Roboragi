@@ -39,7 +39,8 @@ const ENGLISH_SENTENCE_ENDERS = [
     'is trying her best',
     'is trying hard',
     'you the best',
-    'you\'re the best'
+    'you\'re the best',
+    'you are the best'
 ]
 const ANIME_REFRENCES = {
     'I love Emilia!': {response:'You are a cruel man, Subaru-kun.', case_sensitive: true}, //Re:Zero
@@ -49,7 +50,11 @@ const ANIME_REFRENCES = {
     'goodnight': {response: 'Selamat malam.', case_sensitive: false, random_chance: 0.5}, //Nichijou
     'good night': {response: 'Selamat malam.', case_sensitive: false, random_chance: 0.5}, //Nichijou
     'Why didn\'t you tell us you were the Avatar?': {response: 'Because I never wanted to be.', case_sensitive: false}, //Avatar: TLA
-    'cactus juice': {responses: ['<i>It\'s the quenchiest!</i>','<i>It\'ll quench ya!</i>'], case_sensitive: false, includes_only: true} //Avatar: TLA
+    'cactus juice': {responses: ['<i>It\'s the quenchiest!</i>','<i>It\'ll quench ya!</i>'], case_sensitive: false, includes_only: true}, //Avatar: TLA
+    'Akihabara!': {response: 'We don\'t have time to sightsee.', case_sensitive: false}, //Oreimo
+    'Feel free to verbally abuse me too if you\'d like': {response: 'I can\'t figure out if you\'re a nice person or a weird person.', case_sensitive: false},
+    'Feel free to verbally abuse me too if you\'d like, Mr. Kyousuke.': {response: 'I can\'t figure out if you\'re a nice person or a weird person.', case_sensitive: false},
+    'Akihabara!': {response: 'We don\'t have time to sightsee.', case_sensitive: false}
 }
 //build valid mention tokens
 
@@ -200,6 +205,20 @@ _.replaceWildcard = (ray) => {
     return arr;
 }
 
+_.arraysEqual = (arr1, arr2) => {
+
+    if(arr1.length !== arr2.length) {
+        return false;
+    }
+    for(let i = 0; i < arr1.length; i++) {
+        //logger.log('test')
+        if(arr1[i] !== arr2[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
 //asynchonous, return promise
 _.respond = (message_str) => {
     return new Promise((resolve, reject) => {
@@ -319,6 +338,17 @@ _.respond = (message_str) => {
                 for(let n in the_message) {
                     //arrayInsideArrayWithSameOrder
                     if(_.arrayInsideArrayWithSameOrder(VALID_MENTIONS[i],the_message)) {
+                        //logger.log(VALID_MENTIONS[i]);
+                        for(let j in BOT_NAMES) {
+                            for(let n in ENGLISH_GREETINGS) {
+                                if(_.arraysEqual(VALID_MENTIONS[i],tokenizer.tokenize(ENGLISH_GREETINGS[n]+' '+BOT_NAMES[j]))) {
+                                    //logger.success('yes');
+                                    let greetings = ['Ohayō','Hi','Hello'];
+                                    resolve(greetings[Math.floor(Math.random()*greetings.length)]);
+                                }
+                            }
+                        }
+
                         resolve(JSON.stringify(_.replaceWildcard(VALID_MENTIONS[i])));
                     }
                 }
