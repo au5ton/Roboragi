@@ -777,6 +777,9 @@ function buildAnimeChatMessage(anime, options) {
 function buildMangaChatMessage(anime, options) {
 	options = options || {};
 	let message = '';
+	if(anime['image'].startsWith('http')) {
+		message += '\n<a href=\"'+anime['image']+'\">'+empty_char+'</a>';
+	}
 	message += '<b>' + anime['title'] + '</b>';
 	message += ' ('+buildHyperlinksForAnime(anime)+')\n';
 	if(anime['nsfw'] === true) {
