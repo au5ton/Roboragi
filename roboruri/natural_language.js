@@ -22,78 +22,102 @@ const ENGLISH_GREETINGS = [
     'what\'s up',
     'what is up'
 ];
-const ENGLISH_SENTENCE_STARTERS = [
-    'good job',
+const ENGLISH_SENTENCE_STARTERS_ENDEARMENT = [
     'i love you',
+    'love me',
+    'fuck me'
+];
+const ENGLISH_SENTENCE_ENDEARMENT_RESPONSES = [
+    '(づ￣ ³￣)づ',
+    '(っಠ‿ಠ)っ',
+    '(つ✧ω✧)つ',
+    '(￣o￣) zzZZzzZZ',
+    '(l|l º □ º)',
+    '( º □ º)'
+];
+const ENGLISH_SENTENCE_STARTERS_POSITIVE = [
+    'good job',
     'good',
-    'bad',
     'who\'s a good',
     'who is a good',
     'thanks',
-    'die',
+    'thank you',
     'you the best',
     'you\'re the best'
 ];
-const ENGLISH_SENTENCE_ENDERS = [
+const ENGLISH_SENTENCE_POSITIVE_RESPONSES = [
+    'I\'ll try my best',
+    'I don\'t know anyone by that name.',
+    '( ´ ∀ `)',
+    '( ＾ワ＾)',
+    '(* ◡‿◡)',
+    '(´• ω •`)',
+    'Arigatō',
+    'I aim to please.'
+];
+const ENGLISH_SENTENCE_STARTERS_NEGATIVE = [
+    'bad',
+    'die',
+    'i hate you',
+    'fuck off',
+    'shut up',
+    'wrong '+MENTION_WILDCARD
+];
+const ENGLISH_SENTENCE_NEGATIVE_RESPONSES = [
+    '凸(￣ヘ￣)',
+    '(｡•́︿•̀｡)',
+    '(￢_￢;)',
+    '(＃￣ω￣)',
+    '(╥﹏╥)',
+    'Σ(°△°|||)',
+    'Gomennasai'
+];
+const ENGLISH_SENTENCE_ENDERS_POSITIVE = [
     'is doing her best',
     'is trying her best',
     'is trying hard',
     'you the best',
     'you\'re the best',
     'you are the best'
-]
+];
+const ENGLISH_SENTENCE_ENDERS_NEGATIVE = [
+    'is bad',
+    'is stupid',
+    'is dumb',
+    'is buggy',
+    'is ugly'
+];
 const ANIME_REFRENCES = {
     'I love Emilia!': {response:'You are a cruel man, Subaru-kun.', case_sensitive: true}, //Re:Zero
     'Omae Wa Mou Shindeiru': {response:'<b>Nani?!</b>', case_sensitive: false}, //meme
-    'I\'ll do anything!': {response:'Anything, Right? You\'ll obey me like a dog? You\'ll do anything to the extreme?', case_sensitive: true}, //Toradora
-    'good morning': {response: 'Selamat pagi.', case_sensitive: false, random_chance: 0.5}, //Nichijou
-    'goodnight': {response: 'Selamat malam.', case_sensitive: false, random_chance: 0.5}, //Nichijou
-    'good night': {response: 'Selamat malam.', case_sensitive: false, random_chance: 0.5}, //Nichijou
-    'Why didn\'t you tell us you were the Avatar?': {response: 'Because I never wanted to be.', case_sensitive: false}, //Avatar: TLA
     'cactus juice': {responses: ['<i>It\'s the quenchiest!</i>','<i>It\'ll quench ya!</i>'], case_sensitive: false, includes_only: true}, //Avatar: TLA
     'Akihabara!': {response: 'We don\'t have time to sightsee.', case_sensitive: false}, //Oreimo
-    'Feel free to verbally abuse me too if you\'d like': {response: 'I can\'t figure out if you\'re a nice person or a weird person.', case_sensitive: false},
-    'Feel free to verbally abuse me too if you\'d like, Mr. Kyousuke.': {response: 'I can\'t figure out if you\'re a nice person or a weird person.', case_sensitive: false},
-    'Akihabara!': {response: 'We don\'t have time to sightsee.', case_sensitive: false}
-}
+};
+
 //build valid mention tokens
-
-/*
-
-direct mention
-==============
-Good job roboruri
-I love you roboruri
-Bad roboruri
-Wrong * roboruri
-Who's a good roboruri?
-thanks roboruri
-good roboruri
-hi roboruri
-what's up roboruri
-roboruri die
-Roboruri you the best
-
-
-*/
-
-for(let i in BOT_NAMES) {
-    VALID_MENTIONS.push(tokenizer.tokenize('wrong '+MENTION_WILDCARD+' '+BOT_NAMES[i]));
-}
-for(let i in BOT_NAMES) {
-    VALID_MENTIONS.push(tokenizer.tokenize(BOT_NAMES[i]+' is '+MENTION_WILDCARD));
-}
-for(let i in BOT_NAMES) {
-    VALID_MENTIONS.push(tokenizer.tokenize(BOT_NAMES[i]+' is a '+MENTION_WILDCARD));
-}
-for(let n in ENGLISH_SENTENCE_STARTERS) {
+for(let n in ENGLISH_SENTENCE_STARTERS_POSITIVE) {
     for(let i in BOT_NAMES) {
-        VALID_MENTIONS.push(tokenizer.tokenize(ENGLISH_SENTENCE_STARTERS[n]+' '+BOT_NAMES[i]));
+        VALID_MENTIONS.push(tokenizer.tokenize(ENGLISH_SENTENCE_STARTERS_POSITIVE[n]+' '+BOT_NAMES[i]));
     }
 }
-for(let n in ENGLISH_SENTENCE_STARTERS) {
+for(let n in ENGLISH_SENTENCE_STARTERS_ENDEARMENT) {
     for(let i in BOT_NAMES) {
-        VALID_MENTIONS.push(tokenizer.tokenize(BOT_NAMES[i]+' '+ENGLISH_SENTENCE_ENDERS[n]));
+        VALID_MENTIONS.push(tokenizer.tokenize(ENGLISH_SENTENCE_STARTERS_ENDEARMENT[n]+' '+BOT_NAMES[i]));
+    }
+}
+for(let n in ENGLISH_SENTENCE_STARTERS_NEGATIVE) {
+    for(let i in BOT_NAMES) {
+        VALID_MENTIONS.push(tokenizer.tokenize(ENGLISH_SENTENCE_STARTERS_NEGATIVE[n]+' '+BOT_NAMES[i]));
+    }
+}
+for(let n in ENGLISH_SENTENCE_ENDERS_POSITIVE) {
+    for(let i in BOT_NAMES) {
+        VALID_MENTIONS.push(tokenizer.tokenize(BOT_NAMES[i]+' '+ENGLISH_SENTENCE_ENDERS_POSITIVE[n]));
+    }
+}
+for(let n in ENGLISH_SENTENCE_ENDERS_NEGATIVE) {
+    for(let i in BOT_NAMES) {
+        VALID_MENTIONS.push(tokenizer.tokenize(BOT_NAMES[i]+' '+ENGLISH_SENTENCE_ENDERS_NEGATIVE[n]));
     }
 }
 for(let n in ENGLISH_GREETINGS) {
@@ -335,22 +359,47 @@ _.respond = (message_str) => {
             //logger.warn('no ANIME_REFRENCES')
 
             for(let i in VALID_MENTIONS) {
-                for(let n in the_message) {
-                    //arrayInsideArrayWithSameOrder
-                    if(_.arrayInsideArrayWithSameOrder(VALID_MENTIONS[i],the_message)) {
-                        //logger.log(VALID_MENTIONS[i]);
-                        for(let j in BOT_NAMES) {
-                            for(let n in ENGLISH_GREETINGS) {
-                                if(_.arraysEqual(VALID_MENTIONS[i],tokenizer.tokenize(ENGLISH_GREETINGS[n]+' '+BOT_NAMES[j]))) {
-                                    //logger.success('yes');
-                                    let greetings = ['Ohayō','Hi','Hello'];
-                                    resolve(greetings[Math.floor(Math.random()*greetings.length)]);
-                                }
+                //arrayInsideArrayWithSameOrder
+                if(_.arrayInsideArrayWithSameOrder(VALID_MENTIONS[i],the_message)) {
+                    //logger.log(VALID_MENTIONS[i]);
+                    for(let j in BOT_NAMES) {
+                        for(let n in ENGLISH_GREETINGS) {
+                            if(_.arraysEqual(VALID_MENTIONS[i],tokenizer.tokenize(ENGLISH_GREETINGS[n]+' '+BOT_NAMES[j]))) {
+                                //logger.success('yes');
+                                let greetings = ['Ohayō','Hi','Hello'];
+                                resolve(greetings[Math.floor(Math.random()*greetings.length)]);
                             }
                         }
-
-                        resolve(JSON.stringify(_.replaceWildcard(VALID_MENTIONS[i])));
+                        for(let n in ENGLISH_SENTENCE_STARTERS_POSITIVE) {
+                            if(_.arraysEqual(VALID_MENTIONS[i],tokenizer.tokenize(ENGLISH_SENTENCE_STARTERS_POSITIVE[n]+' '+BOT_NAMES[j]))) {
+                                resolve(ENGLISH_SENTENCE_POSITIVE_RESPONSES[Math.floor(Math.random()*ENGLISH_SENTENCE_POSITIVE_RESPONSES.length)]);
+                            }
+                        }
+                        for(let n in ENGLISH_SENTENCE_STARTERS_NEGATIVE) {
+                            if(_.arraysEqual(VALID_MENTIONS[i],tokenizer.tokenize(ENGLISH_SENTENCE_STARTERS_NEGATIVE[n]+' '+BOT_NAMES[j]))) {
+                                resolve(ENGLISH_SENTENCE_NEGATIVE_RESPONSES[Math.floor(Math.random()*ENGLISH_SENTENCE_NEGATIVE_RESPONSES.length)]);
+                            }
+                        }
+                        for(let n in ENGLISH_SENTENCE_ENDERS_POSITIVE) {
+                            //logger.log(tokenizer.tokenize(BOT_NAMES[j]+' '+ENGLISH_SENTENCE_ENDERS_POSITIVE[n]));
+                            if(_.arraysEqual(VALID_MENTIONS[i],tokenizer.tokenize(BOT_NAMES[j]+' '+ENGLISH_SENTENCE_ENDERS_POSITIVE[n]))) {
+                                //logger.success('yes');
+                                resolve(ENGLISH_SENTENCE_POSITIVE_RESPONSES[Math.floor(Math.random()*ENGLISH_SENTENCE_POSITIVE_RESPONSES.length)]);
+                            }
+                        }
+                        for(let n in ENGLISH_SENTENCE_ENDERS_NEGATIVE) {
+                            if(_.arraysEqual(VALID_MENTIONS[i],tokenizer.tokenize(BOT_NAMES[j]+' '+ENGLISH_SENTENCE_ENDERS_NEGATIVE[n]))) {
+                                resolve(ENGLISH_SENTENCE_NEGATIVE_RESPONSES[Math.floor(Math.random()*ENGLISH_SENTENCE_NEGATIVE_RESPONSES.length)]);
+                            }
+                        }
+                        for(let n in ENGLISH_SENTENCE_STARTERS_ENDEARMENT) {
+                            if(_.arraysEqual(VALID_MENTIONS[i],tokenizer.tokenize(ENGLISH_SENTENCE_STARTERS_ENDEARMENT[n]+' '+BOT_NAMES[j]))) {
+                                resolve(ENGLISH_SENTENCE_ENDEARMENT_RESPONSES[Math.floor(Math.random()*ENGLISH_SENTENCE_ENDEARMENT_RESPONSES.length)]);
+                            }
+                        }
                     }
+
+                    reject(JSON.stringify(_.replaceWildcard(VALID_MENTIONS[i])));
                 }
             }
         }
