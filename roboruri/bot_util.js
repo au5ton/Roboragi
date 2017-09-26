@@ -2,6 +2,56 @@
 
 const _ = {};
 
+_.genEasterEggAnswerArticle = (title, desc) => {
+	return [{
+		type: 'article',
+		id: String(Math.floor(Math.random()*10000)+1),
+		title: title,
+		input_message_content: {
+			message_text: desc,
+			parse_mode: 'html',
+			disable_web_page_preview: false,
+			disable_notification: true
+		},
+		description: 'do it',
+		thumb_url: 'https://sooot.github.io/repo/roboruri/egg.png'
+	}];
+};
+
+_.genEasterEggAnswerVoice = (title, url, desc) => {
+	return [{
+		type: 'voice',
+		id: String(Math.floor(Math.random()*10000)+1),
+		title: title,
+		voice_url: url
+	}];
+}
+
+_.genEasterEggAnswerAudio = (title, url, desc) => {
+	return [{
+		type: 'audio',
+		id: String(Math.floor(Math.random()*10000)+1),
+		title: title,
+		audio_url: url,
+		caption: title,
+	}];
+}
+
+_.isEasterEgg = (message_str) => {
+	return new Promise((resolve, reject) => {
+		if(message_str.toLowerCase() === 'audio xfiles') {
+			resolve(_.genEasterEggAnswerVoice('X-Files Theme','https://sooot.github.io/repo/roboruri/xfiles.mp3'));
+		}
+		else if(message.toLowerCase() === 'block the bot') {
+			resolve(_.genEasterEggAnswerArticle('block the bot','<b>ｙｏｕ ｃａｎｔ ｂｌｏｃｋ ｔｈｅ ｂｏｔ</b>'));
+		}
+		else {
+			reject('nothing');
+		}
+	});
+};
+
+
 _.isValidBraceSummon = (message_str) => {
 	return new Promise((resolve, reject) => {
 		let l_cnt = r_cnt = 0,
@@ -254,5 +304,25 @@ _.millisecondsToStr = (milliseconds) => {
     // }
     return 'less than a second'; //'just now' //or other string you like;
 };
+
+_.cleanUpString = (str) => {
+	let cleaned_up = str;
+	cleaned_up = cleaned_up.replace(/\u2018|\u2019|\u201A|\uFFFD/g, "\'");
+	cleaned_up = cleaned_up.replace(/\u201c|\u201d|\u201e/g, '\"');
+	cleaned_up = cleaned_up.replace(/\u02C6/g, '^');
+	cleaned_up = cleaned_up.replace(/\u2039/g, '<');
+	cleaned_up = cleaned_up.replace(/\u203A/g, '>');
+	cleaned_up = cleaned_up.replace(/\u2013/g, '-');
+	cleaned_up = cleaned_up.replace(/\u2014/g, '--');
+	cleaned_up = cleaned_up.replace(/\u2026/g, '...');
+	cleaned_up = cleaned_up.replace(/\u00A9/g, '(c)');
+	cleaned_up = cleaned_up.replace(/\u00AE/g, '(r)');
+	cleaned_up = cleaned_up.replace(/\u2122/g, 'TM');
+	cleaned_up = cleaned_up.replace(/\u00BC/g, '1/4');
+	cleaned_up = cleaned_up.replace(/\u00BD/g, '1/2');
+	cleaned_up = cleaned_up.replace(/\u00BE/g, '3/4');
+	cleaned_up = cleaned_up.replace(/[\u02DC|\u00A0]/g, " ");
+	return cleaned_up;
+}
 
 module.exports = _;

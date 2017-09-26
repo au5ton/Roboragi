@@ -175,7 +175,8 @@ _.searchAnimes = (query, query_format) => {
 								start_date: a_result['start_date'],
 								end_date: a_result['end_date'],
 								image: a_result['image'],
-								synonyms: new Synonyms(a_result['synonyms'])
+								synonyms: new Synonyms(a_result['synonyms']),
+								original_query: query
 							}));
 						}
 					} else {
@@ -204,7 +205,8 @@ _.searchAnimes = (query, query_format) => {
 								end_date: a_result['end_date'],
 								image: a_result['image_url_lge'],
 								nsfw: a_result['adult'], //confirmed bool 👍
-								synonyms: new Synonyms(a_result['synonyms'])
+								synonyms: new Synonyms(a_result['synonyms']),
+								original_query: query
 							});
 							anime_arrays[ResolvedArray[r].DataSource].push(some_anime);
 						}
@@ -248,9 +250,10 @@ _.searchAnimes = (query, query_format) => {
 								synopsis_full: a_result['synopsis'],
 								start_date: a_result['startDate'],
 								end_date: a_result['endDate'],
-								image: a_result['posterImage']['original'],
+								image: (a_result['posterImage'] === null || a_result['posterImage'] === undefined) ? undefined : a_result['posterImage']['original'],
 								nsfw: a_result['nsfw'], //confirmed bool 👍
-								synonyms: new Synonyms(synonyms_try) //maybe this'll be good enough, please work ^
+								synonyms: new Synonyms(synonyms_try), //maybe this'll be good enough, please work ^
+								original_query: query
 							});
 							//logger.log(some_anime);
 							anime_arrays[ResolvedArray[r].DataSource].push(some_anime);
@@ -527,7 +530,8 @@ _.searchManga = (query, MangaOrLN) => {
 								start_date: a_result['start_date'],
 								end_date: a_result['end_date'],
 								image: a_result['image'],
-								synonyms: new Synonyms(a_result['synonyms'])
+								synonyms: new Synonyms(a_result['synonyms']),
+								original_query: query
 							}));
 						}
 					} else {
@@ -555,7 +559,8 @@ _.searchManga = (query, MangaOrLN) => {
 								end_date: a_result['end_date_fuzzy'],
 								image: a_result['image_url_lge'],
 								nsfw: a_result['adult'], //confirmed bool 👍
-								synonyms: new Synonyms(a_result['synonyms'])
+								synonyms: new Synonyms(a_result['synonyms']),
+								original_query: query
 							});
 							anime_arrays[ResolvedArray[r].DataSource].push(some_anime);
 						}
@@ -594,7 +599,8 @@ _.searchManga = (query, MangaOrLN) => {
 								end_date: a_result['endDate'],
 								image: a_result['posterImage']['original'],
 								nsfw: a_result['nsfw'], //confirmed bool 👍
-								synonyms: new Synonyms(synonyms_try) //maybe this'll be good enough, please work ^
+								synonyms: new Synonyms(synonyms_try), //maybe this'll be good enough, please work ^
+								original_query: query
 							});
 							//logger.log(a_result['subtype']);
 							anime_arrays[ResolvedArray[r].DataSource].push(some_anime);
@@ -947,7 +953,8 @@ _.matchAnimeFromDatabase = (query) => {
 												start_date: a_result['start_date'],
 												end_date: a_result['end_date'],
 												image: a_result['image'],
-												synonyms: new Synonyms(a_result['synonyms'])
+												synonyms: new Synonyms(a_result['synonyms']),
+												original_query: query
 											}), the_anime);
 										}
 									}
@@ -973,7 +980,8 @@ _.matchAnimeFromDatabase = (query) => {
 										end_date: a_result['end_date_fuzzy'],
 										image: a_result['image_url_lge'],
 										nsfw: a_result['adult'], //confirmed bool 👍
-										synonyms: new Synonyms(a_result['synonyms'])
+										synonyms: new Synonyms(a_result['synonyms']),
+										original_query: query
 									});
 									the_anime = Anime.consolidate(the_anime, some_anime);
 
@@ -1017,7 +1025,8 @@ _.matchAnimeFromDatabase = (query) => {
 											end_date: a_result['endDate'],
 											image: a_result['posterImage']['original'],
 											nsfw: a_result['nsfw'], //confirmed bool 👍
-											synonyms: new Synonyms(synonyms_try) //maybe this'll be good enough, please work ^
+											synonyms: new Synonyms(synonyms_try), //maybe this'll be good enough, please work ^
+											original_query: query
 										});
 										the_anime = Anime.consolidate(the_anime, some_anime);
 									}

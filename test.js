@@ -111,32 +111,31 @@ const non_empty = (val) => {
 // let other = show.flattened
 // logger.log('after flat: ',show);
 
-// kitsu.auth({
-//     clientId: process.env.KITSU_CLIENT_ID,
-//     clientSecret: process.env.KITSU_CLIENT_SECRET,
-//     username: process.env.KITSU_USER,
-//     password: process.env.KITSU_PASSWORD
-// }).then((what) => {
-//     //logger.log(what);
-//
-//     if (kitsu.isAuth) console.log('Authenticated')
-//     else console.log('Not authenticated')
-//
-//     kitsu.get('manga', {
-//         filter: {
-//             text: 'eromanga',
-//             subtype: 'novel'
-//         }
-//     }).then((response) => {
-//         logger.log(response.meta.count);
-//         for(let i in response.data) {
-//             logger.log(response.data[i]);
-//         }
-//     });
-//     kitsu.get('anime/12761/episodes', {}).then((response) => {
-//         logger.warn(response);
-//     });
-// });
+kitsu.auth({
+    clientId: process.env.KITSU_CLIENT_ID,
+    clientSecret: process.env.KITSU_CLIENT_SECRET,
+    username: process.env.KITSU_USER,
+    password: process.env.KITSU_PASSWORD
+}).then((what) => {
+    //logger.log(what);
+
+    if (kitsu.isAuth) console.log('Authenticated')
+    else console.log('Not authenticated')
+
+    // kitsu.get('anime', {
+    //     filter: {
+    //         text: 'redline'
+    //     }
+    // }).then((response) => {
+    //     logger.log(response.meta.count);
+    //     for(let i in response.data) {
+    //         logger.log(response.data[i]);
+    //     }
+    // });
+    kitsu.get('anime/4659', {}).then((response) => {
+        logger.warn(response);
+    });
+});
 
 // MAL.verifyAuth().then((r) => {
 // 	logger.success('MAL authenticated. ');
@@ -171,14 +170,14 @@ const non_empty = (val) => {
 
 //tt4731072
 
-const imdb = require('imdb-api');
-const token = {apiKey: process.env.OMDB_API_KEY};
+//const imdb = require('imdb-api');
+//const token = {apiKey: process.env.OMDB_API_KEY};
 // imdb.search({
 //     title: process.argv[2]
 // }, token).then((results)=> {
 //     logger.log(results.results);
 // }).catch(console.log);
-imdb.getById('tt2575988', token).then(logger.log).catch(logger.error);
+//imdb.getById('tt2575988', token).then(logger.log).catch(logger.error);
 
 // const TVDB = require('node-tvdb');
 // const tvdb = new TVDB(process.env.THETVDB_API_KEY);
@@ -199,3 +198,18 @@ imdb.getById('tt2575988', token).then(logger.log).catch(logger.error);
 
 
 //logger.log('access_token: ', access_token);
+
+// const natural = require('natural'); //NLP
+// // logger.log(natural.PorterStemmer.stem('good job roboruri')); // stem a single word
+// //
+// var tokenizer = new natural.WordTokenizer();
+// // let tokens = tokenizer.tokenize(process.argv[2]);
+// // logger.log(tokens);
+//
+// const MENTION_WILDCARD = 'dea5d6976f7c54b48ff5d6c539121232f52092ef';
+//
+// let small = tokenizer.tokenize('wrong '+MENTION_WILDCARD+' bot'); //is this
+// let bigger = tokenizer.tokenize('you mentione the wrong thing bot'); //inside this
+//
+// const natural_language = require('./roboruri/natural_language');
+// logger.log(natural_language.arrayInsideArrayWithSameOrder(small,bigger));

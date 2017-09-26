@@ -28,6 +28,7 @@ const tvdb = new TVDB(process.env.THETVDB_API_KEY);
 const bot_util = require('./roboruri/bot_util');
 const Searcher = require('./roboruri/searcher');
 const DataSource = require('./roboruri/enums').DataSource;
+const natural_language = require('./roboruri/natural_language');
 
 
 // Custom classes
@@ -43,6 +44,8 @@ const Genres = require('./roboruri/classes/Genres');
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 
 const DEV_TELEGRAM_ID = parseInt(process.env.DEV_TELEGRAM_ID) || 0;
+
+process.on('unhandledRejection', r => logger.error(r));
 
 // Basic commands
 
@@ -91,19 +94,19 @@ bot.hears(new RegExp('\/flipcoin|\/flipcoin@' + BOT_USERNAME), (context) => {
 })
 
 // Listen for regex
-bot.hears(/thanks roboruri|good bot/gi, (context) => {
-	let catchphrases = [
-		'I\'ll try my best',
-		'I don\'t know anyone by that name.',
-		'( ´ ∀ `)',
-		'( ＾ワ＾)',
-		'(* ◡‿◡)',
-		'(￢_￢;)',
-		'Arigatō',
-		'I aim to please.'
-	];
-	context.reply(catchphrases[Math.floor(Math.random() * catchphrases.length)]);
-});
+// bot.hears(/thanks roboruri|good bot/gi, (context) => {
+// 	let catchphrases = [
+// 		'I\'ll try my best',
+// 		'I don\'t know anyone by that name.',
+// 		'( ´ ∀ `)',
+// 		'( ＾ワ＾)',
+// 		'(* ◡‿◡)',
+// 		'(￢_￢;)',
+// 		'Arigatō',
+// 		'I aim to please.'
+// 	];
+// 	context.reply(catchphrases[Math.floor(Math.random() * catchphrases.length)]);
+// });
 
 bot.hears(/anime_irl/gi, (context) => {
 	//1 in 100 chance
@@ -112,205 +115,514 @@ bot.hears(/anime_irl/gi, (context) => {
 	}
 });
 
-bot.on('text', (context) => {
-	const message_str = context.message.text;
-	if(typeof message_str === 'string' && message_str.length > 0) {
+bot.on('message', (context) => {
+	//logger.log(context)
+	//New members were added
+	if(context.update.message.new_chat_members){
+		let members = context.update.message.new_chat_members;
+		for(let i in members) {
+			if(members[i]['username'] === BOT_USERNAME) {
+				context.reply('Ohayō, '+context.chat.title+'. ');
+				context.telegram.sendVideo(context.chat.id, 'https://a.safe.moe/AAqRJ.mp4');
+			}
+		}
+	}
+	else if(context.updateType === 'message' && context.updateSubTypes.includes('text')) {
+		//Message was received
+		const message_str = context.update.message.text;
+		const message_id =  context.update.message.message_id;
+		if(typeof message_str === 'string' && message_str.length > 0) {
+			//logger.log(context)
+			//summon handlers
+			//logger.log(JSON.parse(JSON.stringify(context.update)));
+			//logger.log(JSON.parse(JSON.stringify(context.update.message.entities)))
 
-		//summon handlers
-		bot_util.isValidBraceSummon(message_str).then((query) => {
-			logger.log('Summon: {', query, '}');
-			console.time('execution time');
-			//logger.log('q: ', query);
-			Searcher.matchFromCache('{'+query+'}').then((result) => {
-				//boo yah
-				context.reply(buildAnimeChatMessage(result), {
-					parse_mode: 'html',
-					disable_web_page_preview: true
-				});
-				console.timeEnd('execution time');
-			}).catch((err) => {
-				logger.warn('cache empty: ', err);
-				//nothing in cache
-				Searcher.matchAnimeFromDatabase(query).then((result) => {
+			// {} queries to ignore because a certain someone wont stop using them
+			let god_damnit_fluff = [
+				'smh'
+			];
+
+			bot_util.isValidBraceSummon(message_str).then((query) => {
+
+				if(god_damnit_fluff.includes(query)) {
+					//fucking give up
+					logger.warn('damnit fluff');
+					throw 'fuck this shit';
+				}
+
+				logger.log('Summon: {', query, '}');
+				console.time('execution time');
+				//logger.log('q: ', query);
+				Searcher.matchFromCache('{'+query+'}').then((result) => {
 					//boo yah
 					context.reply(buildAnimeChatMessage(result), {
 						parse_mode: 'html',
-						disable_web_page_preview: true
+						disable_web_page_preview: result['image'].startsWith('http') ? false : true,
+						reply_to_message_id: message_id
 					});
 					console.timeEnd('execution time');
 				}).catch((err) => {
-					logger.warn('database empty: ', err);
-					//nothing in database
-					Searcher.searchAnimes(query).then((result) => {
-						//logger.log(result);
+					logger.warn('cache empty: ', err);
+					//nothing in cache
+					Searcher.matchAnimeFromDatabase(query).then((result) => {
+						//boo yah
 						context.reply(buildAnimeChatMessage(result), {
 							parse_mode: 'html',
-							disable_web_page_preview: true
+							disable_web_page_preview: result['image'].startsWith('http') ? false : true,
+							reply_to_message_id: message_id
 						});
 						console.timeEnd('execution time');
-					}).catch((r) => {
-						//well that sucks
-						if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
-							logger.warn('q: {'+query+'} => '+filled_x)
-						}
-						else {
-							logger.error('failed to search with Searcher: ', r);
-						}
-						console.timeEnd('execution time');
-					});
-				})
-			});
-		}).catch(()=>{});
-		bot_util.isValidLTGTSummon(message_str).then((query) => {
+					}).catch((err) => {
+						logger.warn('database empty: ', err);
+						//nothing in database
+						Searcher.searchAnimes(query).then((result) => {
+							//logger.log(result);
+							context.reply(buildAnimeChatMessage(result), {
+								parse_mode: 'html',
+								disable_web_page_preview: result['image'].startsWith('http') ? false : true,
+								reply_to_message_id: message_id
+							});
+							console.timeEnd('execution time');
+						}).catch((r) => {
+							//well that sucks
+							if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
+								logger.warn('q: {'+query+'} => '+filled_x)
+							}
+							else {
+								logger.error('failed to search with Searcher: ', r);
+							}
+							console.timeEnd('execution time');
+						});
+					})
+				});
+			}).catch(()=>{});
+			bot_util.isValidLTGTSummon(message_str).then((query) => {
 
-			logger.log('Summon: <', query, '>');
-			console.time('execution time');
-			//logger.log('q: ', query);
-			Searcher.matchFromCache('<'+query+'>').then((result) => {
-				//boo yah
-				context.reply(buildMangaChatMessage(result), {
-					parse_mode: 'html',
-					disable_web_page_preview: true
-				});
-				console.timeEnd('execution time');
-			}).catch((err) => {
-				logger.warn('cache empty: ', err);
-				//nothing in cache
-				Searcher.matchMangaFromDatabase(query, 'Manga').then((result) => {
+				logger.log('Summon: <', query, '>');
+				console.time('execution time');
+				//logger.log('q: ', query);
+				Searcher.matchFromCache('<'+query+'>').then((result) => {
 					//boo yah
 					context.reply(buildMangaChatMessage(result), {
 						parse_mode: 'html',
-						disable_web_page_preview: true
+						disable_web_page_preview: result['image'].startsWith('http') ? false : true
 					});
 					console.timeEnd('execution time');
 				}).catch((err) => {
-					logger.warn('database empty: ', err);
-					//nothing in database
-					Searcher.searchManga(query, 'Manga').then((result) => {
-						//logger.log(result);
+					logger.warn('cache empty: ', err);
+					//nothing in cache
+					Searcher.matchMangaFromDatabase(query, 'Manga').then((result) => {
+						//boo yah
 						context.reply(buildMangaChatMessage(result), {
 							parse_mode: 'html',
-							disable_web_page_preview: true
+							disable_web_page_preview: result['image'].startsWith('http') ? false : true
 						});
 						console.timeEnd('execution time');
-					}).catch((r) => {
-						//well that sucks
-						if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
-							logger.warn('q: <'+query+'> => '+filled_x)
-						}
-						else {
-							logger.error('failed to search with Searcher: ', r);
-						}
-						console.timeEnd('execution time');
-					});
-				})
-			});
-		}).catch(()=>{});
-		bot_util.isValidReverseBracketSummon(message_str).then((query) => {
-			logger.log('Summon: ]', query, '[');
-			console.time('execution time');
-			//logger.log('q: ', query);
-			Searcher.matchFromCache(']'+query+'[').then((result) => {
-				//boo yah
-				context.reply(buildMangaChatMessage(result), {
-					parse_mode: 'html',
-					disable_web_page_preview: true
+					}).catch((err) => {
+						logger.warn('database empty: ', err);
+						//nothing in database
+						Searcher.searchManga(query, 'Manga').then((result) => {
+							//logger.log(result);
+							context.reply(buildMangaChatMessage(result), {
+								parse_mode: 'html',
+								disable_web_page_preview: result['image'].startsWith('http') ? false : true
+							});
+							console.timeEnd('execution time');
+						}).catch((r) => {
+							//well that sucks
+							if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
+								logger.warn('q: <'+query+'> => '+filled_x)
+							}
+							else {
+								logger.error('failed to search with Searcher: ', r);
+							}
+							console.timeEnd('execution time');
+						});
+					})
 				});
-				console.timeEnd('execution time');
-			}).catch((err) => {
-				logger.warn('cache empty: ', err);
-				//nothing in cache
-				Searcher.matchMangaFromDatabase(query, 'LN').then((result) => {
+			}).catch(()=>{});
+			bot_util.isValidReverseBracketSummon(message_str).then((query) => {
+				logger.log('Summon: ]', query, '[');
+				console.time('execution time');
+				//logger.log('q: ', query);
+				Searcher.matchFromCache(']'+query+'[').then((result) => {
 					//boo yah
 					context.reply(buildMangaChatMessage(result), {
 						parse_mode: 'html',
-						disable_web_page_preview: true
+						disable_web_page_preview: result['image'].startsWith('http') ? false : true
 					});
 					console.timeEnd('execution time');
 				}).catch((err) => {
-					logger.warn('database empty: ', err);
-					//nothing in database
-					Searcher.searchManga(query, 'LN').then((result) => {
-						//logger.log(result);
+					logger.warn('cache empty: ', err);
+					//nothing in cache
+					Searcher.matchMangaFromDatabase(query, 'LN').then((result) => {
+						//boo yah
 						context.reply(buildMangaChatMessage(result), {
 							parse_mode: 'html',
-							disable_web_page_preview: true
+							disable_web_page_preview: result['image'].startsWith('http') ? false : true
 						});
 						console.timeEnd('execution time');
-					}).catch((r) => {
-						//well that sucks
-						if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
-							logger.warn('q: ]'+query+'[ => '+filled_x)
-						}
-						else {
-							logger.error('failed to search with Searcher: ', r);
-						}
-						console.timeEnd('execution time');
-					});
-				})
-			});
-		}).catch(()=>{});
-		bot_util.isValidReverseLTGTSummon(message_str).then((query) => {
-			logger.log('Summon: >', query, '<');
-			console.time('execution time');
-			Searcher.matchFromCache('>'+query+'<').then((result) => {
-				context.reply(buildMovieChatMessage(result),{
-					parse_mode: 'html',
-					disable_web_page_preview: true
+					}).catch((err) => {
+						logger.warn('database empty: ', err);
+						//nothing in database
+						Searcher.searchManga(query, 'LN').then((result) => {
+							//logger.log(result);
+							context.reply(buildMangaChatMessage(result), {
+								parse_mode: 'html',
+								disable_web_page_preview: result['image'].startsWith('http') ? false : true
+							});
+							console.timeEnd('execution time');
+						}).catch((r) => {
+							//well that sucks
+							if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
+								logger.warn('q: ]'+query+'[ => '+filled_x)
+							}
+							else {
+								logger.error('failed to search with Searcher: ', r);
+							}
+							console.timeEnd('execution time');
+						});
+					})
 				});
-				console.timeEnd('execution time');
-			}).catch((err) => {
-				logger.warn('cache empty: ', err);
-				Searcher.searchWesternMovie(query).then((result) => {
-					//logger.log(result);
+			}).catch(()=>{});
+			bot_util.isValidReverseLTGTSummon(message_str).then((query) => {
+				logger.log('Summon: >', query, '<');
+				console.time('execution time');
+				Searcher.matchFromCache('>'+query+'<').then((result) => {
 					context.reply(buildMovieChatMessage(result),{
 						parse_mode: 'html',
-						disable_web_page_preview: true
+						disable_web_page_preview: result['poster'].startsWith('http') ? false : true
 					});
 					console.timeEnd('execution time');
-				}).catch((r) => {
-					//well that sucks
-					if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
-						logger.warn('q: >'+query+'< => '+filled_x)
-					}
-					else {
-						logger.error('failed to search with Searcher: ', r);
-					}
-					console.timeEnd('execution time');
+				}).catch((err) => {
+					logger.warn('cache empty: ', err);
+					Searcher.searchWesternMovie(query).then((result) => {
+						//logger.log(result);
+						context.reply(buildMovieChatMessage(result),{
+							parse_mode: 'html',
+							disable_web_page_preview: result['poster'].startsWith('http') ? false : true
+						});
+						console.timeEnd('execution time');
+					}).catch((r) => {
+						//well that sucks
+						if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
+							logger.warn('q: >'+query+'< => '+filled_x)
+						}
+						else {
+							logger.error('failed to search with Searcher: ', r);
+						}
+						console.timeEnd('execution time');
+					});
 				});
-			});
-		}).catch(()=>{});
-		bot_util.isValidPipeSummon(message_str).then((query) => {
-			logger.log('Summon: |', query, '|');
-			console.time('execution time');
-			Searcher.matchFromCache('|'+query+'|').then((result) => {
-				context.reply(buildAnimeChatMessage(result),{
-					parse_mode: 'html',
-					disable_web_page_preview: true
-				});
-				console.timeEnd('execution time');
-			}).catch((err) => {
-				logger.warn('cache empty: ', err);
-				Searcher.searchWesternTelevision(query).then((result) => {
-					//logger.log(result);
+			}).catch(()=>{});
+			bot_util.isValidPipeSummon(message_str).then((query) => {
+				logger.log('Summon: |', query, '|');
+				console.time('execution time');
+				Searcher.matchFromCache('|'+query+'|').then((result) => {
 					context.reply(buildAnimeChatMessage(result),{
 						parse_mode: 'html',
-						disable_web_page_preview: true
+						disable_web_page_preview: result['image'].startsWith('http') ? false : true
 					});
 					console.timeEnd('execution time');
-				}).catch((r) => {
-					//well that sucks
-					if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
-						logger.warn('q: |'+query+'| => '+filled_x)
-					}
-					else {
-						logger.error('failed to search with Searcher: ', r);
-					}
-					console.timeEnd('execution time');
+				}).catch((err) => {
+					logger.warn('cache empty: ', err);
+					Searcher.searchWesternTelevision(query).then((result) => {
+						//logger.log(result);
+						context.reply(buildAnimeChatMessage(result),{
+							parse_mode: 'html',
+							disable_web_page_preview: result['image'].startsWith('http') ? false : true
+						});
+						console.timeEnd('execution time');
+					}).catch((r) => {
+						//well that sucks
+						if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
+							logger.warn('q: |'+query+'| => '+filled_x)
+						}
+						else {
+							logger.error('failed to search with Searcher: ', r);
+						}
+						console.timeEnd('execution time');
+					});
 				});
-			});
-		}).catch(()=>{});
+			}).catch(()=>{});
+
+			//will only response if she should respond
+			//logger.log(context.update.message);
+			if(context.update.message.from.username !== BOT_USERNAME || !context.update.message.from.is_bot) {
+				natural_language.respond(message_str).then((response_str) => {
+					context.reply(response_str, {
+						parse_mode: 'html',
+						reply_to_message_id: message_id
+					});
+				}).catch((err)=>{
+					// shouldRespond returned false
+					//logger.error(err);
+				});
+			}
+		}
 	}
+});
+
+var LastInlineRequest = {};
+var to_be_removed = [];
+const INLINE_SUMMON_DELAY = 500;
+const TELEGRAM_SUMMON_TIMEOUT = 30000;
+// Regularly checks every second for unresolved queries
+setInterval(() => {
+	//logger.warn(LastInlineRequest,'\n',to_be_removed)
+	for(let from_id in LastInlineRequest) {
+		let elapsed_time = new Date().getTime() - LastInlineRequest[from_id]['time_ms'];
+		if(elapsed_time > INLINE_SUMMON_DELAY && elapsed_time < TELEGRAM_SUMMON_TIMEOUT && LastInlineRequest[from_id]['status'] === 'unprocessed') {
+			LastInlineRequest[from_id]['status'] = 'pending';
+			// safe to reply
+			logger.warn('inline_query: ', LastInlineRequest[from_id]['query']);
+
+			bot_util.isEasterEgg(LastInlineRequest[from_id]['query']).then((answer) => {
+				bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], answer).catch((err) => {
+					logger.error('answerInlineQuery failed to send: ',err)
+				});
+				LastInlineRequest[from_id]['status'] = 'done';
+				to_be_removed.push(from_id);
+			}).catch(()=>{});
+
+			bot_util.isValidBraceSummon(LastInlineRequest[from_id]['query']).then((query) => {
+				logger.log('Summon: {', query, '}');
+				console.time('execution time');
+				//logger.log('q: ', query);
+				Searcher.matchFromCache('{'+query+'}').then((result) => {
+					//boo yah
+					bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]).catch((err) => {logger.error('answerInlineQuery failed to send: ',err)});
+					LastInlineRequest[from_id]['status'] = 'done';
+					to_be_removed.push(from_id);
+					console.timeEnd('execution time');
+				}).catch((err) => {
+					logger.warn('cache empty: ', err);
+					//nothing in cache
+					Searcher.matchAnimeFromDatabase(query).then((result) => {
+						//boo yah
+						bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]).catch((err) => {logger.error('answerInlineQuery failed to send: ',err)});
+						LastInlineRequest[from_id]['status'] = 'done';
+						to_be_removed.push(from_id);
+						console.timeEnd('execution time');
+					}).catch((err) => {
+						logger.warn('database empty: ', err);
+						//nothing in database
+						Searcher.searchAnimes(query).then((result) => {
+							//logger.log(result);
+							bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]).catch((err) => {logger.error('answerInlineQuery failed to send: ',err)});
+							LastInlineRequest[from_id]['status'] = 'done';
+							to_be_removed.push(from_id);
+							console.timeEnd('execution time');
+						}).catch((r) => {
+							//well that sucks
+							if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
+								logger.warn('q: {'+query+'} => '+filled_x)
+							}
+							else {
+								logger.error('failed to search with Searcher: ', r);
+							}
+							LastInlineRequest[from_id]['status'] = 'done';
+							to_be_removed.push(from_id);
+							console.timeEnd('execution time');
+						});
+					})
+				});
+			}).catch(()=>{
+				//LastInlineRequest[from_id]['status'] = 'done';
+				//to_be_removed.push(from_id);
+			}).catch(()=>{});
+			bot_util.isValidLTGTSummon(LastInlineRequest[from_id]['query']).then((query) => {
+
+			    logger.log('Summon: <', query, '>');
+			    console.time('execution time');
+			    //logger.log('q: ', query);
+			    Searcher.matchFromCache('<'+query+'>').then((result) => {
+			        //boo yah
+			        bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]).catch((err) => {logger.error('answerInlineQuery failed to send: ',err)});
+					LastInlineRequest[from_id]['status'] = 'done';
+					to_be_removed.push(from_id);
+					console.timeEnd('execution time');
+			    }).catch((err) => {
+			        logger.warn('cache empty: ', err);
+			        //nothing in cache
+			        Searcher.matchMangaFromDatabase(query, 'Manga').then((result) => {
+			            //boo yah
+						bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]).catch((err) => {logger.error('answerInlineQuery failed to send: ',err)});
+						LastInlineRequest[from_id]['status'] = 'done';
+						to_be_removed.push(from_id);
+						console.timeEnd('execution time');
+			        }).catch((err) => {
+			            logger.warn('database empty: ', err);
+			            //nothing in database
+			            Searcher.searchManga(query, 'Manga').then((result) => {
+			                //logger.log(result);
+			                bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]).catch((err) => {logger.error('answerInlineQuery failed to send: ',err)});
+							LastInlineRequest[from_id]['status'] = 'done';
+							to_be_removed.push(from_id);
+							console.timeEnd('execution time');
+			            }).catch((r) => {
+			                //well that sucks
+			                if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
+			                    logger.warn('q: <'+query+'> => '+filled_x)
+			                }
+			                else {
+			                    logger.error('failed to search with Searcher: ', r);
+			                }
+							LastInlineRequest[from_id]['status'] = 'done';
+							to_be_removed.push(from_id);
+			                console.timeEnd('execution time');
+			            });
+			        })
+			    });
+			}).catch(()=>{
+				//LastInlineRequest[from_id]['status'] = 'done';
+				//to_be_removed.push(from_id);
+			}).catch(()=>{});
+			bot_util.isValidReverseBracketSummon(LastInlineRequest[from_id]['query']).then((query) => {
+			    logger.log('Summon: ]', query, '[');
+			    console.time('execution time');
+			    //logger.log('q: ', query);
+			    Searcher.matchFromCache(']'+query+'[').then((result) => {
+			        //boo yah
+					bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]).catch((err) => {logger.error('answerInlineQuery failed to send: ',err)});
+					LastInlineRequest[from_id]['status'] = 'done';
+					to_be_removed.push(from_id);
+			        console.timeEnd('execution time');
+			    }).catch((err) => {
+			        logger.warn('cache empty: ', err);
+			        //nothing in cache
+			        Searcher.matchMangaFromDatabase(query, 'LN').then((result) => {
+			            //boo yah
+						bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]).catch((err) => {logger.error('answerInlineQuery failed to send: ',err)});
+						LastInlineRequest[from_id]['status'] = 'done';
+						to_be_removed.push(from_id);
+			            console.timeEnd('execution time');
+			        }).catch((err) => {
+			            logger.warn('database empty: ', err);
+			            //nothing in database
+			            Searcher.searchManga(query, 'LN').then((result) => {
+			                //logger.log(result);
+							bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]).catch((err) => {logger.error('answerInlineQuery failed to send: ',err)});
+							LastInlineRequest[from_id]['status'] = 'done';
+							to_be_removed.push(from_id);
+			                console.timeEnd('execution time');
+			            }).catch((r) => {
+			                //well that sucks
+			                if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
+			                    logger.warn('q: ]'+query+'[ => '+filled_x)
+			                }
+			                else {
+			                    logger.error('failed to search with Searcher: ', r);
+			                }
+							LastInlineRequest[from_id]['status'] = 'done';
+							to_be_removed.push(from_id);
+			                console.timeEnd('execution time');
+			            });
+			        })
+			    });
+			}).catch(()=>{
+				//LastInlineRequest[from_id]['status'] = 'done';
+				//to_be_removed.push(from_id);
+			}).catch(()=>{});
+			bot_util.isValidReverseLTGTSummon(LastInlineRequest[from_id]['query']).then((query) => {
+			    logger.log('Summon: >', query, '<');
+			    console.time('execution time');
+			    Searcher.matchFromCache('>'+query+'<').then((result) => {
+			        bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromMovie(result)]).catch((err) => {logger.error('answerInlineQuery failed to send: ',err)});
+					LastInlineRequest[from_id]['status'] = 'done';
+					to_be_removed.push(from_id);
+					console.timeEnd('execution time');
+			    }).catch((err) => {
+			        logger.warn('cache empty: ', err);
+			        Searcher.searchWesternMovie(query).then((result) => {
+			            //logger.log(result);
+			            bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromMovie(result)]).catch((err) => {logger.error('answerInlineQuery failed to send: ',err)});
+						LastInlineRequest[from_id]['status'] = 'done';
+						to_be_removed.push(from_id);
+			            console.timeEnd('execution time');
+			        }).catch((r) => {
+			            //well that sucks
+			            if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
+			                logger.warn('q: >'+query+'< => '+filled_x)
+			            }
+			            else {
+			                logger.error('failed to search with Searcher: ', r);
+			            }
+						LastInlineRequest[from_id]['status'] = 'done';
+						to_be_removed.push(from_id);
+			            console.timeEnd('execution time');
+			        });
+			    });
+			}).catch(()=>{
+				//LastInlineRequest[from_id]['status'] = 'done';
+				//to_be_removed.push(from_id);
+			}).catch(()=>{});
+			bot_util.isValidPipeSummon(LastInlineRequest[from_id]['query']).then((query) => {
+			    logger.log('Summon: |', query, '|');
+			    console.time('execution time');
+			    Searcher.matchFromCache('|'+query+'|').then((result) => {
+					bot.telegram.answerInlineQuery(Object.assign({}, LastInlineRequest[from_id]['query_id']), [buildInlineQueryResultArticleFromAnime(result)]).catch((err) => {logger.error('answerInlineQuery failed to send: ',err)});
+					LastInlineRequest[from_id]['status'] = 'done';
+					to_be_removed.push(from_id);
+			        console.timeEnd('execution time');
+			    }).catch((err) => {
+			        logger.warn('cache empty: ', err);
+			        Searcher.searchWesternTelevision(query).then((result) => {
+			            //logger.log(result);
+						bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [buildInlineQueryResultArticleFromAnime(result)]).catch((err) => {logger.error('answerInlineQuery failed to send: ',err)});
+						LastInlineRequest[from_id]['status'] = 'done';
+						to_be_removed.push(from_id);
+			            console.timeEnd('execution time');
+			        }).catch((r) => {
+			            //well that sucks
+			            if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
+			                logger.warn('q: |'+query+'| => '+filled_x)
+			            }
+			            else {
+			                logger.error('failed to search with Searcher: ', r);
+			            }
+						LastInlineRequest[from_id]['status'] = 'done';
+						to_be_removed.push(from_id);
+			            console.timeEnd('execution time');
+			        });
+			    });
+			}).catch(()=>{
+				//LastInlineRequest[from_id]['status'] = 'done';
+				//to_be_removed.push(from_id);
+			}).catch(()=>{});
+		}
+		if(elapsed_time > TELEGRAM_SUMMON_TIMEOUT) {
+			//stores the user ids of users who cant have their request fullfilled anymore
+			logger.warn('to_be_removed '+from_id+' due to timeout')
+			to_be_removed.push(from_id);
+		}
+	}
+	for(let i = to_be_removed.length-1; i >= 0; i--) {
+		//removes the request info of users who cant have their request fullfilled anymore
+		//logger.log(LastInlineRequest,'\n',to_be_removed);
+		logger.warn('removing ',to_be_removed[i]);
+		delete LastInlineRequest[to_be_removed[i]];
+		to_be_removed.splice(i,1);
+
+	}
+},100);
+
+bot.on('inline_query', (context) => {
+	let from_id = context.update.inline_query.from.id; //telegram user id of requesting user
+	//let from_id = context.update.inline_query.id; //actually use query id instead
+	let time_ms = new Date().getTime(); //epoch time in milliseconds
+	let query = context.update.inline_query.query; //the query the user made
+	let query_id = context.update.inline_query.id; //the telegram inline query id, needed to use answerInlineQuery
+	if(LastInlineRequest[from_id] === undefined) {
+		LastInlineRequest[from_id] = {};
+	}
+	else {
+		//logger.warn('updated query from ',from_id,': ',query);
+	}
+	LastInlineRequest[from_id]['time_ms'] = time_ms;
+	LastInlineRequest[from_id]['query'] = query;
+	LastInlineRequest[from_id]['query_id'] = query_id;
+	LastInlineRequest[from_id]['status'] = 'unprocessed'; // unprocessed || pending || done
 });
 
 const star_char = '\u272A';
@@ -321,6 +633,8 @@ const prohibited_symbol = String.fromCodePoint(0x1f232);
 const manga_symbol = String.fromCodePoint(0x1f4d4);
 const tomato_symbol = String.fromCodePoint(0x1f345); //fresh
 const rotten_symbol = String.fromCodePoint(0x1F922); //rotten
+const bowing_symbol = String.fromCodePoint(0x1F647);
+const empty_char = '&#8203;';
 
 function buildHyperlinksForAnime(anime) {
 	let message = '';
@@ -388,10 +702,27 @@ function getIdealIMDBRating(IMDBRatings) {
 		return rate_string;
 	}
 }
+function truncatePlot(plot_str) {
+	let new_plot = '';
+	if(plot_str) {
+		const txtLimit = 220;
+		let the_plot = plot_str.replace(new RegExp('<br>', 'g'), '')
+		if (the_plot.length > txtLimit) {
+			new_plot += the_plot.substring(0, txtLimit - 3) + '...';
+		}
+		else {
+			new_plot += the_plot;
+		}
+	}
+	return new_plot;
+}
 
 function buildAnimeChatMessage(anime, options) {
 	options = options || {};
 	let message = '';
+	if(anime['image'].startsWith('http')) {
+		message += '\n<a href=\"'+anime['image']+'\">'+empty_char+'</a>';
+	}
 	message += '<b>' + anime['title'] + '</b>';
 	message += ' ('+buildHyperlinksForAnime(anime)+')\n';
 
@@ -446,6 +777,9 @@ function buildAnimeChatMessage(anime, options) {
 function buildMangaChatMessage(anime, options) {
 	options = options || {};
 	let message = '';
+	if(anime['image'].startsWith('http')) {
+		message += '\n<a href=\"'+anime['image']+'\">'+empty_char+'</a>';
+	}
 	message += '<b>' + anime['title'] + '</b>';
 	message += ' ('+buildHyperlinksForAnime(anime)+')\n';
 	if(anime['nsfw'] === true) {
@@ -468,6 +802,9 @@ function buildMovieChatMessage(movie, options) {
 	let url = 'http://www.imdb.com/title/' + movie['imdbid'] + '/'
 	let message = '';
 	let unreleased = false;
+	if(movie['poster'].startsWith('http')) {
+		message += '\n<a href=\"'+movie['poster']+'\">'+empty_char+'</a>';
+	}
 	message += '<b>' + movie['title'] + '</b>';
 	message += ' ('+movie['_year_data']+') (<a href=\"'+url+'\">IMDB</a>)\n';
 	if(movie['director']) {
@@ -528,33 +865,61 @@ function buildMovieChatMessage(movie, options) {
 	}
 	if(movie['plot']) {
 		if(unreleased) {
-			if(movie['plot'] !== 'N/A') {
-				const txtLimit = 220;
-				let the_plot = movie['plot'].replace(new RegExp('<br>', 'g'), '')
-				if (the_plot.length > txtLimit) {
-					message += '\n'+the_plot.substring(0, txtLimit - 3) + '...';
-				}
-				else {
-					message += '\n'+the_plot;
-				}
+			if(plot_str !== 'N/A') {
+				message += '\n'+truncatePlot(movie['plot']);
 			}
 			else {
 				//do nothing
 			}
 		}
 		else {
-			const txtLimit = 220;
-			let the_plot = movie['plot'].replace(new RegExp('<br>', 'g'), '')
-			if (the_plot.length > txtLimit) {
-				message += '\n'+the_plot.substring(0, txtLimit - 3) + '...';
-			}
-			else {
-				message += '\n'+the_plot;
-			}
+			message += '\n'+truncatePlot(movie['plot']);
 		}
 	}
 	return message;
 }
+
+function buildInputMessageContentFromAnime(anime) {
+	return {
+		message_text: anime.flattened.format === 'Manga' ? buildMangaChatMessage(anime) : buildAnimeChatMessage(anime),
+		parse_mode: 'html',
+		disable_web_page_preview: false,
+		disable_notification: true
+	};
+}
+
+function buildInputMessageContentFromMovie(movie) {
+	return {
+		message_text: buildMovieChatMessage(movie),
+		parse_mode: 'html',
+		disable_web_page_preview: false,
+		disable_notification: true
+	};
+}
+
+function buildInlineQueryResultArticleFromAnime(anime, options) {
+	return {
+		type: 'article',
+		id: String(Math.floor(Math.random()*10000)+1),
+		title: anime['title'],
+		input_message_content: buildInputMessageContentFromAnime(anime),
+		description: anime['synopsis'],
+		thumb_url: anime['image'] !== null ? anime['image'] : undefined
+	};
+}
+
+
+function buildInlineQueryResultArticleFromMovie(movie, options) {
+	return {
+		type: 'article',
+		id: String(Math.floor(Math.random()*10000)+1),
+		title: movie['title'] + ' ('+movie['_year_data']+')',
+		input_message_content: buildInputMessageContentFromMovie(movie),
+		description: truncatePlot(movie['plot']),
+		thumb_url: movie['poster'].startsWith('http') ? movie['poster'] : undefined
+	};
+}
+
 
 logger.log('Bot active. Performing startup checks.');
 

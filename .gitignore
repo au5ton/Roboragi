@@ -64,3 +64,6 @@ typings/
 stdout.txt
 stderr.txt
 synonyms.db
+
+# Windows wtf
+*/Thumbs.db

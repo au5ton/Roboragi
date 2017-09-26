@@ -243,6 +243,12 @@ class Anime {
         else {
             //this.actors_str = null;
         }
+        if(non_empty(options.original_query)) {
+            this.original_query = options.original_query;
+        }
+        else {
+            //this.original_query = null;
+        }
 
         //Indentifiers
         if(non_empty(options.MAL_ID)) {
@@ -533,6 +539,10 @@ class Anime {
         //actors_str
         if(non_def(copy.actors_str)) {
             copy.actors_str = null;
+        }
+        //original_query
+        if(non_def(copy.original_query)) {
+            copy.original_query = null;
         }
         //Identifers
         if(non_def(copy.MAL_ID)) {
