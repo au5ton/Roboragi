@@ -92,6 +92,7 @@ const ANIME_REFRENCES = {
     'Omae Wa Mou Shindeiru': {response:'<b>Nani?!</b>', case_sensitive: false}, //meme
     'cactus juice': {responses: ['<i>It\'s the quenchiest!</i>','<i>It\'ll quench ya!</i>'], case_sensitive: false, includes_only: true}, //Avatar: TLA
     'Akihabara!': {response: 'We don\'t have time to sightsee.', case_sensitive: false}, //Oreimo
+    'Feel free to verbally abuse me too if you\'d like': {response: 'I can\'t figure out if you\'re a nice person or a weird person.', case_sensitive: false} //Oreimo
 };
 
 //build valid mention tokens
