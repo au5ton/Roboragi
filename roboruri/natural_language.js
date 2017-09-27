@@ -248,7 +248,7 @@ _.respond = (message_str) => {
     return new Promise((resolve, reject) => {
         message_str = bot_util.cleanUpString(message_str);
         if(_.shouldRespond(message_str)) {
-            let the_message = tokenizer.tokenize(message_str);
+            let the_message = tokenizer.tokenize(message_str.toLowerCase());
 
             for(let key in ANIME_REFRENCES) {
                 if(ANIME_REFRENCES[key]['case_sensitive']) {
