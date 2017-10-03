@@ -956,6 +956,8 @@ kitsu.auth({
 		logger.error('Kitsu failed to authenticate.');
 		process.exit();
 	}
+}).catch((err) => {
+	logger.error('Kitsu failed to authenticate: ', err);
 });
 
 logger.warn('Is synonyms.db operational?');
