@@ -61,7 +61,8 @@ const ENGLISH_SENTENCE_STARTERS_NEGATIVE = [
     'i hate you',
     'fuck off',
     'shut up',
-    'wrong '+MENTION_WILDCARD
+    'wrong '+MENTION_WILDCARD,
+    'eat my ass'
 ];
 const ENGLISH_SENTENCE_NEGATIVE_RESPONSES = [
     '凸(￣ヘ￣)',
@@ -85,7 +86,13 @@ const ENGLISH_SENTENCE_ENDERS_NEGATIVE = [
     'is stupid',
     'is dumb',
     'is buggy',
-    'is ugly'
+    'is ugly',
+    'bad',
+    'die',
+    'i hate you',
+    'fuck off',
+    'shut up',
+    'eat my ass'
 ];
 const ANIME_REFRENCES = {
     'I love Emilia!': {response:'You are a cruel man, Subaru-kun.', case_sensitive: true}, //Re:Zero
