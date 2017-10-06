@@ -628,6 +628,7 @@ function buildHyperlinksForAnime(anime) {
 		return (val !== undefined);
 	};
 
+	//logger.log(anime);
 
 	for(let e in DataSource) {
 		if(DataSource[e] === DataSource.MAL && exists(anime.hyperlinks.dict[DataSource[e]])) {
