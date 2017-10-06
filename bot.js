@@ -52,7 +52,7 @@ process.on('unhandledRejection', r => logger.error(r));
 bot.hears(new RegExp('\/start|\/start@' + BOT_USERNAME), (context) => {
 	context.getChat().then((chat) => {
 		if(chat.type === 'private') {
-			context.reply('Welcome!\n\n'+warning_sign+'Roboruri is currently in beta, so PLEASE report any issues you experience!'+warning_sign+'\n\nI reply with links to anime with the following format:\n{Toradora!}\n\nI reply with links to manga with the following format:\n<Game Over>\n\nI reply with links to light novels with the following format:\n]Re:Zero[\n\nI reply with links to Western television with the following format:\n|Game of Thrones|\n\nI reply with links to Western movies with the following format. Optionally, you can include the year in parenthesis:\n>Spider-man (2017)<\n\nAny response containing `'+prohibited_symbol+'` is NSFW content.\n\nIf roboruri doesn\'t recognize the anime you requested correctly, tell @austinj or leave an issue on github if you\'re socially awkward.\nhttps://github.com/au5ton/Roboruri/issues',{
+			context.reply('Welcome!\n\nI reply with links to anime with the following format:\n{Toradora!}\n\nI reply with links to manga with the following format:\n<Game Over>\n\nI reply with links to light novels with the following format:\n]Re:Zero[\n\nAny response containing `'+prohibited_symbol+'` is NSFW content.\n\nIf I don\'t recognize the anime you requested correctly, tell @austinj or leave an issue on github if you\'re socially awkward.\nhttps://github.com/au5ton/Roboruri/issues',{
 		  	  disable_web_page_preview: true
 		    });
 		}
