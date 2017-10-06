@@ -1076,7 +1076,7 @@ _.matchMangaFromDatabase = (query, MangaOrLN) => {
 					//grab info about the anime
 					let dbLinks = JSON.parse(row.dbLinks);
 					var promises = [];
-					//logger.log(dbLinks);
+					//logger.log('dbLinks: ', dbLinks);
 
 					/*
 					Start an asynchonous snatching of all info from multiple anime services
@@ -1143,10 +1143,12 @@ _.matchMangaFromDatabase = (query, MangaOrLN) => {
 											//logger.log('found a MAL result with the intended id');
 											let temp_dict = {};
 											temp_dict[ResolvedArray[r].DataSource] = 'https://myanimelist.net/manga/' + a_result['id'];
-											if(dbLinks['mu'] !== undefined || dbLinks['mu'] !== '') {
+											if(!(dbLinks['mu'] === undefined || dbLinks['mu'] === '')) {
+												//logger.warn('mu good: ',dbLinks['mu']);
 												temp_dict[DataSource.MANGAUPDATES] = 'https://www.mangaupdates.com/series.html?id=' + dbLinks['mu'];
 											}
-											if(dbLinks['ap'] !== undefined || dbLinks['ap'] !== '') {
+											if(!(dbLinks['ap'] === undefined || dbLinks['ap'] === '')) {
+												//logger.warn('ap good',dbLinks['ap']);
 												temp_dict[DataSource.ANIMEPLANET] = 'https://www.anime-planet.com/manga/' + dbLinks['ap'];
 											}
 											//logger.log(ResolvedArray[r].DataSource,' ',a_result['volumes'],' | ',a_result['chapters']);
@@ -1179,10 +1181,12 @@ _.matchMangaFromDatabase = (query, MangaOrLN) => {
 									//logger.log(ResolvedArray[r].DataSource,' ',a_result['volumes'],' | ',a_result['chapters']);
 									let temp_dict = {};
 									temp_dict[ResolvedArray[r].DataSource] = 'https://anilist.co/manga/' + a_result['id'] + '/';
-									if(dbLinks['mu'] !== undefined || dbLinks['mu'] !== '') {
+									if(!(dbLinks['mu'] === undefined || dbLinks['mu'] === '')) {
+										//logger.warn('mu good: ',dbLinks['mu']);
 										temp_dict[DataSource.MANGAUPDATES] = 'https://www.mangaupdates.com/series.html?id=' + dbLinks['mu'];
 									}
-									if(dbLinks['ap'] !== undefined || dbLinks['ap'] !== '') {
+									if(!(dbLinks['ap'] === undefined || dbLinks['ap'] === '')) {
+										//logger.warn('ap good',dbLinks['ap']);
 										temp_dict[DataSource.ANIMEPLANET] = 'https://www.anime-planet.com/manga/' + dbLinks['ap'];
 									}
 									let some_manga = new Anime({
@@ -1216,10 +1220,12 @@ _.matchMangaFromDatabase = (query, MangaOrLN) => {
 										//logger.log(a_result);
 										let temp_dict = {};
 										temp_dict[ResolvedArray[r].DataSource] = 'https://kitsu.io/manga/' + a_result['id'] + '/';
-										if(dbLinks['mu'] !== undefined || dbLinks['mu'] !== '') {
+										if(!(dbLinks['mu'] === undefined || dbLinks['mu'] === '')) {
+											//logger.warn('mu good: ',dbLinks['mu']);
 											temp_dict[DataSource.MANGAUPDATES] = 'https://www.mangaupdates.com/series.html?id=' + dbLinks['mu'];
 										}
-										if(dbLinks['ap'] !== undefined || dbLinks['ap'] !== '') {
+										if(!(dbLinks['ap'] === undefined || dbLinks['ap'] === '')) {
+											//logger.warn('ap good',dbLinks['ap']);
 											temp_dict[DataSource.ANIMEPLANET] = 'https://www.anime-planet.com/manga/' + dbLinks['ap'];
 										}
 										let synonyms_try = a_result['abbreviatedTitles'];

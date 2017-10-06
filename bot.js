@@ -93,21 +93,6 @@ bot.hears(new RegExp('\/flipcoin|\/flipcoin@' + BOT_USERNAME), (context) => {
 	context.reply(Math.random() <= 0.5 ? 'Heads' : 'Tails');
 })
 
-// Listen for regex
-// bot.hears(/thanks roboruri|good bot/gi, (context) => {
-// 	let catchphrases = [
-// 		'I\'ll try my best',
-// 		'I don\'t know anyone by that name.',
-// 		'( ´ ∀ `)',
-// 		'( ＾ワ＾)',
-// 		'(* ◡‿◡)',
-// 		'(￢_￢;)',
-// 		'Arigatō',
-// 		'I aim to please.'
-// 	];
-// 	context.reply(catchphrases[Math.floor(Math.random() * catchphrases.length)]);
-// });
-
 bot.hears(/anime_irl/gi, (context) => {
 	//1 in 100 chance
 	if(Math.floor(Math.random()*100) < 1) {
@@ -643,6 +628,7 @@ function buildHyperlinksForAnime(anime) {
 		return (val !== undefined);
 	};
 
+
 	for(let e in DataSource) {
 		if(DataSource[e] === DataSource.MAL && exists(anime.hyperlinks.dict[DataSource[e]])) {
 			message += '<a href=\"'+anime.hyperlinks.dict[DataSource[e]]+'\">MAL</a>, ';
@@ -979,7 +965,7 @@ catch(err) {
 }
 
 logger.warn('IMDb/OMDb connection operational?');
-imdb.getById('tt0090190', {apiKey: process.env.OMDB_API_KEY, timeout: 5000}).then((movie) => {
+imdb.getById('tt0090190', {apiKey: process.env.OMDB_API_KEY, timeout: 15000}).then((movie) => {
 	if(String(movie['imdbid']) === 'tt0090190') {
 		logger.success('IMDb/OMDb connection good.');
 	}
