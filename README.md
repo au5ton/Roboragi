@@ -10,6 +10,10 @@ Thanks [Nihilate](https://github.com/Nihilate)~!
 
 Roboruri recently left beta. Although she's been pretty stable so far, there has been limited testing due to its relatively small usage. If you happen to encounter any bugs, please report them on the issues page, or if you're a socially awkward weeb, message me directly: https://telegram.me/austinj
 
+#### Some known issues
+- Problems with light novel recognition
+- Problems with manga recognition
+
 
 ## Running an instance
 
@@ -38,6 +42,10 @@ Before consolidating the results, the result that best matches the query is calc
 Using the ART, the search results are consolidated into one `Anime` instance and is then used to print out:
 
 ![roboruri-kouhai](img/Screenshot_02.png)
+
+### Spices up your group chats
+
+![roboruri-kouhai](img/Screenshot_03.png)
 
 ### Inline summons
 
