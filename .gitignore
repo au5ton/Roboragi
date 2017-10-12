@@ -53,6 +53,7 @@ typings/
 
 # Yarn Integrity file
 .yarn-integrity
+yarn.lock
 
 # dotenv environment variables file
 .env
@@ -61,8 +62,7 @@ typings/
 # package-lock.json
 
 # roboruri stuff
-stdout.txt
-stderr.txt
+bot_console.log
 synonyms.db
 
 # Windows wtf
