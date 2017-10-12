@@ -52,7 +52,7 @@ process.on('unhandledRejection', r => logger.error(r));
 bot.hears(new RegExp('\/start|\/start@' + BOT_USERNAME), (context) => {
 	context.getChat().then((chat) => {
 		if(chat.type === 'private') {
-			context.reply('Welcome!\n\n'+warning_sign+'Roboruri is currently in beta, so PLEASE report any issues you experience!'+warning_sign+'\n\nI reply with links to anime with the following format:\n{Toradora!}\n\nI reply with links to manga with the following format:\n<Game Over>\n\nI reply with links to light novels with the following format:\n]Re:Zero[\n\nI reply with links to Western television with the following format:\n|Game of Thrones|\n\nI reply with links to Western movies with the following format. Optionally, you can include the year in parenthesis:\n>Spider-man (2017)<\n\nAny response containing `'+prohibited_symbol+'` is NSFW content.\n\nIf roboruri doesn\'t recognize the anime you requested correctly, tell @austinj or leave an issue on github if you\'re socially awkward.\nhttps://github.com/au5ton/Roboruri/issues',{
+			context.reply('Welcome!\n\nI reply with links to anime with the following format:\n{Toradora!}\n\nI reply with links to manga with the following format:\n<Game Over>\n\nI reply with links to light novels with the following format:\n]Re:Zero[\n\nAny response containing `'+prohibited_symbol+'` is NSFW content.\n\nIf I don\'t recognize the anime you requested correctly, tell @austinj or leave an issue on github if you\'re socially awkward.\nhttps://github.com/au5ton/Roboruri/issues',{
 		  	  disable_web_page_preview: true
 		    });
 		}
@@ -92,21 +92,6 @@ bot.hears(new RegExp('\/commit|\/commit@' + BOT_USERNAME), (context) => {
 bot.hears(new RegExp('\/flipcoin|\/flipcoin@' + BOT_USERNAME), (context) => {
 	context.reply(Math.random() <= 0.5 ? 'Heads' : 'Tails');
 })
-
-// Listen for regex
-// bot.hears(/thanks roboruri|good bot/gi, (context) => {
-// 	let catchphrases = [
-// 		'I\'ll try my best',
-// 		'I don\'t know anyone by that name.',
-// 		'( ´ ∀ `)',
-// 		'( ＾ワ＾)',
-// 		'(* ◡‿◡)',
-// 		'(￢_￢;)',
-// 		'Arigatō',
-// 		'I aim to please.'
-// 	];
-// 	context.reply(catchphrases[Math.floor(Math.random() * catchphrases.length)]);
-// });
 
 bot.hears(/anime_irl/gi, (context) => {
 	//1 in 100 chance
@@ -643,6 +628,8 @@ function buildHyperlinksForAnime(anime) {
 		return (val !== undefined);
 	};
 
+	//logger.log(anime);
+
 	for(let e in DataSource) {
 		if(DataSource[e] === DataSource.MAL && exists(anime.hyperlinks.dict[DataSource[e]])) {
 			message += '<a href=\"'+anime.hyperlinks.dict[DataSource[e]]+'\">MAL</a>, ';
@@ -979,7 +966,7 @@ catch(err) {
 }
 
 logger.warn('IMDb/OMDb connection operational?');
-imdb.getById('tt0090190', {apiKey: process.env.OMDB_API_KEY, timeout: 5000}).then((movie) => {
+imdb.getById('tt0090190', {apiKey: process.env.OMDB_API_KEY, timeout: 15000}).then((movie) => {
 	if(String(movie['imdbid']) === 'tt0090190') {
 		logger.success('IMDb/OMDb connection good.');
 	}
