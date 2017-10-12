@@ -3,9 +3,6 @@
   "version": "0.7.1",
   "description": "telegram bot for myanimelist",
   "main": "index.js",
-  "scripts": {
-    "start": "node bot.js >> stdout.txt 2>>stderr.txt"
-  },
   "author": "",
   "license": "GNU",
   "dependencies": {
