@@ -12,6 +12,7 @@ const VERSION = require('./package').version;
 //
 const START_TIME = new Date();
 var BOT_USERNAME;
+var ACTIVE_CHATS = {};
 
 // Anime APIs
 const popura = require('popura');
@@ -100,9 +101,50 @@ bot.hears(/anime_irl/gi, (context) => {
 	}
 });
 
+// DEV TOOLS
+bot.hears(new RegExp('\/blastmessage'), (context) => {
+	if(context.update.message.from.id === parseInt(process.env.DEV_TELEGRAM_ID) && context.update.message.chat.type === 'private') {
+		if(context.updateType === 'message' && context.updateSubTypes.includes('text')) {
+			//Message was received
+			let cmd_portion = '\/blastmessage';
+			let received_msg = context.update.message.text;
+			let blast_msg = received_msg.substring(received_msg.indexOf(cmd_portion)+cmd_portion.length);
+			//context.reply('active chats: '+ACTIVE_CHATS.length);
+			for(let i in ACTIVE_CHATS) {
+				context.telegram.sendMessage(i,blast_msg);
+			}
+		}
+	}
+})
+
+bot.hears(new RegExp('\/activechats'), (context) => {
+	if(context.update.message.from.id === parseInt(process.env.DEV_TELEGRAM_ID) && context.update.message.chat.type === 'private') {
+		if(context.updateType === 'message' && context.updateSubTypes.includes('text')) {
+			context.reply('active chats: '+Object.keys(ACTIVE_CHATS).length);
+		}
+	}
+})
+
+// every hour
+setInterval(() => {
+	for(let i in ACTIVE_CHATS) {
+		let diff = new Date() - new Date(ACTIVE_CHATS[i]); //milliseconds passed
+		let week_in_ms = 604800000; //6.048e+8
+		if(diff > week_in_ms) {
+			delete ACTIVE_CHATS[i];
+		}
+	}
+},3600000);
+
 bot.on('message', (context) => {
 	//logger.log(context)
 	//New members were added
+
+	if(context.update.message.chat.type === 'group' || context.update.message.chat.type === 'supergroup') {
+		// I want roboruri to be privacy conscious, so I will only keep ACTIVE_CHATS in memory. Between bot restarts, this will be cleared.
+		ACTIVE_CHATS[context.update.message.chat.id] = new Date();
+	}
+
 	if(context.update.message.new_chat_members){
 		let members = context.update.message.new_chat_members;
 		for(let i in members) {
