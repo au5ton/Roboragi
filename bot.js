@@ -9,10 +9,12 @@ const git = require('git-last-commit');
 const prettyMs = require('pretty-ms');
 const VERSION = require('./package').version;
 
-//
 const START_TIME = new Date();
 var BOT_USERNAME;
+
+// analytics-y stuff?
 var ACTIVE_CHATS = {};
+var REQUEST_COUNT = 0;
 
 // Anime APIs
 const popura = require('popura');
@@ -117,10 +119,18 @@ bot.hears(new RegExp('\/blastmessage'), (context) => {
 	}
 })
 
-bot.hears(new RegExp('\/activechats'), (context) => {
-	if(context.update.message.from.id === parseInt(process.env.DEV_TELEGRAM_ID) && context.update.message.chat.type === 'private') {
+bot.hears(new RegExp('\/activechats|\/activechats@' + BOT_USERNAME), (context) => {
+	if(context.update.message.from.id === parseInt(process.env.DEV_TELEGRAM_ID)) {
 		if(context.updateType === 'message' && context.updateSubTypes.includes('text')) {
 			context.reply('active chats: '+Object.keys(ACTIVE_CHATS).length);
+		}
+	}
+})
+
+bot.hears(new RegExp('\/requestcount|\/requestcount@' + BOT_USERNAME), (context) => {
+	if(context.update.message.from.id === parseInt(process.env.DEV_TELEGRAM_ID)) {
+		if(context.updateType === 'message' && context.updateSubTypes.includes('text')) {
+			context.reply(REQUEST_COUNT+' requests since '+START_TIME.toString());
 		}
 	}
 })
@@ -747,6 +757,7 @@ function truncatePlot(plot_str) {
 }
 
 function buildAnimeChatMessage(anime, options) {
+	REQUEST_COUNT++;
 	options = options || {};
 	let message = '';
 	if(anime['image'].startsWith('http')) {
@@ -804,6 +815,7 @@ function buildAnimeChatMessage(anime, options) {
 	return message;
 }
 function buildMangaChatMessage(anime, options) {
+	REQUEST_COUNT++;
 	options = options || {};
 	let message = '';
 	if(anime['image'].startsWith('http')) {
@@ -826,6 +838,7 @@ function buildMangaChatMessage(anime, options) {
 	return message;
 }
 function buildMovieChatMessage(movie, options) {
+	REQUEST_COUNT++;
 	//logger.success(movie)
 	options = options || {};
 	let url = 'http://www.imdb.com/title/' + movie['imdbid'] + '/'
