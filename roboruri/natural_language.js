@@ -43,7 +43,8 @@ const ENGLISH_SENTENCE_STARTERS_POSITIVE = [
     'thanks',
     'thank you',
     'you the best',
-    'you\'re the best'
+    'you\'re the best',
+    'nice'
 ];
 const ENGLISH_SENTENCE_POSITIVE_RESPONSES = [
     'I\'ll try my best',
