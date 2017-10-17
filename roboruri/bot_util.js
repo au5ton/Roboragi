@@ -1,5 +1,6 @@
 // util.js
 
+//const
 const _ = {};
 
 _.genEasterEggAnswerArticle = (title, desc) => {
