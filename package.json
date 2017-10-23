@@ -10,16 +10,16 @@
     "dotenv": "^4.0.0",
     "git-last-commit": "^0.3.0",
     "imdb-api": "^3.1.1",
-    "kitsu": "^2.0.3",
+    "kitsu": "^2.0.4",
     "nani": "^1.2.0",
     "natural": "^0.5.4",
     "node-cache": "^4.1.1",
     "node-tvdb": "^3.2.0",
     "popura": "^1.2.5",
-    "pretty-ms": "^3.0.0",
+    "pretty-ms": "^3.0.1",
     "speakeasy-nlp": "^0.2.12",
-    "sqlite3": "^3.1.8",
+    "sqlite3": "^3.1.13",
     "string-similarity": "^1.2.0",
-    "telegraf": "^3.9.0"
+    "telegraf": "^3.14.0"
   }
 }

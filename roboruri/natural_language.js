@@ -93,7 +93,8 @@ const ENGLISH_SENTENCE_ENDERS_NEGATIVE = [
     'i hate you',
     'fuck off',
     'shut up',
-    'eat my ass'
+    'eat my ass',
+    'kys'
 ];
 const ANIME_REFRENCES = {
     'I love Emilia!': {response:'You are a cruel man, Subaru-kun.', case_sensitive: true}, //Re:Zero

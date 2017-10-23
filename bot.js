@@ -45,7 +45,7 @@ const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 
 const DEV_TELEGRAM_ID = parseInt(process.env.DEV_TELEGRAM_ID) || 0;
 
-process.on('unhandledRejection', r => logger.error(r));
+process.on('unhandledRejection', r => logger.error('unhandledRejection: ',r.stack,'\n',r));
 
 // Basic commands
 
@@ -101,6 +101,7 @@ bot.hears(/anime_irl/gi, (context) => {
 });
 
 bot.on('message', (context) => {
+	//context.reply(JSON.stringify(context.update));
 	//logger.log(context)
 	//New members were added
 	if(context.update.message.new_chat_members){
@@ -116,6 +117,7 @@ bot.on('message', (context) => {
 		//Message was received
 		const message_str = context.update.message.text;
 		const message_id =  context.update.message.message_id;
+		const message_from = context.update.message.from;
 		if(typeof message_str === 'string' && message_str.length > 0) {
 			//logger.log(context)
 			//summon handlers
@@ -334,15 +336,23 @@ bot.on('message', (context) => {
 			//will only response if she should respond
 			//logger.log(context.update.message);
 			if(context.update.message.from.username !== BOT_USERNAME || !context.update.message.from.is_bot) {
-				natural_language.respond(message_str).then((response_str) => {
-					context.reply(response_str, {
-						parse_mode: 'html',
-						reply_to_message_id: message_id
+
+				let ignore_list = [
+					411812615
+				];
+
+				//ignore someone
+				if(!ignore_list.includes(message_from)) {
+					natural_language.respond(message_str).then((response_str) => {
+						context.reply(response_str, {
+							parse_mode: 'html',
+							reply_to_message_id: message_id
+						});
+					}).catch((err)=>{
+						// shouldRespond returned false
+						//logger.error(err);
 					});
-				}).catch((err)=>{
-					// shouldRespond returned false
-					//logger.error(err);
-				});
+				}
 			}
 		}
 	}
