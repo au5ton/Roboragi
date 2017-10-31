@@ -907,7 +907,7 @@ function buildMovieChatMessage(movie, options) {
 	}
 	if(movie['plot']) {
 		if(unreleased) {
-			if(plot_str !== 'N/A') {
+			if(movie['plot'] !== 'N/A') {
 				message += '\n'+truncatePlot(movie['plot']);
 			}
 			else {
