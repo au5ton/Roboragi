@@ -367,7 +367,7 @@ bot.on('message', (context) => {
 						//logger.log(result);
 						context.reply(buildAnimeChatMessage(result),{
 							parse_mode: 'html',
-							disable_web_page_preview: result['image'].startsWith('http') ? false : true
+							disable_web_page_preview: (result['image'] && result['image'].startsWith('http')) ? false : true
 						});
 						console.timeEnd('execution time');
 					}).catch((r) => {
@@ -760,7 +760,7 @@ function buildAnimeChatMessage(anime, options) {
 	REQUEST_COUNT++;
 	options = options || {};
 	let message = '';
-	if(anime['image'].startsWith('http')) {
+	if(anime['image'] && anime['image'].startsWith('http')) {
 		message += '\n<a href=\"'+anime['image']+'\">'+empty_char+'</a>';
 	}
 	message += '<b>' + anime['title'] + '</b>';
