@@ -597,7 +597,7 @@ _.searchManga = (query, MangaOrLN) => {
 								synopsis_full: a_result['synopsis'],
 								start_date: a_result['startDate'],
 								end_date: a_result['endDate'],
-								image: a_result['posterImage']['original'],
+								image: (a_result['posterImage'] === null || a_result['posterImage'] === undefined) ? undefined : a_result['posterImage']['original'],
 								nsfw: a_result['nsfw'], //confirmed bool 👍
 								synonyms: new Synonyms(synonyms_try), //maybe this'll be good enough, please work ^
 								original_query: query
