@@ -9,9 +9,12 @@ const git = require('git-last-commit');
 const prettyMs = require('pretty-ms');
 const VERSION = require('./package').version;
 
-//
 const START_TIME = new Date();
 var BOT_USERNAME;
+
+// analytics-y stuff?
+var ACTIVE_CHATS = {};
+var REQUEST_COUNT = 0;
 
 // Anime APIs
 const popura = require('popura');
@@ -100,10 +103,59 @@ bot.hears(/anime_irl/gi, (context) => {
 	}
 });
 
+// DEV TOOLS
+bot.hears(new RegExp('\/blastmessage'), (context) => {
+	if(context.update.message.from.id === parseInt(process.env.DEV_TELEGRAM_ID) && context.update.message.chat.type === 'private') {
+		if(context.updateType === 'message' && context.updateSubTypes.includes('text')) {
+			//Message was received
+			let cmd_portion = '\/blastmessage';
+			let received_msg = context.update.message.text;
+			let blast_msg = received_msg.substring(received_msg.indexOf(cmd_portion)+cmd_portion.length);
+			//context.reply('active chats: '+ACTIVE_CHATS.length);
+			for(let i in ACTIVE_CHATS) {
+				context.telegram.sendMessage(i,blast_msg);
+			}
+		}
+	}
+})
+
+bot.hears(new RegExp('\/activechats|\/activechats@' + BOT_USERNAME), (context) => {
+	if(context.update.message.from.id === parseInt(process.env.DEV_TELEGRAM_ID)) {
+		if(context.updateType === 'message' && context.updateSubTypes.includes('text')) {
+			context.reply('active chats: '+Object.keys(ACTIVE_CHATS).length);
+		}
+	}
+})
+
+bot.hears(new RegExp('\/requestcount|\/requestcount@' + BOT_USERNAME), (context) => {
+	if(context.update.message.from.id === parseInt(process.env.DEV_TELEGRAM_ID)) {
+		if(context.updateType === 'message' && context.updateSubTypes.includes('text')) {
+			context.reply(REQUEST_COUNT+' requests since '+START_TIME.toString());
+		}
+	}
+})
+
+// every hour
+setInterval(() => {
+	for(let i in ACTIVE_CHATS) {
+		let diff = new Date() - new Date(ACTIVE_CHATS[i]); //milliseconds passed
+		let week_in_ms = 604800000; //6.048e+8
+		if(diff > week_in_ms) {
+			delete ACTIVE_CHATS[i];
+		}
+	}
+},3600000);
+
 bot.on('message', (context) => {
 	//context.reply(JSON.stringify(context.update));
 	//logger.log(context)
 	//New members were added
+
+	if(context.update.message.chat.type === 'group' || context.update.message.chat.type === 'supergroup') {
+		// I want roboruri to be privacy conscious, so I will only keep ACTIVE_CHATS in memory. Between bot restarts, this will be cleared.
+		ACTIVE_CHATS[context.update.message.chat.id] = new Date();
+	}
+
 	if(context.update.message.new_chat_members){
 		let members = context.update.message.new_chat_members;
 		for(let i in members) {
@@ -317,7 +369,7 @@ bot.on('message', (context) => {
 						//logger.log(result);
 						context.reply(buildAnimeChatMessage(result),{
 							parse_mode: 'html',
-							disable_web_page_preview: result['image'].startsWith('http') ? false : true
+							disable_web_page_preview: (result['image'] && result['image'].startsWith('http')) ? false : true
 						});
 						console.timeEnd('execution time');
 					}).catch((r) => {
@@ -715,9 +767,10 @@ function truncatePlot(plot_str) {
 }
 
 function buildAnimeChatMessage(anime, options) {
+	REQUEST_COUNT++;
 	options = options || {};
 	let message = '';
-	if(anime['image'].startsWith('http')) {
+	if(anime['image'] && anime['image'].startsWith('http')) {
 		message += '\n<a href=\"'+anime['image']+'\">'+empty_char+'</a>';
 	}
 	message += '<b>' + anime['title'] + '</b>';
@@ -772,6 +825,7 @@ function buildAnimeChatMessage(anime, options) {
 	return message;
 }
 function buildMangaChatMessage(anime, options) {
+	REQUEST_COUNT++;
 	options = options || {};
 	let message = '';
 	if(anime['image'].startsWith('http')) {
@@ -794,6 +848,7 @@ function buildMangaChatMessage(anime, options) {
 	return message;
 }
 function buildMovieChatMessage(movie, options) {
+	REQUEST_COUNT++;
 	//logger.success(movie)
 	options = options || {};
 	let url = 'http://www.imdb.com/title/' + movie['imdbid'] + '/'
@@ -862,7 +917,7 @@ function buildMovieChatMessage(movie, options) {
 	}
 	if(movie['plot']) {
 		if(unreleased) {
-			if(plot_str !== 'N/A') {
+			if(movie['plot'] !== 'N/A') {
 				message += '\n'+truncatePlot(movie['plot']);
 			}
 			else {
