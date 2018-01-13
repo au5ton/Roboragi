@@ -1,6 +1,6 @@
 {
   "name": "roboruri",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "telegram bot for myanimelist",
   "main": "index.js",
   "author": "",
