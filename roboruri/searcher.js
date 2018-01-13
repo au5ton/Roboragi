@@ -417,14 +417,20 @@ _.searchAnimes = (query, query_format) => {
 						very_best_match.next_episode_countdown = results['airing']['countdown'];
 
 						logger.log('search: {' + query + '} => ' + very_best_match.flattened.title);
-						matchingCache.set('{'+query.toLowerCase()+'}', very_best_match.flattened);
+
+						//issue #51: dont cache the query if its currently airing, info subject to change (especially airtime)
+						//matchingCache.set('{'+query.toLowerCase()+'}', very_best_match.flattened);
+
 						//THIS IS WHAT IT ALL BOILS DOWN TO
 						resolve(very_best_match.flattened);
 					}
 				}).catch((err) => {
 					logger.warn('failed to append airing info: ', err);
 					logger.log('search: {' + query + '} => ' + very_best_match.flattened.title);
-					matchingCache.set('{'+query.toLowerCase()+'}', very_best_match.flattened);
+
+					//issue #51: dont cache the query if its currently airing, info subject to change (especially airtime)
+					//matchingCache.set('{'+query.toLowerCase()+'}', very_best_match.flattened);
+
 					//THIS IS WHAT IT ALL BOILS DOWN TO
 					resolve(very_best_match.flattened);
 				});
