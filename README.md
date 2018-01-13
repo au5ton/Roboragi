@@ -6,14 +6,11 @@ Roboruri is a Telegram bot (based off of [/u/Roboragi](https://www.reddit.com/us
 
 Thanks [Nihilate](https://github.com/Nihilate)~!
 
-## Exiting Beta ✅
+## Telegram Channel
 
-Roboruri recently left beta. Although she's been pretty stable so far, there has been limited testing due to its relatively small usage. If you happen to encounter any bugs, please report them on the issues page, or if you're a socially awkward weeb, message me directly: https://telegram.me/austinj
+When updates posted here are pushed into production, you can get notified by following the roboruri_bot_updates Telegram channel.
 
-#### Some known issues
-- Problems with light novel recognition
-- Problems with manga recognition
-
+https://t.me/roboruri_bot_updates
 
 ## Running an instance
 
@@ -63,9 +60,13 @@ There were already existing bots on Telegram named 'roboragi' and other renditio
 
 ## Picture
 
-The photo is from NFGL on DeviantArt. They're really good at making vector art of moe. 100% shoutout:
+The profile picture of roboruri_bot is from NFGL on DeviantArt:
 
-<https://nfgl.deviantart.com/>
+https://nfgl.deviantart.com/
+
+The profile picture of the roboruri_bot_updates channel is from Dekodere on DeviantArt:
+
+https://dekodere.deviantart.com/
 
 ## Fun Facts
 
