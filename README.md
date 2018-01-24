@@ -10,6 +10,8 @@ Thanks [Nihilate](https://github.com/Nihilate)~!
 
 When updates posted here are pushed into production, you can get notified by following the roboruri_bot_updates Telegram channel.
 
+https://t.me/roboruri_bot
+
 https://t.me/roboruri_bot_updates
 
 ## Running an instance
