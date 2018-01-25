@@ -41,16 +41,16 @@ _.genEasterEggAnswerAudio = (title, url, desc) => {
 _.isEasterEgg = (message_str) => {
 	return new Promise((resolve, reject) => {
 		if(message_str.toLowerCase() === 'audio xfiles') {
-			resolve(_.genEasterEggAnswerVoice('X-Files Theme','https://sooot.github.io/repo/roboruri/xfiles.mp3'));
+			//resolve(_.genEasterEggAnswerVoice('X-Files Theme','https://sooot.github.io/repo/roboruri/xfiles.mp3'));
 		}
 		if(message_str.toLowerCase() === 'audio running90s') {
-			resolve(_.genEasterEggAnswerVoice('Running in the 90s','https://sooot.github.io/repo/roboruri/running90s.mp3'));
+			//resolve(_.genEasterEggAnswerVoice('Running in the 90s','https://sooot.github.io/repo/roboruri/running90s.mp3'));
 		}
 		if(message_str.toLowerCase() === 'audio oof') {
-			resolve(_.genEasterEggAnswerVoice('Roblox oof sound','https://sooot.github.io/repo/roboruri/oof.mp3'));
+			//resolve(_.genEasterEggAnswerVoice('Roblox oof sound','https://sooot.github.io/repo/roboruri/oof.mp3'));
 		}
 		else if(message.toLowerCase() === 'block the bot') {
-			resolve(_.genEasterEggAnswerArticle('block the bot','<b>ｙｏｕ ｃａｎｔ ｂｌｏｃｋ ｔｈｅ ｂｏｔ</b>'));
+			//resolve(_.genEasterEggAnswerArticle('block the bot','<b>ｙｏｕ ｃａｎｔ ｂｌｏｃｋ ｔｈｅ ｂｏｔ</b>'));
 		}
 		else {
 			reject('nothing');
