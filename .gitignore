@@ -64,6 +64,8 @@ yarn.lock
 # roboruri stuff
 bot_console.log
 synonyms.db
+localized_chats.db
+*.db-journal
 
 # Windows wtf
 */Thumbs.db
