@@ -14,6 +14,18 @@ each should accept:
 
 */
 
+// step 2: do some middleware whatevers to the anime object with some provided context
+//      such as: https://github.com/au5ton/Roboruri/issues/48
+_.processMessageBeforeMessageGeneration = (summon, anime) => {
+    //return new Promise((resolve, reject) => {});
+};
+
+// step 3: actually send the fucking response in the appropriate way (also some other middleware whatevers if you already generated the message text, maybe)
+_.deliverMessage = (summon, anime) => {
+    //shouldn't need a promise
+};
+
+// step 1: take summon data and get the correct anime object in the appropriate means
 _.resolveBrace = (summon) => {
 
     let query = summon.query;
