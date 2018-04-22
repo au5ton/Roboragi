@@ -22,8 +22,8 @@ const MAL = popura(process.env.MAL_USER, process.env.MAL_PASSWORD);
 const nani = require('nani').init(process.env.ANILIST_CLIENT_ID, process.env.ANILIST_CLIENT_SECRET);
 const Kitsu = require('kitsu');
 const kitsu = new Kitsu();
-const imdb = require('imdb-api');
-const IMDB_TOKEN = {apiKey: process.env.OMDB_API_KEY, timeout: 5000};
+//const imdb = require('imdb-api');
+//const IMDB_TOKEN = {apiKey: process.env.OMDB_API_KEY, timeout: 5000};
 const TVDB = require('node-tvdb');
 const tvdb = new TVDB(process.env.THETVDB_API_KEY);
 
@@ -322,36 +322,6 @@ bot.on('message', (context) => {
 							console.timeEnd('execution time');
 						});
 					})
-				});
-			}).catch(()=>{});
-			bot_util.isValidReverseLTGTSummon(message_str).then((query) => {
-				logger.log('Summon: >', query, '<');
-				console.time('execution time');
-				Searcher.matchFromCache('>'+query+'<').then((result) => {
-					context.reply(buildMovieChatMessage(result),{
-						parse_mode: 'html',
-						disable_web_page_preview: result['poster'].startsWith('http') ? false : true
-					});
-					console.timeEnd('execution time');
-				}).catch((err) => {
-					logger.warn('cache empty: ', err);
-					Searcher.searchWesternMovie(query).then((result) => {
-						//logger.log(result);
-						context.reply(buildMovieChatMessage(result),{
-							parse_mode: 'html',
-							disable_web_page_preview: result['poster'].startsWith('http') ? false : true
-						});
-						console.timeEnd('execution time');
-					}).catch((r) => {
-						//well that sucks
-						if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
-							logger.warn('q: >'+query+'< => '+filled_x)
-						}
-						else {
-							logger.error('failed to search with Searcher: ', r);
-						}
-						console.timeEnd('execution time');
-					});
 				});
 			}).catch(()=>{});
 			bot_util.isValidPipeSummon(message_str).then((query) => {
@@ -1030,18 +1000,18 @@ catch(err) {
 	process.exit();
 }
 
-logger.warn('IMDb/OMDb connection operational?');
-imdb.getById('tt0090190', {apiKey: process.env.OMDB_API_KEY, timeout: 15000}).then((movie) => {
-	if(String(movie['imdbid']) === 'tt0090190') {
-		logger.success('IMDb/OMDb connection good.');
-	}
-	else {
-		logger.warn('IMDb/OMDb connection is ... weird.');
-	}
-}).catch((err) => {
-	logger.error('Error testing IMDb/OMDb connection: ',err);
-	process.exit();
-});
+// logger.warn('IMDb/OMDb connection operational?');
+// imdb.getById('tt0090190', {apiKey: process.env.OMDB_API_KEY, timeout: 15000}).then((movie) => {
+// 	if(String(movie['imdbid']) === 'tt0090190') {
+// 		logger.success('IMDb/OMDb connection good.');
+// 	}
+// 	else {
+// 		logger.warn('IMDb/OMDb connection is ... weird.');
+// 	}
+// }).catch((err) => {
+// 	logger.error('Error testing IMDb/OMDb connection: ',err);
+// 	process.exit();
+// });
 
 logger.warn('TheTVDB connection operational?');
 tvdb.getSeriesById(71663).then((response) => {
