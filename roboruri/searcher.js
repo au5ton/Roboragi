@@ -652,6 +652,7 @@ _.searchManga = (query, MangaOrLN) => {
 								images: new Hyperlinks(img_dict),
 								nsfw: a_result['adult'], //confirmed bool 👍
 								synonyms: new Synonyms(a_result['synonyms']),
+								genres: new Genres(a_result['genres']),
 								original_query: query
 							});
 							anime_arrays[ResolvedArray[r].DataSource].push(some_anime);

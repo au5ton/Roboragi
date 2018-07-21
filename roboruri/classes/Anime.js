@@ -287,6 +287,14 @@ class Anime {
             //this.hyperlinks = null;
         }
 
+        //genres
+        if(non_empty(options.genres) && options.genres instanceof Genres) {
+            this.genres = options.genres
+        }
+        else {
+            //this.hyperlinks = null;
+        }
+
         //images (instanceof hyperlinks)
         if(non_empty(options.images) && options.images instanceof Hyperlinks) {
             this.images = options.images
