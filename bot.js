@@ -172,18 +172,7 @@ bot.on('message', (context) => {
 			//logger.log(JSON.parse(JSON.stringify(context.update)));
 			//logger.log(JSON.parse(JSON.stringify(context.update.message.entities)))
 
-			// {} queries to ignore because a certain someone wont stop using them
-			let god_damnit_fluff = [
-				'smh'
-			];
-
 			bot_util.isValidBraceSummon(message_str).then((query) => {
-
-				if(god_damnit_fluff.includes(query)) {
-					//fucking give up
-					logger.warn('damnit fluff');
-					throw 'fuck this shit';
-				}
 
 				logger.log('Summon: {', query, '}');
 				console.time('execution time');
@@ -359,14 +348,6 @@ setInterval(() => {
 			LastInlineRequest[from_id]['status'] = 'pending';
 			// safe to reply
 			logger.warn('inline_query: ', LastInlineRequest[from_id]['query']);
-
-			bot_util.isEasterEgg(LastInlineRequest[from_id]['query']).then((answer) => {
-				bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], answer).catch((err) => {
-					logger.error('answerInlineQuery failed to send: ',err)
-				});
-				LastInlineRequest[from_id]['status'] = 'done';
-				to_be_removed.push(from_id);
-			}).catch(()=>{});
 
 			bot_util.isValidBraceSummon(LastInlineRequest[from_id]['query']).then((query) => {
 				logger.log('Summon: {', query, '}');
