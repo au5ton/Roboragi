@@ -173,11 +173,10 @@ bot.on('message', (context) => {
 			//logger.log(JSON.parse(JSON.stringify(context.update.message.entities)))
 
 			bot_util.isValidBraceSummon(message_str).then((query) => {
-
 				logger.log('Summon: {', query, '}');
 				console.time('execution time');
-				//logger.log('q: ', query);
-				Searcher.matchFromCache('{'+query+'}').then((result) => {
+
+				Searcher.searchAllAnime(query).then(result => {
 					//boo yah
 					context.reply(buildAnimeChatMessage(result), {
 						parse_mode: 'html',
@@ -185,128 +184,59 @@ bot.on('message', (context) => {
 						reply_to_message_id: message_id
 					});
 					console.timeEnd('execution time');
-				}).catch((err) => {
-					logger.warn('cache empty: ', err);
-					//nothing in cache
-					Searcher.matchAnimeFromDatabase(query).then((result) => {
-						//boo yah
-						context.reply(buildAnimeChatMessage(result), {
-							parse_mode: 'html',
-							disable_web_page_preview: result['image'].startsWith('http') ? false : true,
-							reply_to_message_id: message_id
-						});
-						console.timeEnd('execution time');
-					}).catch((err) => {
-						logger.warn('database empty: ', err);
-						//nothing in database
-						Searcher.searchAnimes(query).then((result) => {
-							//logger.log(result);
-							context.reply(buildAnimeChatMessage(result), {
-								parse_mode: 'html',
-								disable_web_page_preview: result['image'].startsWith('http') ? false : true,
-								reply_to_message_id: message_id
-							});
-							console.timeEnd('execution time');
-						}).catch((r) => {
-							//well that sucks
-							if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
-								logger.warn('q: {'+query+'} => '+filled_x)
-							}
-							else {
-								logger.error('failed to search with Searcher: ', r);
-							}
-							console.timeEnd('execution time');
-						});
-					})
+				}).catch(err => {
+					if(err === 'can\'t findBestMatchForAnimeArray if there are no titles') {
+						logger.warn('q: {'+query+'} => '+filled_x)
+					}
+					else {
+						logger.error('failed to search with Searcher: ', err);
+					}
+					console.timeEnd('execution time');
 				});
 			}).catch(()=>{});
 			bot_util.isValidLTGTSummon(message_str).then((query) => {
-
 				logger.log('Summon: <', query, '>');
 				console.time('execution time');
-				//logger.log('q: ', query);
-				Searcher.matchFromCache('<'+query+'>').then((result) => {
+
+				Searcher.searchAllManga(query, 'Manga').then(result => {
 					//boo yah
 					context.reply(buildMangaChatMessage(result), {
 						parse_mode: 'html',
 						disable_web_page_preview: result['image'].startsWith('http') ? false : true
 					});
 					console.timeEnd('execution time');
-				}).catch((err) => {
-					logger.warn('cache empty: ', err);
-					//nothing in cache
-					Searcher.matchMangaFromDatabase(query, 'Manga').then((result) => {
-						//boo yah
-						context.reply(buildMangaChatMessage(result), {
-							parse_mode: 'html',
-							disable_web_page_preview: result['image'].startsWith('http') ? false : true
-						});
-						console.timeEnd('execution time');
-					}).catch((err) => {
-						logger.warn('database empty: ', err);
-						//nothing in database
-						Searcher.searchManga(query, 'Manga').then((result) => {
-							//logger.log(result);
-							context.reply(buildMangaChatMessage(result), {
-								parse_mode: 'html',
-								disable_web_page_preview: result['image'].startsWith('http') ? false : true
-							});
-							console.timeEnd('execution time');
-						}).catch((r) => {
-							//well that sucks
-							if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
-								logger.warn('q: <'+query+'> => '+filled_x)
-							}
-							else {
-								logger.error('failed to search with Searcher: ', r);
-							}
-							console.timeEnd('execution time');
-						});
-					})
+				}).catch(err => {
+					//well that sucks
+					if(err === 'can\'t findBestMatchForAnimeArray if there are no titles') {
+						logger.warn('q: <'+query+'> => '+filled_x)
+					}
+					else {
+						logger.error('failed to search with Searcher: ', err);
+					}
+					console.timeEnd('execution time');
 				});
+				
 			}).catch(()=>{});
 			bot_util.isValidReverseBracketSummon(message_str).then((query) => {
 				logger.log('Summon: ]', query, '[');
 				console.time('execution time');
-				//logger.log('q: ', query);
-				Searcher.matchFromCache(']'+query+'[').then((result) => {
+				
+				Searcher.searchAllManga(query, 'LN').then(result => {
 					//boo yah
 					context.reply(buildMangaChatMessage(result), {
 						parse_mode: 'html',
 						disable_web_page_preview: result['image'].startsWith('http') ? false : true
 					});
 					console.timeEnd('execution time');
-				}).catch((err) => {
-					logger.warn('cache empty: ', err);
-					//nothing in cache
-					Searcher.matchMangaFromDatabase(query, 'LN').then((result) => {
-						//boo yah
-						context.reply(buildMangaChatMessage(result), {
-							parse_mode: 'html',
-							disable_web_page_preview: result['image'].startsWith('http') ? false : true
-						});
-						console.timeEnd('execution time');
-					}).catch((err) => {
-						logger.warn('database empty: ', err);
-						//nothing in database
-						Searcher.searchManga(query, 'LN').then((result) => {
-							//logger.log(result);
-							context.reply(buildMangaChatMessage(result), {
-								parse_mode: 'html',
-								disable_web_page_preview: result['image'].startsWith('http') ? false : true
-							});
-							console.timeEnd('execution time');
-						}).catch((r) => {
-							//well that sucks
-							if(r === 'can\'t findBestMatchForAnimeArray if there are no titles') {
-								logger.warn('q: ]'+query+'[ => '+filled_x)
-							}
-							else {
-								logger.error('failed to search with Searcher: ', r);
-							}
-							console.timeEnd('execution time');
-						});
-					})
+				}).catch(err => {
+					//well that sucks
+					if(err === 'can\'t findBestMatchForAnimeArray if there are no titles') {
+						logger.warn('q: <'+query+'> => '+filled_x)
+					}
+					else {
+						logger.error('failed to search with Searcher: ', err);
+					}
+					console.timeEnd('execution time');
 				});
 			}).catch(()=>{});
 

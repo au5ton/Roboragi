@@ -46,6 +46,62 @@ const Hyperlinks = require('./classes/Hyperlinks');
 const Synonyms = require('./classes/Synonyms');
 const Genres = require('./classes/Genres');
 
+_.searchAllAnime = (query, query_format) => {
+	return new Promise((resolve, reject) => {
+		_.matchFromCache('{'+query+'}').then((result) => {
+			resolve(result);
+		}).catch((err) => {
+			logger.warn('cache empty: ', err);
+			//nothing in cache
+			_.matchAnimeFromDatabase(query).then((result) => {
+				resolve(result);
+			}).catch((err) => {
+				logger.warn('database empty: ', err);
+				//nothing in database
+				_.searchAnimes(query).then((result) => {
+					resolve(result)
+				}).catch((r) => {
+					reject(r)
+				});
+			});
+		});
+	});
+}
+
+_.searchAllManga = (query, MangaOrLN) => {
+	return new Promise((resolve, reject) => {
+		if(MangaOrLN !== 'Manga' && MangaOrLN !== 'LN') {
+			reject('supply MangaOrLN, no ifs ands or buts! supplied: '+MangaOrLN);
+		}
+
+		let queryf;
+		if(MangaOrLN === 'Manga') {
+			queryf = '<'+query+'>';
+		}
+		else {
+			queryf = ']'+query+'[';
+		}
+
+		_.matchFromCache(queryf).then((result) => {
+			resolve(result)
+		}).catch((err) => {
+			logger.warn('cache empty: ', err);
+			//nothing in cache
+			_.matchMangaFromDatabase(query, MangaOrLN).then((result) => {
+				resolve(result);
+			}).catch((err) => {
+				logger.warn('database empty: ', err);
+				//nothing in database
+				_.searchManga(query, MangaOrLN).then((result) => {
+					resolve(result);
+				}).catch((r) => {
+					reject(r);
+				});
+			});
+		});
+	});
+}
+
 _.searchAnimes = (query, query_format) => {
 	//logger.log('searchAnimes() with \'', query, '\'');
 	return new Promise((resolve, reject) => {
