@@ -19,7 +19,7 @@ var REQUEST_COUNT = 0;
 // Anime APIs
 const popura = require('popura');
 const MAL = popura(process.env.MAL_USER, process.env.MAL_PASSWORD);
-const nani = require('nani').init(process.env.ANILIST_CLIENT_ID, process.env.ANILIST_CLIENT_SECRET);
+const ANILIST = require('nani').init(process.env.ANILIST_CLIENT_ID, process.env.ANILIST_CLIENT_SECRET);
 const Kitsu = require('kitsu');
 const kitsu = new Kitsu();
 
@@ -783,7 +783,7 @@ MAL.verifyAuth().then((r) => {
 });
 */
 
-logger.warn('Is out Kitsu connection valid?');
+logger.warn('Is our Kitsu connection valid?');
 kitsu.get('anime/1', {}).then((response) => {
     if (response.data.slug === 'cowboy-bebop') {
 		logger.success('Kitsu connection good.');
@@ -794,6 +794,19 @@ kitsu.get('anime/1', {}).then((response) => {
 	}
 }).catch((err) => {
 	logger.error('Kitsu failed to get a good connection: ', err);
+});
+
+logger.warn('Is our Anilist connection valid?');
+ANILIST.get('anime/1').then(data => {
+    if (data.id === 1) {
+		logger.success('Anilist connection good.');
+	}
+	else {
+		logger.error('Anilist failed to get a good connection.');
+		process.exit();
+	}
+}).catch(error => {
+    console.log(error);
 });
 
 logger.warn('Is synonyms.db operational?');
@@ -812,3 +825,4 @@ try {
 catch(err) {
 	logger.error('Error serializing synonyms.db: ',err);
 	process.exit();
+}
