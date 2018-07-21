@@ -956,7 +956,9 @@ bot.telegram.getMe().then((r) => {
 	process.exit();
 });
 
-logger.warn('Is our MAL authentication valid?');
+
+// Dont even try MyAnimeList: https://github.com/erengy/taiga/issues/588
+/*logger.warn('Is our MAL authentication valid?');
 MAL.verifyAuth().then((r) => {
 	logger.success('MAL authenticated. ');
 }).catch((r) => {
@@ -964,6 +966,7 @@ MAL.verifyAuth().then((r) => {
 	//MAL API may go down indefinitely
 	//process.exit();
 });
+*/
 
 logger.warn('Is out Kitsu connection valid?');
 kitsu.get('anime/1', {}).then((response) => {

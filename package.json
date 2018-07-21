@@ -17,6 +17,7 @@
     "node-tvdb": "^3.2.0",
     "popura": "^1.2.5",
     "pretty-ms": "^3.2.0",
+    "probe-image-size": "^4.0.0",
     "speakeasy-nlp": "^0.2.13",
     "sqlite3": "^4.0.2",
     "string-similarity": "^1.2.0",

@@ -65,7 +65,9 @@ _.searchAnimes = (query, query_format) => {
 		data in a neat array, and we'll maximize asynchonous
 		performance.
 		*/
-		promises.push(new Promise((resolve, reject) => {
+
+		// Dont even try MyAnimeList: https://github.com/erengy/taiga/issues/588
+		/* promises.push(new Promise((resolve, reject) => {
 			//Queries MAL
 			MAL.searchAnimes(query).then((results) => {
 				resolve(new Resolved(DataSource.MAL, results));
@@ -75,6 +77,8 @@ _.searchAnimes = (query, query_format) => {
 				resolve(new Rejected(DataSource.MAL, err));
 			});
 		}));
+		*/
+
 		promises.push(new Promise((resolve, reject) => {
 			//Queries ANILIST
 			//GET: {series_type}/search/{query}
