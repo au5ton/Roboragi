@@ -467,7 +467,7 @@ _.buildMangaChatMessage = (anime, options) => {
 			}
 			message += anime['media_type'] + ', ' + anime['status'] + '\n';
 			message += 'Volumes: ' + anime['volumes'] + ' | Chapters: ' + anime['chapters'] + '\n';
-			if(anime['genres'] !== null) {
+			if(anime['genres'] !== null && anime['genres'].array.length > 0) {
 				message += _.buildGenresForAnime(anime) + '\n';
 			}
 			message += anime['synopsis'];
