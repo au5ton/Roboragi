@@ -36,7 +36,6 @@ const AnilistStatusMap = require('./enums').AnilistStatusMap;
 const AnilistMediaTypeMap = require('./enums').AnilistMediaTypeMap;
 const KitsuStatusMap = require('./enums').KitsuStatusMap;
 const KitsuMediaTypeMap = require('./enums').KitsuMediaTypeMap;
-const TVDBStatusMap = require('./enums').TVDBStatusMap;
 
 // Custom classes
 const Resolved = require('./classes/Resolved');
@@ -212,6 +211,8 @@ _.searchAnimes = (query, query_format) => {
 							//logger.log(a_result);
 							let temp_dict = {};
 							temp_dict[ResolvedArray[r].DataSource] = 'https://myanimelist.net/anime/' + a_result['id'];
+							let img_dict = {};
+							img_dict[ResolvedArray[r].DataSource] = a_result['image'];
 							anime_arrays[ResolvedArray[r].DataSource].push(new Anime({
 								MAL_ID: a_result['id'],
 								title_romaji: a_result['title'],
@@ -225,6 +226,7 @@ _.searchAnimes = (query, query_format) => {
 								start_date: a_result['start_date'],
 								end_date: a_result['end_date'],
 								image: a_result['image'],
+								images: new Hyperlinks(img_dict),
 								synonyms: new Synonyms(a_result['synonyms']),
 								original_query: query
 							}));
@@ -242,6 +244,8 @@ _.searchAnimes = (query, query_format) => {
 							//logger.log(a_result);
 							let temp_dict = {};
 							temp_dict[ResolvedArray[r].DataSource] = 'https://anilist.co/anime/' + a_result['id'] + '/';
+							let img_dict = {};
+							img_dict[ResolvedArray[r].DataSource] = a_result['image_url_lge'];
 							let some_anime = new Anime({
 								ANILIST_ID: a_result['id'],
 								title_romaji: a_result['title_romaji'],
@@ -254,8 +258,10 @@ _.searchAnimes = (query, query_format) => {
 								start_date: a_result['start_date'],
 								end_date: a_result['end_date'],
 								image: a_result['image_url_lge'],
+								images: new Hyperlinks(img_dict),
 								nsfw: a_result['adult'], //confirmed bool 👍
 								synonyms: new Synonyms(a_result['synonyms']),
+								genres: new Genres(a_result['genres']),
 								original_query: query
 							});
 							anime_arrays[ResolvedArray[r].DataSource].push(some_anime);
@@ -273,6 +279,8 @@ _.searchAnimes = (query, query_format) => {
 							//logger.log(a_result);
 							let temp_dict = {};
 							temp_dict[ResolvedArray[r].DataSource] = 'https://kitsu.io/anime/' + a_result['id'] + '/';
+							let img_dict = {};
+							img_dict[ResolvedArray[r].DataSource] = (a_result['posterImage'] === null || a_result['posterImage'] === undefined) ? undefined : a_result['posterImage']['original'];
 							let synonyms_try = a_result['abbreviatedTitles'];
 							if (synonyms_try === null) {
 								synonyms_try = [];
@@ -301,6 +309,7 @@ _.searchAnimes = (query, query_format) => {
 								start_date: a_result['startDate'],
 								end_date: a_result['endDate'],
 								image: (a_result['posterImage'] === null || a_result['posterImage'] === undefined) ? undefined : a_result['posterImage']['original'],
+								images: new Hyperlinks(img_dict),
 								nsfw: a_result['nsfw'], //confirmed bool 👍
 								synonyms: new Synonyms(synonyms_try), //maybe this'll be good enough, please work ^
 								original_query: query
@@ -506,7 +515,9 @@ _.searchManga = (query, MangaOrLN) => {
 	//logger.log('searchAnimes() with \'', query, '\'');
 	return new Promise((resolve, reject) => {
 		var promises = [];
-		promises.push(new Promise((resolve, reject) => {
+
+		// Dont even try MyAnimeList: https://github.com/erengy/taiga/issues/588
+		/*promises.push(new Promise((resolve, reject) => {
 			//Queries MAL
 			MAL.searchMangas(query).then((results) => {
 				resolve(new Resolved(DataSource.MAL, results));
@@ -515,7 +526,9 @@ _.searchManga = (query, MangaOrLN) => {
 				//"resolving an error is still a good idea" -Austin, July 5, 2018
 				resolve(new Rejected(DataSource.MAL, err));
 			});
-		}));
+		}));*/
+
+
 		promises.push(new Promise((resolve, reject) => {
 			//Queries ANILIST
 			ANILIST.get('manga/search/' + encodeURIComponent(query.replace(new RegExp('/', 'g'), ''))).then((results) => {
@@ -590,6 +603,8 @@ _.searchManga = (query, MangaOrLN) => {
 							let a_result = ResolvedArray[r].data[c];
 							let temp_dict = {};
 							temp_dict[ResolvedArray[r].DataSource] = 'https://myanimelist.net/manga/' + a_result['id'];
+							let img_dict = {};
+							img_dict[ResolvedArray[r].DataSource] = a_result['image'];
 							anime_arrays[ResolvedArray[r].DataSource].push(new Anime({
 								title_romaji: a_result['title'],
 								title_english: a_result['english'],
@@ -603,6 +618,7 @@ _.searchManga = (query, MangaOrLN) => {
 								start_date: a_result['start_date'],
 								end_date: a_result['end_date'],
 								image: a_result['image'],
+								images: new Hyperlinks(img_dict),
 								synonyms: new Synonyms(a_result['synonyms']),
 								original_query: query
 							}));
@@ -619,6 +635,8 @@ _.searchManga = (query, MangaOrLN) => {
 							let a_result = ResolvedArray[r].data[c];
 							let temp_dict = {};
 							temp_dict[ResolvedArray[r].DataSource] = 'https://anilist.co/manga/' + a_result['id'] + '/';
+							let img_dict = {};
+							img_dict[ResolvedArray[r].DataSource] = a_result['image_url_lge'];
 							let some_anime = new Anime({
 								title_romaji: a_result['title_romaji'],
 								title_english: a_result['title_english'],
@@ -631,6 +649,7 @@ _.searchManga = (query, MangaOrLN) => {
 								start_date: a_result['start_date_fuzzy'],
 								end_date: a_result['end_date_fuzzy'],
 								image: a_result['image_url_lge'],
+								images: new Hyperlinks(img_dict),
 								nsfw: a_result['adult'], //confirmed bool 👍
 								synonyms: new Synonyms(a_result['synonyms']),
 								original_query: query
@@ -649,6 +668,8 @@ _.searchManga = (query, MangaOrLN) => {
 							let a_result = ResolvedArray[r].data.data[c];
 							let temp_dict = {};
 							temp_dict[ResolvedArray[r].DataSource] = 'https://kitsu.io/manga/' + a_result['id'] + '/';
+							let img_dict = {};
+							img_dict[ResolvedArray[r].DataSource] = (a_result['posterImage'] === null || a_result['posterImage'] === undefined) ? undefined : a_result['posterImage']['original'];
 							let synonyms_try = a_result['abbreviatedTitles'];
 							if (synonyms_try === null) {
 								synonyms_try = [];
@@ -671,6 +692,7 @@ _.searchManga = (query, MangaOrLN) => {
 								start_date: a_result['startDate'],
 								end_date: a_result['endDate'],
 								image: (a_result['posterImage'] === null || a_result['posterImage'] === undefined) ? undefined : a_result['posterImage']['original'],
+								images: new Hyperlinks(img_dict),
 								nsfw: a_result['nsfw'], //confirmed bool 👍
 								synonyms: new Synonyms(synonyms_try), //maybe this'll be good enough, please work ^
 								original_query: query

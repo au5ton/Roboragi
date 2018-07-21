@@ -1,7 +1,23 @@
 // util.js
 
+const logger = require('au5ton-logger');
+logger.setOption('prefix_date',true);
+const probe = require('probe-image-size');
+const DataSource = require('./enums').DataSource;
+
 //const
 const _ = {};
+
+_.star_char = '\u272A';
+_.star_char_alt = '\u2605';
+_.filled_x = '\u274C';
+_.warning_sign = '⚠️'; //please work
+_.prohibited_symbol = String.fromCodePoint(0x1f232);
+_.manga_symbol = String.fromCodePoint(0x1f4d4);
+_.tomato_symbol = String.fromCodePoint(0x1f345); //fresh
+_.rotten_symbol = String.fromCodePoint(0x1F922); //rotten
+_.bowing_symbol = String.fromCodePoint(0x1F647);
+_.empty_char = '&#8203;';
 
 _.isValidBraceSummon = (message_str) => {
 	return new Promise((resolve, reject) => {
@@ -275,5 +291,202 @@ _.cleanUpString = (str) => {
 	cleaned_up = cleaned_up.replace(/[\u02DC|\u00A0]/g, " ");
 	return cleaned_up;
 }
+
+_.getBestImage = (images) => {
+	return new Promise((resolve, reject) => {
+		let promises = [];
+		for(let i in images.dict) {
+			promises.push(new Promise((resolve, reject) => {
+				probe(images.dict[i]).then(response => {
+					response.error = false;
+					resolve(response);
+				}).catch(err => {
+					logger.error(err);
+					resolve({error: true});
+				})
+			}));
+		}
+		Promise.all(promises).then(results => {
+			let best_area = 0;
+			let best_img = null;
+			for(let i in results) {
+				if(!results[i].error) {
+					if(best_area < results[i].width * results[i].height) {
+						best_area = results[i].width * results[i].height;
+						best_img = results[i].url;
+					}
+				}
+			}
+			if(best_img === null) {
+				resolve('error: getBestImage failed, literally no image could resolve (???)')
+			}
+			else {
+				resolve(best_img);
+			}
+		}).catch(err => {
+			logger.error(err)
+			resolve('error: getBestImage '+err);
+		});
+	});
+};
+
+_.buildHyperlinksForAnime = (anime) => {
+	let message = '';
+
+	let exists = (val) => {
+		return (val !== undefined);
+	};
+
+	//logger.log(anime);
+
+	for(let e in DataSource) {
+		if(DataSource[e] === DataSource.MAL && exists(anime.hyperlinks.dict[DataSource[e]])) {
+			message += '<a href=\"'+anime.hyperlinks.dict[DataSource[e]]+'\">MAL</a>, ';
+		}
+		else if(DataSource[e] === DataSource.ANILIST && exists(anime.hyperlinks.dict[DataSource[e]])) {
+			message += '<a href=\"'+anime.hyperlinks.dict[DataSource[e]]+'\">AL</a>, ';
+		}
+		else if(DataSource[e] === DataSource.KITSU && exists(anime.hyperlinks.dict[DataSource[e]])) {
+			message += '<a href=\"'+anime.hyperlinks.dict[DataSource[e]]+'\">KIT</a>, ';
+		}
+		else if(DataSource[e] === DataSource.MANGAUPDATES && exists(anime.hyperlinks.dict[DataSource[e]])) {
+			message += '<a href=\"'+anime.hyperlinks.dict[DataSource[e]]+'\">MU</a>, ';
+		}
+		else if(DataSource[e] === DataSource.ANIMEPLANET && exists(anime.hyperlinks.dict[DataSource[e]])) {
+			message += '<a href=\"'+anime.hyperlinks.dict[DataSource[e]]+'\">A-P</a>, ';
+		}
+	}
+	return message.substring(0,message.length-2); //remove trailing comma and space
+}
+
+_.truncatePlot = (plot_str) => {
+	let new_plot = '';
+	if(plot_str) {
+		const txtLimit = 220;
+		let the_plot = plot_str.replace(new RegExp('<br>', 'g'), '')
+		if (the_plot.length > txtLimit) {
+			new_plot += the_plot.substring(0, txtLimit - 3) + '...';
+		}
+		else {
+			new_plot += the_plot;
+		}
+	}
+	return new_plot;
+}
+
+//Async
+_.buildAnimeChatMessage = (anime, options) => {
+	return new Promise((resolve, reject) => {
+		_.getBestImage(anime.images).then(best_image_url => {
+			options = options || {};
+			let message = '';
+			if(best_image_url.startsWith('http')) {
+				message += '\n<a href=\"'+best_image_url+'\">'+_.empty_char+'</a>';
+			}
+			message += '<b>' + anime['title'] + '</b>';
+			message += ' ('+_.buildHyperlinksForAnime(anime)+')\n';
+
+			//Weeb/general shit
+			if(anime['nsfw'] === true) {
+				message += _.prohibited_symbol+' | ';
+			}
+			if(anime['score_str'] !== null) {
+				message += anime['score_str'] + _.star_char + ' | ';
+			}
+			if(anime['rating'] !== null) {
+				message += anime['rating'] + '%' + ' | ';
+			}
+			if(anime['media_type'] !== null) {
+				message += anime['media_type'] + ' | ';
+			}
+			if(anime['status'] !== null) {
+				message += 'Status: ' + anime['status'] + ' | ';
+			}
+			if(anime['episode_count'] !== null) {
+				message += 'Episodes: ' + anime['episode_count'] + '\n';
+			}
+			if(anime['total_seasons'] !== null) {
+				message += 'Seasons: ' + anime['total_seasons'] + '\n';
+			}
+			if(anime['next_episode_number'] !== null && anime['next_episode_countdown'] !== null && anime['format'] !== 'Western TV' && anime['format'] !== 'Western Movie') {
+				let temp = parseInt(anime['next_episode_countdown']);
+				temp = temp - (temp % 60); //remove extra seconds, so prettyMs doesn't get annoyingly specific
+				temp *= 1000; //seconds -> milliseconds
+				message += '<i>Episode '+anime['next_episode_number']+' airs in '+prettyMs(temp)+'</i>\n';
+			}
+			message += anime['synopsis'];
+			resolve(message);
+		})
+	})
+}
+//Async
+_.buildMangaChatMessage = (anime, options) => {
+	return new Promise((resolve, reject) => {
+		_.getBestImage(anime.images).then(best_image_url => {
+			options = options || {};
+			let message = '';
+			if(best_image_url.startsWith('http')) {
+				message += '\n<a href=\"'+best_image_url+'\">'+_.empty_char+'</a>';
+			}
+			message += '<b>' + anime['title'] + '</b>';
+			message += ' ('+_.buildHyperlinksForAnime(anime)+')\n';
+			if(anime['nsfw'] === true) {
+				message += _.prohibited_symbol+' | ';
+			}
+			if(anime['score_str'] !== null) {
+				message += anime['score_str'] + _.star_char + ' | ';
+			}
+			if(anime['rating'] !== null) {
+				message += anime['rating'] + '%' + ' | ';
+			}
+			message += anime['media_type'] + ', ' + anime['status'] + '\n';
+			message += 'Volumes: ' + anime['volumes'] + ' | Chapters: ' + anime['chapters'];
+			message += '\n' + anime['synopsis'];
+			resolve(message);
+		})
+	})
+};
+
+//async
+_.buildInputMessageContentFromAnime = (anime) => {
+	return new Promise((resolve, reject) => {
+		if(anime.flattened.format === 'Manga') {
+			_.buildMangaChatMessage(anime).then(composedMessage => {
+				resolve({
+					message_text: composedMessage,
+					parse_mode: 'html',
+					disable_web_page_preview: false,
+					disable_notification: true
+				});
+			})
+		}
+		else {
+			_.buildAnimeChatMessage(anime).then(composedMessage => {
+				resolve({
+					message_text: composedMessage,
+					parse_mode: 'html',
+					disable_web_page_preview: false,
+					disable_notification: true
+				});
+			})
+		}
+	});
+};
+
+// Async
+_.buildInlineQueryResultArticleFromAnime = (anime, options) => {
+	return new Promise((resolve, reject) => {
+		_.buildInputMessageContentFromAnime(anime).then(composedMessage => {
+			resolve({
+				type: 'article',
+				id: String(Math.floor(Math.random()*10000)+1),
+				title: anime['title'],
+				input_message_content: composedMessage,
+				description: anime['synopsis'],
+				thumb_url: anime['image'] !== null ? anime['image'] : undefined
+			});
+		})
+	});
+};
 
 module.exports = _;

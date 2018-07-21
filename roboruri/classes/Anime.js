@@ -213,18 +213,6 @@ class Anime {
         else {
             //this.hard_format = null;
         }
-        if(non_empty(options.tvdb_score)) {
-            this.tvdb_score = options.tvdb_score;
-        }
-        else {
-            //this.tvdb_score = null;
-        }
-        if(non_empty(options.imdb_ratings)) {
-            this.imdb_ratings = options.imdb_ratings;
-        }
-        else {
-            //this.imdb_ratings = null;
-        }
         if(non_empty(options.total_seasons)) {
             this.total_seasons = options.total_seasons;
         }
@@ -269,18 +257,6 @@ class Anime {
         else {
             //this.KITSU_ID = null;
         }
-        if(non_empty(options.IMDB_ID)) {
-            this.IMDB_ID = options.IMDB_ID;
-        }
-        else {
-            //this.IMDB_ID = null;
-        }
-        if(non_empty(options.TVDB_ID)) {
-            this.TVDB_ID = options.TVDB_ID;
-        }
-        else {
-            //this.TVDB_ID = null;
-        }
 
         //Printed media stuff
         if(non_empty(options.chapters)) {
@@ -310,6 +286,15 @@ class Anime {
         else {
             //this.hyperlinks = null;
         }
+
+        //images (instanceof hyperlinks)
+        if(non_empty(options.images) && options.images instanceof Hyperlinks) {
+            this.images = options.images
+        }
+        else {
+            //this.hyperlinks = null;
+        }
+
 
         /*
         THIS IS IMPORTANT
@@ -520,14 +505,6 @@ class Anime {
         if(non_def(copy.rotten_rating)) {
             copy.rotten_rating = null;
         }
-        //tvdb_score
-        if(non_def(copy.tvdb_score)) {
-            copy.tvdb_score = null;
-        }
-        //imdb_ratings
-        if(non_def(copy.imdb_ratings)) {
-            copy.imdb_ratings = null;
-        }
         //total_seasons
         if(non_def(copy.total_seasons)) {
             copy.total_seasons = null;
@@ -554,12 +531,6 @@ class Anime {
         if(non_def(copy.KITSU_ID)) {
             copy.KITSU_ID = null;
         }
-        if(non_def(copy.IMDB_ID)) {
-            copy.IMDB_ID = null;
-        }
-        if(non_def(copy.TVDB_ID)) {
-            copy.TVDB_ID = null;
-        }
 
         //Printed media stuff
         //chapters
@@ -583,6 +554,10 @@ class Anime {
         if(non_def(copy.genres)) {
             copy.genres = null;
         }
+        //hyperlinks
+        if(non_def(copy.images)) {
+            copy.images = null;
+        }
         copy._flattened = true
         return copy;
     }
@@ -591,11 +566,13 @@ class Anime {
         let temp_hyperlinks;
         let temp_synonyms;
         let temp_genres;
+        let temp_images;
         for(let i in arguments) {
             if(arguments[i] instanceof Anime) {
                 temp_hyperlinks = Hyperlinks.consolidate(temp_hyperlinks,arguments[i].hyperlinks);
                 temp_synonyms = Synonyms.consolidate(temp_synonyms,arguments[i].synonyms);
                 temp_genres = Genres.consolidate(temp_genres,arguments[i].genres);
+                temp_images = Hyperlinks.consolidate(temp_images,arguments[i].images);
             }
             else {
                 //logger.warn('Anime.consolidate() supplied with non-Anime instance: ', arguments[i])
@@ -605,6 +582,7 @@ class Anime {
         copy.hyperlinks = temp_hyperlinks;
         copy.synonyms = temp_synonyms;
         copy.genres = temp_genres;
+        copy.images = temp_images;
         return copy;
     }
 }
