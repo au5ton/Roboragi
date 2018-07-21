@@ -11,8 +11,10 @@ const _ = {};
 
 _.star_char = '\u272A';
 _.star_char_alt = '\u2605';
+_.star_char_alt2 = String.fromCharCode('10032');
 _.filled_x = '\u274C';
 _.warning_sign = '⚠️'; //please work
+_.voltage_sign = '⚡';
 _.prohibited_symbol = String.fromCodePoint(0x1f232);
 _.manga_symbol = String.fromCodePoint(0x1f4d4);
 _.tomato_symbol = String.fromCodePoint(0x1f345); //fresh
@@ -405,11 +407,14 @@ _.buildAnimeChatMessage = (anime, options) => {
 			if(anime['nsfw'] === true) {
 				message += _.prohibited_symbol+' | ';
 			}
-			if(anime['score_str'] !== null) {
-				message += anime['score_str'] + _.star_char + ' | ';
+			if(anime['mal_score'] !== null) {
+				message += anime['mal_score'] + _.star_char + ' | ';
 			}
-			if(anime['rating'] !== null) {
-				message += anime['rating'] + '%' + ' | ';
+			if(anime['kitsu_score'] !== null) {
+				message += anime['kitsu_score'] + _.voltage_sign + ' | ';
+			}
+			else if(anime['anilist_score'] !== null) {
+				message += anime['anilist_score'] + '%' + ' | ';
 			}
 			if(anime['media_type'] !== null) {
 				message += anime['media_type'] + ' | ';

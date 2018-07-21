@@ -106,201 +106,116 @@ class Anime {
         if(non_empty(options.title_romaji)) {
             this.title_romaji = options.title_romaji;
         }
-        else {
-            //this.title_romaji = null;
-        }
         if(non_empty(options.title_english)) {
             this.title_english = options.title_english;
         }
-        else {
-            //this.title_english = null;
-        }
         if(non_empty(options.title_japanese)) {
             this.title_japanese = options.title_japanese;
-        }
-        else {
-            //this.title_japanese = null;
-        }
-        //score
-        if(non_empty(options.score_str)) {
-            this.score_str = options.score_str;
-        }
-        else {
-            //this.score_str = null;
         }
         //media_type
         if(non_empty(options.media_type)) {
             this.media_type = options.media_type;
         }
-        else {
-            //this.media_type = null;
-        }
         //status
         if(non_empty(options.status)) {
             this.status = options.status;
-        }
-        else {
-            //this.status = null;
         }
         //episode_count
         if(non_empty(options.episode_count)) {
             this.episode_count = options.episode_count;
         }
-        else {
-            //this.episode_count = null;
-        }
         //synopsis_full
         if(non_empty(options.synopsis_full)) {
             this.synopsis_full = options.synopsis_full;
-        }
-        else {
-            //this.synopsis_full = null;
         }
         //start_date
         if(non_empty(options.start_date)) {
             this.start_date = options.start_date;
         }
-        else {
-            //this.start_date = null;
-        }
         //end_date
         if(non_empty(options.end_date)) {
             this.end_date = options.end_date;
-        }
-        else {
-            //this.end_date = null;
         }
         //images
         if(non_empty(options.image)) {
             this.image = options.image
         }
-        else {
-            //this.image = null;
-        }
         if(non_empty(options.nsfw)) {
             this.nsfw = options.nsfw;
         }
-        else {
-            //this.nsfw = null;
+        //score
+        if(non_empty(options.mal_score)) {
+            this.mal_score = options.mal_score;
         }
-        if(non_empty(options.rating)) {
-            this.rating = options.rating;
+        //score
+        if(non_empty(options.anilist_score)) {
+            this.anilist_score = options.anilist_score;
         }
-        else {
-            //this.rating = null;
+        //score
+        if(non_empty(options.kitsu_score)) {
+            this.kitsu_score = options.kitsu_score;
         }
         if(non_empty(options.next_episode_countdown)) {
             this.next_episode_countdown = options.next_episode_countdown;
         }
-        else {
-            //this.next_episode_countdown = null;
-        }
         if(non_empty(options.next_episode_number)) {
             this.next_episode_number = options.next_episode_number;
-        }
-        else {
-            //this.next_episode_number = null;
         }
         if(non_empty(options.rotten_rating)) {
             this.rotten_rating = options.rotten_rating;
         }
-        else {
-            //this.rotten_rating = null;
-        }
         if(non_empty(options.hard_format)) {
             this.hard_format = options.hard_format;
-        }
-        else {
-            //this.hard_format = null;
         }
         if(non_empty(options.total_seasons)) {
             this.total_seasons = options.total_seasons;
         }
-        else {
-            //this.total_seasons = null;
-        }
         if(non_empty(options.year_of_release)) {
             this.year_of_release = options.year_of_release;
-        }
-        else {
-            //this.year_of_release = null;
         }
         if(non_empty(options.actors_str)) {
             this.actors_str = options.actors_str;
         }
-        else {
-            //this.actors_str = null;
-        }
         if(non_empty(options.original_query)) {
             this.original_query = options.original_query;
-        }
-        else {
-            //this.original_query = null;
         }
 
         //Indentifiers
         if(non_empty(options.MAL_ID)) {
             this.MAL_ID = options.MAL_ID;
         }
-        else {
-            //this.MAL_ID = null;
-        }
         if(non_empty(options.ANILIST_ID)) {
             this.ANILIST_ID = options.ANILIST_ID;
         }
-        else {
-            //this.ANILIST_ID = null;
-        }
         if(non_empty(options.KITSU_ID)) {
             this.KITSU_ID = options.KITSU_ID;
-        }
-        else {
-            //this.KITSU_ID = null;
         }
 
         //Printed media stuff
         if(non_empty(options.chapters)) {
             this.chapters = options.chapters;
         }
-        else {
-            //this.chapters = null;
-        }
         if(non_empty(options.volumes)) {
             this.volumes = options.volumes;
-        }
-        else {
-            //this.volumes = null;
         }
 
         //synonyms
         if(non_empty(options.synonyms) && options.synonyms instanceof Synonyms){
             this.synonyms = options.synonyms;
         }
-        else {
-            //this.synonyms = null;
-        }
         //hyperlinks
         if(non_empty(options.hyperlinks) && options.hyperlinks instanceof Hyperlinks) {
             this.hyperlinks = options.hyperlinks
-        }
-        else {
-            //this.hyperlinks = null;
         }
 
         //genres
         if(non_empty(options.genres) && options.genres instanceof Genres) {
             this.genres = options.genres
         }
-        else {
-            //this.hyperlinks = null;
-        }
 
         //images (instanceof hyperlinks)
         if(non_empty(options.images) && options.images instanceof Hyperlinks) {
             this.images = options.images
-        }
-        else {
-            //this.hyperlinks = null;
         }
 
 
@@ -439,15 +354,6 @@ class Anime {
             return null;
         }
     }
-    get score_num() {
-        let parsed = parseFloat(this.score_str);
-        if(isNaN(parsed)) {
-            return null;
-        }
-        else {
-            return parsed
-        }
-    }
     get flattened() {
         let copy = new Anime(Object.assign({}, this))
 
@@ -460,10 +366,6 @@ class Anime {
         }
         if(non_def(copy.title_japanese)) {
             copy.title_japanese = null;
-        }
-        //score_str
-        if(non_def(copy.score_str)) {
-            copy.score_str = null;
         }
         //media_type
         if(non_def(copy.media_type)) {
@@ -497,9 +399,17 @@ class Anime {
         if(non_def(copy.nsfw)) {
             copy.nsfw = null;
         }
-        //rating
-        if(non_def(copy.rating)) {
-            copy.rating = null;
+        //score
+        if(non_def(copy.mal_score)) {
+            copy.mal_score = null;
+        }
+        //score
+        if(non_def(copy.anilist_score)) {
+            copy.anilist_score = null;
+        }
+        //score
+        if(non_def(copy.kitsu_score)) {
+            copy.kitsu_score = null;
         }
         //next_episode_number
         if(non_def(copy.next_episode_number)) {

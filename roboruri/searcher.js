@@ -218,7 +218,7 @@ _.searchAnimes = (query, query_format) => {
 								title_romaji: a_result['title'],
 								title_english: a_result['english'],
 								hyperlinks: new Hyperlinks(temp_dict),
-								score_str: a_result['score'],
+								mal_score: a_result['score'],
 								media_type: MalMediaTypeMap[a_result['type']],
 								status: MalStatusMap[a_result['status']],
 								episode_count: a_result['episodes'],
@@ -246,11 +246,13 @@ _.searchAnimes = (query, query_format) => {
 							temp_dict[ResolvedArray[r].DataSource] = 'https://anilist.co/anime/' + a_result['id'] + '/';
 							let img_dict = {};
 							img_dict[ResolvedArray[r].DataSource] = a_result['image_url_lge'];
+							
 							let some_anime = new Anime({
 								ANILIST_ID: a_result['id'],
 								title_romaji: a_result['title_romaji'],
 								title_english: a_result['title_english'],
 								hyperlinks: new Hyperlinks(temp_dict),
+								anilist_score: a_result['average_score'],
 								media_type: AnilistMediaTypeMap[a_result['type']],
 								status: AnilistStatusMap[a_result['airing_status']],
 								episode_count: a_result['total_episodes'],
@@ -301,7 +303,7 @@ _.searchAnimes = (query, query_format) => {
 								title_english: a_result['titles']['en'] || a_result['titles']['en_us'], //for shows originating in the US??? see: https://github.com/au5ton/Roboruri/issues/19
 								title_japanese: a_result['titles']['ja_jp'],
 								hyperlinks: new Hyperlinks(temp_dict),
-								rating: a_result['averageRating'], //preserve kitsu rating AND mal score
+								kitsu_score: a_result['averageRating'], //preserve kitsu rating AND mal score
 								media_type: KitsuMediaTypeMap[a_result['subtype']],
 								status: KitsuStatusMap[a_result['status']],
 								episode_count: a_result['episodeCount'],
@@ -609,7 +611,7 @@ _.searchManga = (query, MangaOrLN) => {
 								title_romaji: a_result['title'],
 								title_english: a_result['english'],
 								hyperlinks: new Hyperlinks(temp_dict),
-								score_str: a_result['score'],
+								mal_score: a_result['score'],
 								media_type: MalMediaTypeMap[a_result['type']],
 								status: MalStatusMap[a_result['status']],
 								volumes: no_volumes(a_result['volumes']) ? 'Unknown' : a_result['volumes'],
@@ -641,6 +643,7 @@ _.searchManga = (query, MangaOrLN) => {
 								title_romaji: a_result['title_romaji'],
 								title_english: a_result['title_english'],
 								hyperlinks: new Hyperlinks(temp_dict),
+								anilist_score: a_result['average_score'],
 								media_type: AnilistMediaTypeMap[a_result['type']],
 								status: AnilistStatusMap[a_result['publishing_status']],
 								volumes: no_volumes(a_result['total_volumes']) ? 'Unknown' : a_result['total_volumes'],
@@ -684,7 +687,7 @@ _.searchManga = (query, MangaOrLN) => {
 								title_english: a_result['titles']['en'] || a_result['titles']['en_us'], //for books originating in the US??? see: https://github.com/au5ton/Roboruri/issues/19
 								title_japanese: a_result['titles']['ja_jp'],
 								hyperlinks: new Hyperlinks(temp_dict),
-								rating: a_result['averageRating'], //preserve kitsu rating AND mal score
+								kitsu_score: a_result['averageRating'], //preserve kitsu rating AND mal score
 								media_type: KitsuMediaTypeMap[a_result['subtype']],
 								status: KitsuStatusMap[a_result['status']],
 								volumes: no_volumes(a_result['volumeCount']) ? 'Unknown' : a_result['volumeCount'],
@@ -1048,7 +1051,7 @@ _.matchAnimeFromDatabase = (query) => {
 												title_romaji: a_result['title'],
 												title_english: a_result['english'],
 												hyperlinks: new Hyperlinks(temp_dict),
-												score_str: a_result['score'],
+												mal_score: a_result['score'],
 												media_type: MalMediaTypeMap[a_result['type']],
 												status: MalStatusMap[a_result['status']],
 												episode_count: a_result['episodes'],
@@ -1079,6 +1082,7 @@ _.matchAnimeFromDatabase = (query) => {
 										title_romaji: a_result['title_romaji'],
 										title_english: a_result['title_english'],
 										hyperlinks: new Hyperlinks(temp_dict),
+										anilist_score: a_result['average_score'],
 										media_type: AnilistMediaTypeMap[a_result['type']],
 										status: AnilistStatusMap[a_result['airing_status']],
 										episode_count: a_result['total_episodes'],
@@ -1128,7 +1132,7 @@ _.matchAnimeFromDatabase = (query) => {
 											title_english: a_result['titles']['en'] || a_result['titles']['en_us'], //for shows originating in the US??? see: https://github.com/au5ton/Roboruri/issues/19
 											title_japanese: a_result['titles']['ja_jp'],
 											hyperlinks: new Hyperlinks(temp_dict),
-											rating: a_result['averageRating'], //preserve kitsu rating AND mal score
+											kitsu_score: a_result['averageRating'], //preserve kitsu rating AND mal score
 											media_type: KitsuMediaTypeMap[a_result['showType']],
 											status: KitsuStatusMap[a_result['status']],
 											episode_count: a_result['episodeCount'],
@@ -1275,7 +1279,7 @@ _.matchMangaFromDatabase = (query, MangaOrLN) => {
 												title_romaji: a_result['title'],
 												title_english: a_result['english'],
 												hyperlinks: new Hyperlinks(temp_dict),
-												score_str: a_result['score'],
+												mal_score: a_result['score'],
 												media_type: MalMediaTypeMap[a_result['type']],
 												status: MalStatusMap[a_result['status']],
 												volumes: no_volumes(a_result['volumes']) ? 'Unknown' : a_result['volumes'],
@@ -1316,6 +1320,7 @@ _.matchMangaFromDatabase = (query, MangaOrLN) => {
 										title_romaji: a_result['title_romaji'],
 										title_english: a_result['title_english'],
 										hyperlinks: new Hyperlinks(temp_dict),
+										anilist_score: a_result['average_score'],
 										media_type: AnilistMediaTypeMap[a_result['type']],
 										status: AnilistStatusMap[a_result['publishing_status']],
 										volumes: no_volumes(a_result['total_volumes']) ? 'Unknown' : a_result['total_volumes'],
@@ -1368,7 +1373,7 @@ _.matchMangaFromDatabase = (query, MangaOrLN) => {
 											title_english: a_result['titles']['en'],
 											title_japanese: a_result['titles']['ja_jp'],
 											hyperlinks: new Hyperlinks(temp_dict),
-											rating: a_result['averageRating'], //preserve kitsu rating AND mal score
+											kitsu_score: a_result['averageRating'], //preserve kitsu rating AND mal score
 											media_type: KitsuMediaTypeMap[a_result['subtype']],
 											status: KitsuStatusMap[a_result['status']],
 											volumes: no_volumes(a_result['volumeCount']) ? 'Unknown' : a_result['volumeCount'],
