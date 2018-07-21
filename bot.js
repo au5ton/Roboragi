@@ -961,7 +961,8 @@ MAL.verifyAuth().then((r) => {
 	logger.success('MAL authenticated. ');
 }).catch((r) => {
 	logger.error('MAL failed to authenticate: ', r.message);
-	process.exit();
+	//MAL API may go down indefinitely
+	//process.exit();
 });
 
 logger.warn('Is out Kitsu authentication valid?');
