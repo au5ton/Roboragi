@@ -644,12 +644,6 @@ function buildHyperlinksForAnime(anime) {
 		else if(DataSource[e] === DataSource.ANIMEPLANET && exists(anime.hyperlinks.dict[DataSource[e]])) {
 			message += '<a href=\"'+anime.hyperlinks.dict[DataSource[e]]+'\">A-P</a>, ';
 		}
-		else if(DataSource[e] === DataSource.IMDB && exists(anime.hyperlinks.dict[DataSource[e]])) {
-			message += '<a href=\"'+anime.hyperlinks.dict[DataSource[e]]+'\">IMDB</a>, ';
-		}
-		else if(DataSource[e] === DataSource.TVDB && exists(anime.hyperlinks.dict[DataSource[e]])) {
-			message += '<a href=\"'+anime.hyperlinks.dict[DataSource[e]]+'\">TVDB</a>, ';
-		}
 	}
 	return message.substring(0,message.length-2); //remove trailing comma and space
 }
