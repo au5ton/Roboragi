@@ -3,6 +3,7 @@
 const logger = require('au5ton-logger');
 logger.setOption('prefix_date',true);
 const probe = require('probe-image-size');
+const prettyMs = require('pretty-ms');
 const DataSource = require('./enums').DataSource;
 
 //const
@@ -359,6 +360,20 @@ _.buildHyperlinksForAnime = (anime) => {
 	return message.substring(0,message.length-2); //remove trailing comma and space
 }
 
+_.buildGenresForAnime = (anime) => {
+	let message = '';
+
+	let exists = (val) => {
+		return (val !== undefined);
+	};
+
+	//logger.log(anime);
+	for(let i in anime.genres.array) {
+		message += '<i>'+anime.genres.array[i]+'</i>, ';
+	}
+	return message.substring(0,message.length-2); //remove trailing comma and space
+}
+
 _.truncatePlot = (plot_str) => {
 	let new_plot = '';
 	if(plot_str) {
@@ -408,6 +423,9 @@ _.buildAnimeChatMessage = (anime, options) => {
 			if(anime['total_seasons'] !== null) {
 				message += 'Seasons: ' + anime['total_seasons'] + '\n';
 			}
+			if(anime['genres'] !== null && anime['genres'].array.length > 0) {
+				message += _.buildGenresForAnime(anime) + '\n';
+			}
 			if(anime['next_episode_number'] !== null && anime['next_episode_countdown'] !== null && anime['format'] !== 'Western TV' && anime['format'] !== 'Western Movie') {
 				let temp = parseInt(anime['next_episode_countdown']);
 				temp = temp - (temp % 60); //remove extra seconds, so prettyMs doesn't get annoyingly specific
@@ -440,8 +458,11 @@ _.buildMangaChatMessage = (anime, options) => {
 				message += anime['rating'] + '%' + ' | ';
 			}
 			message += anime['media_type'] + ', ' + anime['status'] + '\n';
-			message += 'Volumes: ' + anime['volumes'] + ' | Chapters: ' + anime['chapters'];
-			message += '\n' + anime['synopsis'];
+			message += 'Volumes: ' + anime['volumes'] + ' | Chapters: ' + anime['chapters'] + '\n';
+			if(anime['genres'] !== null) {
+				message += _.buildGenresForAnime(anime) + '\n';
+			}
+			message += anime['synopsis'];
 			resolve(message);
 		})
 	})
