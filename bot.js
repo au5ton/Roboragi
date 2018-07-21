@@ -965,22 +965,17 @@ MAL.verifyAuth().then((r) => {
 	//process.exit();
 });
 
-logger.warn('Is out Kitsu authentication valid?');
-kitsu.auth({
-    clientId: process.env.KITSU_CLIENT_ID,
-    clientSecret: process.env.KITSU_CLIENT_SECRET,
-    username: process.env.KITSU_USER,
-    password: process.env.KITSU_PASSWORD
-}).then((access_token) => {
-    if (kitsu.isAuth) {
-		logger.success('Kitsu authenticated.');
+logger.warn('Is out Kitsu connection valid?');
+kitsu.get('anime/1', {}).then((response) => {
+    if (response.data.slug === 'cowboy-bebop') {
+		logger.success('Kitsu connection good.');
 	}
-    else {
-		logger.error('Kitsu failed to authenticate.');
+	else {
+		logger.error('Kitsu failed to get a good connection.');
 		process.exit();
 	}
 }).catch((err) => {
-	logger.error('Kitsu failed to authenticate: ', err);
+	logger.error('Kitsu failed to get a good connection: ', err);
 });
 
 logger.warn('Is synonyms.db operational?');

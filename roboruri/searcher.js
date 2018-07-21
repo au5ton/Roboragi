@@ -27,12 +27,6 @@ const MAL = popura(process.env.MAL_USER, process.env.MAL_PASSWORD);
 const ANILIST = require('nani').init(process.env.ANILIST_CLIENT_ID, process.env.ANILIST_CLIENT_SECRET);
 const Kitsu = require('kitsu');
 const kitsu = new Kitsu();
-kitsu.auth({
-	clientId: process.env.KITSU_CLIENT_ID,
-	clientSecret: process.env.KITSU_CLIENT_SECRET,
-	username: process.env.KITSU_USER,
-	password: process.env.KITSU_PASSWORD
-});
 const imdb = require('imdb-api');
 const IMDB_TOKEN = {apiKey: process.env.OMDB_API_KEY, timeout: 5000};
 const TVDB = require('node-tvdb');

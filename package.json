@@ -10,7 +10,7 @@
     "dotenv": "^4.0.0",
     "git-last-commit": "^0.3.0",
     "imdb-api": "^3.1.2",
-    "kitsu": "^2.0.4",
+    "kitsu": "^5.2.1",
     "nani": "^1.2.0",
     "natural": "^0.5.6",
     "node-cache": "^4.2.0",
@@ -18,7 +18,7 @@
     "popura": "^1.2.5",
     "pretty-ms": "^3.2.0",
     "speakeasy-nlp": "^0.2.13",
-    "sqlite3": "^4.0.1",
+    "sqlite3": "^4.0.2",
     "string-similarity": "^1.2.0",
     "telegraf": "^3.21.2"
   }
