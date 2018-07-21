@@ -679,20 +679,6 @@ function buildAnimeChatMessage(anime, options) {
 	message += '<b>' + anime['title'] + '</b>';
 	message += ' ('+buildHyperlinksForAnime(anime)+')\n';
 
-	//Western shit
-	if(anime['actors_str'] !== null) {
-		message += '<i>Actor(s): ' + anime['actors_str'] + '</i>\n';
-	}
-	if(anime['tvdb_score'] !== null) {
-		message += anime['tvdb_score'] + star_char_alt + ' | ';
-	}
-	if(anime['imdb_ratings'] !== null) {
-		let rate_string = getIdealIMDBRating(anime['imdb_ratings']);
-		if(rate_string) {
-			message += rate_string + ' | ';
-		}
-	}
-
 	//Weeb/general shit
 	if(anime['nsfw'] === true) {
 		message += prohibited_symbol+' | ';
