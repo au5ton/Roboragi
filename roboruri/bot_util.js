@@ -456,11 +456,14 @@ _.buildMangaChatMessage = (anime, options) => {
 			if(anime['nsfw'] === true) {
 				message += _.prohibited_symbol+' | ';
 			}
-			if(anime['score_str'] !== null) {
-				message += anime['score_str'] + _.star_char + ' | ';
+			if(anime['mal_score'] !== null) {
+				message += anime['mal_score'] + _.star_char + ' | ';
 			}
-			if(anime['rating'] !== null) {
-				message += anime['rating'] + '%' + ' | ';
+			if(anime['kitsu_score'] !== null) {
+				message += anime['kitsu_score'] + _.voltage_sign + ' | ';
+			}
+			else if(anime['anilist_score'] !== null) {
+				message += anime['anilist_score'] + '%' + ' | ';
 			}
 			message += anime['media_type'] + ', ' + anime['status'] + '\n';
 			message += 'Volumes: ' + anime['volumes'] + ' | Chapters: ' + anime['chapters'] + '\n';
