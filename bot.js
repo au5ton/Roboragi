@@ -148,7 +148,7 @@ bot.on('message', (context) => {
 		for(let i in members) {
 			if(members[i]['username'] === BOT_USERNAME) {
 				context.reply('Ohayō, '+context.chat.title+'. ');
-				context.telegram.sendVideo(context.chat.id, 'https://a.safe.moe/AAqRJ.mp4');
+				context.telegram.sendVideo(context.chat.id, 'https://sooot.github.io/repo/roboruri/greeting.mp4');
 			}
 		}
 	}
