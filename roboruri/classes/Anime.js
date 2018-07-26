@@ -84,152 +84,77 @@ Schema:
 const non_empty = (val) => {
     return (val !== null && val !== undefined && val !== '');
 };
-const non_empty_array = (ray) => {
-    return (Array.isArray(ray) && ray.length > 0);
-};
-const non_def = (val) => {
-    //doesn't account for if an object has the value defined,
-    //but has decided to leave it holding undefined for
-    //whatever reason.
-    //fuck it, bulldozer that shit with nulls
-    return (val === undefined)
-};
+
+const properties = [
+    'title_romaji',
+    'title_english',
+    'title_japanese',
+    'media_type',
+    'status',
+    'episode_count',
+    'synopsis_full',
+    'start_date',
+    'end_date',
+    'image',
+    'nsfw',
+    'mal_score',
+    'anilist_score',
+    'kitsu_score',
+    'next_episode_countdown',
+    'next_episode_number',
+    'rotten_rating',
+    'hard_format',
+    'total_seasons',
+    'year_of_release',
+    'actors_str',
+    'original_query',
+    'MAL_ID',
+    'ANILIST_ID',
+    'KITSU_ID',
+    'chapters',
+    'volumes'
+];
+
+const special_properties = [
+    'synonyms',
+    'hyperlinks',
+    'genres',
+    'images'
+];
 
 class Anime {
     constructor(options) {
 
+        //If no options specified
         if(!non_empty(options)) {
             return
         }
 
-        //all the titles
-        if(non_empty(options.title_romaji)) {
-            this.title_romaji = options.title_romaji;
-        }
-        if(non_empty(options.title_english)) {
-            this.title_english = options.title_english;
-        }
-        if(non_empty(options.title_japanese)) {
-            this.title_japanese = options.title_japanese;
-        }
-        //media_type
-        if(non_empty(options.media_type)) {
-            this.media_type = options.media_type;
-        }
-        //status
-        if(non_empty(options.status)) {
-            this.status = options.status;
-        }
-        //episode_count
-        if(non_empty(options.episode_count)) {
-            this.episode_count = options.episode_count;
-        }
-        //synopsis_full
-        if(non_empty(options.synopsis_full)) {
-            this.synopsis_full = options.synopsis_full;
-        }
-        //start_date
-        if(non_empty(options.start_date)) {
-            this.start_date = options.start_date;
-        }
-        //end_date
-        if(non_empty(options.end_date)) {
-            this.end_date = options.end_date;
-        }
-        //images
-        if(non_empty(options.image)) {
-            this.image = options.image
-        }
-        if(non_empty(options.nsfw)) {
-            this.nsfw = options.nsfw;
-        }
-        //score
-        if(non_empty(options.mal_score)) {
-            this.mal_score = options.mal_score;
-        }
-        //score
-        if(non_empty(options.anilist_score)) {
-            this.anilist_score = options.anilist_score;
-        }
-        //score
-        if(non_empty(options.kitsu_score)) {
-            this.kitsu_score = options.kitsu_score;
-        }
-        if(non_empty(options.next_episode_countdown)) {
-            this.next_episode_countdown = options.next_episode_countdown;
-        }
-        if(non_empty(options.next_episode_number)) {
-            this.next_episode_number = options.next_episode_number;
-        }
-        if(non_empty(options.rotten_rating)) {
-            this.rotten_rating = options.rotten_rating;
-        }
-        if(non_empty(options.hard_format)) {
-            this.hard_format = options.hard_format;
-        }
-        if(non_empty(options.total_seasons)) {
-            this.total_seasons = options.total_seasons;
-        }
-        if(non_empty(options.year_of_release)) {
-            this.year_of_release = options.year_of_release;
-        }
-        if(non_empty(options.actors_str)) {
-            this.actors_str = options.actors_str;
-        }
-        if(non_empty(options.original_query)) {
-            this.original_query = options.original_query;
+        /*Only apply a property if:
+            1) the property is a real property of this class
+            2) if the property is a useful value
+        */
+        for(let i in properties) {
+            if(non_empty(options[properties[i]])) {
+                this[properties[i]] = options[properties[i]];
+            }
         }
 
-        //Indentifiers
-        if(non_empty(options.MAL_ID)) {
-            this.MAL_ID = options.MAL_ID;
-        }
-        if(non_empty(options.ANILIST_ID)) {
-            this.ANILIST_ID = options.ANILIST_ID;
-        }
-        if(non_empty(options.KITSU_ID)) {
-            this.KITSU_ID = options.KITSU_ID;
-        }
-
-        //Printed media stuff
-        if(non_empty(options.chapters)) {
-            this.chapters = options.chapters;
-        }
-        if(non_empty(options.volumes)) {
-            this.volumes = options.volumes;
-        }
-
-        //synonyms
+        //Special properties
         if(non_empty(options.synonyms) && options.synonyms instanceof Synonyms){
             this.synonyms = options.synonyms;
         }
-        //hyperlinks
         if(non_empty(options.hyperlinks) && options.hyperlinks instanceof Hyperlinks) {
             this.hyperlinks = options.hyperlinks
         }
-
-        //genres
         if(non_empty(options.genres) && options.genres instanceof Genres) {
             this.genres = options.genres
         }
-
-        //images (instanceof hyperlinks)
         if(non_empty(options.images) && options.images instanceof Hyperlinks) {
             this.images = options.images
         }
 
-
-        /*
-        THIS IS IMPORTANT
-        THIS IS IMPORTANT
-        THIS IS IMPORTANT
-        */
         this._flattened = false;
-        /*
-        THIS IS IMPORTANT
-        THIS IS IMPORTANT
-        THIS IS IMPORTANT
-        */
     }
     //generated accessors
     get title() {
@@ -357,125 +282,18 @@ class Anime {
     get flattened() {
         let copy = new Anime(Object.assign({}, this))
 
-        //all the titles
-        if(non_def(copy.title_romaji)) {
-            copy.title_romaji = null;
+        //if any properties are undefined, assert them as null
+        for(let i in properties) {
+            if(copy[properties[i]] === undefined) {
+                copy[properties[i]] = null
+            }
         }
-        if(non_def(copy.title_english)) {
-            copy.title_english = null;
+        for(let i in special_properties) {
+            if(copy[special_properties[i]] === undefined) {
+                copy[special_properties[i]] = null;
+            }
         }
-        if(non_def(copy.title_japanese)) {
-            copy.title_japanese = null;
-        }
-        //media_type
-        if(non_def(copy.media_type)) {
-            copy.media_type = null;
-        }
-        //status
-        if(non_def(copy.status)) {
-            copy.status = null;
-        }
-        //episode_count
-        if(non_def(copy.episode_count)) {
-            copy.episode_count = null;
-        }
-        //synopsis_full
-        if(non_def(copy.synopsis_full)) {
-            copy.synopsis_full = null;
-        }
-        //start_date
-        if(non_def(copy.start_date)) {
-            copy.start_date = null;
-        }
-        //end_date
-        if(non_def(copy.end_date)) {
-            copy.end_date = null;
-        }
-        //images
-        if(non_def(copy.images)) {
-            copy.images = null;
-        }
-        //nsfw
-        if(non_def(copy.nsfw)) {
-            copy.nsfw = null;
-        }
-        //score
-        if(non_def(copy.mal_score)) {
-            copy.mal_score = null;
-        }
-        //score
-        if(non_def(copy.anilist_score)) {
-            copy.anilist_score = null;
-        }
-        //score
-        if(non_def(copy.kitsu_score)) {
-            copy.kitsu_score = null;
-        }
-        //next_episode_number
-        if(non_def(copy.next_episode_number)) {
-            copy.next_episode_number = null;
-        }
-        //next_episode_countdown
-        if(non_def(copy.next_episode_countdown)) {
-            copy.next_episode_countdown = null;
-        }
-        //rotten_rating
-        if(non_def(copy.rotten_rating)) {
-            copy.rotten_rating = null;
-        }
-        //total_seasons
-        if(non_def(copy.total_seasons)) {
-            copy.total_seasons = null;
-        }
-        //year_of_release
-        if(non_def(copy.year_of_release)) {
-            copy.year_of_release = null;
-        }
-        //actors_str
-        if(non_def(copy.actors_str)) {
-            copy.actors_str = null;
-        }
-        //original_query
-        if(non_def(copy.original_query)) {
-            copy.original_query = null;
-        }
-        //Identifers
-        if(non_def(copy.MAL_ID)) {
-            copy.MAL_ID = null;
-        }
-        if(non_def(copy.ANILIST_ID)) {
-            copy.ANILIST_ID = null;
-        }
-        if(non_def(copy.KITSU_ID)) {
-            copy.KITSU_ID = null;
-        }
-
-        //Printed media stuff
-        //chapters
-        if(non_def(copy.chapters)) {
-            copy.chapters = null;
-        }
-        //volumes
-        if(non_def(copy.volumes)) {
-            copy.volumes = null;
-        }
-
-        //synonyms
-        if(non_def(copy.synonyms)) {
-            copy.synonyms = null;
-        }
-        //hyperlinks
-        if(non_def(copy.hyperlinks)) {
-            copy.hyperlinks = null;
-        }
-        //genres
-        if(non_def(copy.genres)) {
-            copy.genres = null;
-        }
-        //hyperlinks
-        if(non_def(copy.images)) {
-            copy.images = null;
-        }
+        
         copy._flattened = true
         return copy;
     }
@@ -504,32 +322,5 @@ class Anime {
         return copy;
     }
 }
-
-// let dict = {};
-// dict[DataSource.MAL] = 'http://hello.world'
-// let dict2 = {};
-// dict2[DataSource.ANILIST] = 'http://foo.bar'
-
-//let temp = ;
-//let consol =
-// logger.warn('copy.flattened: ', consol.flattened)
-// logger.log('Object.assign: ', Anime.consolidate(
-//     new Anime({
-//         title_english: 'a life in a better werl',
-//         hyperlinks: new Hyperlinks(dict),
-//         synonyms: new Synonyms(['Rem is best girl','',null,undefined,'Romance'])
-//     }),
-//     new Anime({
-//         title_romaji: 'Re:Zero',
-//         hyperlinks: new Hyperlinks(dict2),
-//         synonyms: new Synonyms(['Emilia waifu','','Romance'])
-//     }),
-//     new Anime()
-// )
-// );
-//logger.log('title: ', consol.title);
-//logger.log('orgi: ', temp);
-//logger.log('instanceof: ',consol instanceof Anime)
-
 
 module.exports = Anime
