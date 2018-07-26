@@ -122,7 +122,17 @@ const special_properties = [
     'images'
 ];
 
+/**
+ * This class represents what data an instance of an Anime or Manga should have
+ */
 class Anime {
+
+    /**
+     * Accepts objects that contain the following properties, 
+     * all others won't be saved to the resulting object:
+     * 
+     * @param {object} options 
+     */
     constructor(options) {
 
         //If no options specified
@@ -156,7 +166,14 @@ class Anime {
 
         this._flattened = false;
     }
-    //generated accessors
+    
+    /**
+     * Returns the title of the anime, depending on the availability
+     * in order: english, romaji, japanese.
+     * Requires that the anime instance be flattened.
+     * 
+     * @returns {String} The title of the anime
+     */
     get title() {
         if(this._flattened) {
             if(this.title_english !== null) {
@@ -177,15 +194,14 @@ class Anime {
             return undefined
         }
     }
-    //Returns 'Anime', 'Manga', 'LN', or 'Other' depending on whatever the media_type is
+    
+    /**
+     * Returns a more broad version of media_type
+     * 
+     * @returns {String} The format of the anime
+     */
     get format() {
         if(this._flattened) {
-            if(this.hard_format === 'Western Movie') {
-                return 'Western Movie';
-            }
-            if(this.hard_format === 'Western TV') {
-                return 'Western TV';
-            }
             if(this.media_type === null) {
                 return null
             }
@@ -234,33 +250,13 @@ class Anime {
             return undefined
         }
     }
-    get all_titles() {
-        //must use a flattened object to function properly
-        if(this._flattened) {
-            let dict = {};
-            if(this.title_english !== null) {
-                dict['title_english'] = this.title_english
-            }
-            if(this.title_romaji !== null) {
-                dict['title_romaji'] = this.title_romaji
-            }
-            if(this.title_japanese !== null) {
-                dict['title_japanese'] = this.title_japanese
-            }
-            if(this.synonyms !== null) {
-                dict['synonyms'] = this.synonyms
-            }
-            //check for empty object
-            if(Object.keys(dict).length === 0 && dict.constructor === Object) {
-                return null
-            }
-            return dict;
-        }
-        else {
-            logger.warn('Anime.all_titles invoked without being flattened first');
-            return undefined
-        }
-    }
+    
+    /**
+     * Returns a shortened and sanitized version of synopsis_full 
+     * that is reasonable to put in a Telegram chat description.
+     * 
+     * @returns {String}
+     */
     get synopsis() {
         if(this.synopsis_full !== null) {
             var firstParagraph = this.synopsis_full.split('\n')[0];
@@ -279,6 +275,17 @@ class Anime {
             return null;
         }
     }
+
+    /**
+     * Returns a copy of this anime object, but with undefined values 
+     * set to null to provide clarity on why a value isn't defined.
+     * 
+     * For example: 
+     * anime.media_type => null
+     * anime.not_a_real_property => undefined
+     * 
+     * @returns {Anime}
+     */
     get flattened() {
         let copy = new Anime(Object.assign({}, this))
 
@@ -297,6 +304,14 @@ class Anime {
         copy._flattened = true
         return copy;
     }
+
+    /**
+     * Returns a combined version of the anime objects provided, 
+     * including special properties.
+     * 
+     * @param {...Anime} - Anime objects you want consolidated into one
+     * @returns {Anime}
+     */
     static consolidate() {
         //consolidate Class objects manually and set aside to re-insert
         let temp_hyperlinks;
