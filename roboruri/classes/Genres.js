@@ -1,7 +1,6 @@
 // Synonyms.js
 
-const logger = require('au5ton-logger')
-
+require('au5ton-logger')({prefix_date: true});
 const non_empty = (val) => {
     return (val !== null && val !== undefined && val !== '');
 };
@@ -42,11 +41,11 @@ class Genres {
                 temp_ray = temp_ray.concat(arguments[i].array);
             }
             else {
-                //logger.warn('Hyperlinks.consolidate() supplied with non-Hyperlinks instance: ', arguments[i])
+                //console.warn('Hyperlinks.consolidate() supplied with non-Hyperlinks instance: ', arguments[i])
             }
-            //logger.log(arguments[i])
+            //console.log(arguments[i])
         }
-        //logger.log('concat rays: ', temp_ray);
+        //console.log('concat rays: ', temp_ray);
         return new Genres(Array.from(new Set(temp_ray)));
     }
 }

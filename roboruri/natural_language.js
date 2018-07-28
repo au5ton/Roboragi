@@ -5,7 +5,7 @@ const _ = {};
 const natural = require('natural');
 const speak = require('speakeasy-nlp');
 const tokenizer = new natural.WordTokenizer();
-const logger = require('au5ton-logger');
+require('au5ton-logger')({prefix_date: true});
 const bot_util = require('./bot_util');
 
 // globals
@@ -136,7 +136,7 @@ for(let n in ENGLISH_GREETINGS) {
     }
 }
 
-//logger.log(VALID_MENTIONS);
+//console.log(VALID_MENTIONS);
 
 //synchronous, return true or false
 _.shouldRespond = (message_str) => {
@@ -186,7 +186,7 @@ _.arrayInsideArrayWithSameOrder = (small, bigger) => {
     let indexes = [];
 
     if(bigger.length < small.length) {
-        //logger.error('BADSIZE, small: ',small,'\nbigger: ',bigger);
+        //console.error('BADSIZE, small: ',small,'\nbigger: ',bigger);
         return false;
     }
 
@@ -198,31 +198,31 @@ _.arrayInsideArrayWithSameOrder = (small, bigger) => {
     }
 
     if(indexes.length === 0) {
-        //logger.error('NOTTHERE, small: ',small,'\nbigger: ',bigger);
+        //console.error('NOTTHERE, small: ',small,'\nbigger: ',bigger);
         return false;
     }
-    //logger.warn('indexes: ',indexes);
+    //console.warn('indexes: ',indexes);
 
     //traverses list where small might start
     for(let i in indexes) {
         //traverses small
         for(let n in small) {
-            //logger.log('n:',parseInt(n),' indexes[i]:',indexes[i],' | `',bigger[indexes[i]+parseInt(n)],'` === `',small[parseInt(n)],'`');
+            //console.log('n:',parseInt(n),' indexes[i]:',indexes[i],' | `',bigger[indexes[i]+parseInt(n)],'` === `',small[parseInt(n)],'`');
             //if bigger at the index, plus whereever we're at in small, equals small whereever we're at in small
             if(bigger[indexes[i]+parseInt(n)] === small[parseInt(n)]) {
-                //logger.success('good');
+                //console.success('good');
             }
             else if(small[parseInt(n)] === MENTION_WILDCARD) {
-                //logger.success('wildcard');
+                //console.success('wildcard');
             }
             else {
-                //logger.warn('bad');
-                //logger.error('MISMATCH, small: ',small,'\nbigger: ',bigger);
+                //console.warn('bad');
+                //console.error('MISMATCH, small: ',small,'\nbigger: ',bigger);
                 return false; //'small' not complete
             }
         }
     }
-    //logger.success('PERMITTED, small: ',small,'\nbigger: ',bigger);
+    //console.success('PERMITTED, small: ',small,'\nbigger: ',bigger);
     return true;
 };
 
@@ -245,7 +245,7 @@ _.arraysEqual = (arr1, arr2) => {
         return false;
     }
     for(let i = 0; i < arr1.length; i++) {
-        //logger.log('test')
+        //console.log('test')
         if(arr1[i] !== arr2[i]) {
             return false;
         }
@@ -366,16 +366,16 @@ _.respond = (message_str) => {
                     }
                 }
             }
-            //logger.warn('no ANIME_REFRENCES')
+            //console.warn('no ANIME_REFRENCES')
 
             for(let i in VALID_MENTIONS) {
                 //arrayInsideArrayWithSameOrder
                 if(_.arrayInsideArrayWithSameOrder(VALID_MENTIONS[i],the_message)) {
-                    //logger.log(VALID_MENTIONS[i]);
+                    //console.log(VALID_MENTIONS[i]);
                     for(let j in BOT_NAMES) {
                         for(let n in ENGLISH_GREETINGS) {
                             if(_.arraysEqual(VALID_MENTIONS[i],tokenizer.tokenize(ENGLISH_GREETINGS[n]+' '+BOT_NAMES[j]))) {
-                                //logger.success('yes');
+                                //console.success('yes');
                                 let greetings = ['Ohayō','Hi','Hello'];
                                 resolve(greetings[Math.floor(Math.random()*greetings.length)]);
                             }
@@ -391,9 +391,9 @@ _.respond = (message_str) => {
                             }
                         }
                         for(let n in ENGLISH_SENTENCE_ENDERS_POSITIVE) {
-                            //logger.log(tokenizer.tokenize(BOT_NAMES[j]+' '+ENGLISH_SENTENCE_ENDERS_POSITIVE[n]));
+                            //console.log(tokenizer.tokenize(BOT_NAMES[j]+' '+ENGLISH_SENTENCE_ENDERS_POSITIVE[n]));
                             if(_.arraysEqual(VALID_MENTIONS[i],tokenizer.tokenize(BOT_NAMES[j]+' '+ENGLISH_SENTENCE_ENDERS_POSITIVE[n]))) {
-                                //logger.success('yes');
+                                //console.success('yes');
                                 resolve(ENGLISH_SENTENCE_POSITIVE_RESPONSES[Math.floor(Math.random()*ENGLISH_SENTENCE_POSITIVE_RESPONSES.length)]);
                             }
                         }

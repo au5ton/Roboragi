@@ -1,7 +1,6 @@
 require('dotenv').config(); //get the environment variables described in .env
 const Telegraf = require('telegraf')
-const logger = require('au5ton-logger');
-logger.setOption('prefix_date',true);
+require('au5ton-logger')({prefix_date: true});
 const util = require('util');
 const path = require('path');
 const fs = require('fs');
@@ -43,7 +42,7 @@ const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 
 const DEV_TELEGRAM_ID = parseInt(process.env.DEV_TELEGRAM_ID) || 0;
 
-process.on('unhandledRejection', r => logger.error('unhandledRejection: ',r.stack,'\n',r));
+process.on('unhandledRejection', r => console.error('unhandledRejection: ',r.stack,'\n',r));
 
 // Basic commands
 
@@ -135,7 +134,7 @@ setInterval(() => {
 
 bot.on('message', (context) => {
 	//context.reply(JSON.stringify(context.update));
-	//logger.log(context)
+	//console.log(context)
 	//New members were added
 
 	if(context.update.message.chat.type === 'group' || context.update.message.chat.type === 'supergroup') {
@@ -158,13 +157,13 @@ bot.on('message', (context) => {
 		const message_id =  context.update.message.message_id;
 		const message_from = context.update.message.from;
 		if(typeof message_str === 'string' && message_str.length > 0) {
-			//logger.log(context)
+			//console.log(context)
 			//summon handlers
-			//logger.log(JSON.parse(JSON.stringify(context.update)));
-			//logger.log(JSON.parse(JSON.stringify(context.update.message.entities)))
+			//console.log(JSON.parse(JSON.stringify(context.update)));
+			//console.log(JSON.parse(JSON.stringify(context.update.message.entities)))
 
 			bot_util.isValidBraceSummon(message_str).then((query) => {
-				logger.log('Summon: {', query, '}');
+				console.log('Summon: {', query, '}');
 				console.time('execution time');
 
 				Searcher.searchAllAnime(query).then(result => {
@@ -178,16 +177,16 @@ bot.on('message', (context) => {
 					});
 				}).catch(err => {
 					if(err === 'can\'t findBestMatchForAnimeArray if there are no titles') {
-						logger.warn('q: {'+query+'} => '+bot_util.filled_x)
+						console.warn('q: {'+query+'} => '+bot_util.filled_x)
 					}
 					else {
-						logger.error('failed to search with Searcher: ', err);
+						console.error('failed to search with Searcher: ', err);
 					}
 					console.timeEnd('execution time');
 				});
 			}).catch(()=>{});
 			bot_util.isValidLTGTSummon(message_str).then((query) => {
-				logger.log('Summon: <', query, '>');
+				console.log('Summon: <', query, '>');
 				console.time('execution time');
 
 				Searcher.searchAllManga(query, 'Manga').then(result => {
@@ -202,17 +201,17 @@ bot.on('message', (context) => {
 				}).catch(err => {
 					//well that sucks
 					if(err === 'can\'t findBestMatchForAnimeArray if there are no titles') {
-						logger.warn('q: <'+query+'> => '+bot_util.filled_x)
+						console.warn('q: <'+query+'> => '+bot_util.filled_x)
 					}
 					else {
-						logger.error('failed to search with Searcher: ', err);
+						console.error('failed to search with Searcher: ', err);
 					}
 					console.timeEnd('execution time');
 				});
 				
 			}).catch(()=>{});
 			bot_util.isValidReverseBracketSummon(message_str).then((query) => {
-				logger.log('Summon: ]', query, '[');
+				console.log('Summon: ]', query, '[');
 				console.time('execution time');
 				
 				Searcher.searchAllManga(query, 'LN').then(result => {
@@ -226,17 +225,17 @@ bot.on('message', (context) => {
 				}).catch(err => {
 					//well that sucks
 					if(err === 'can\'t findBestMatchForAnimeArray if there are no titles') {
-						logger.warn('q: <'+query+'> => '+bot_util.filled_x)
+						console.warn('q: <'+query+'> => '+bot_util.filled_x)
 					}
 					else {
-						logger.error('failed to search with Searcher: ', err);
+						console.error('failed to search with Searcher: ', err);
 					}
 					console.timeEnd('execution time');
 				});
 			}).catch(()=>{});
 
 			//will only response if she should respond
-			//logger.log(context.update.message);
+			//console.log(context.update.message);
 			if(context.update.message.from.username !== BOT_USERNAME || !context.update.message.from.is_bot) {
 
 				let ignore_list = [
@@ -252,7 +251,7 @@ bot.on('message', (context) => {
 						});
 					}).catch((err)=>{
 						// shouldRespond returned false
-						//logger.error(err);
+						//console.error(err);
 					});
 				}
 			}
@@ -266,22 +265,22 @@ const INLINE_SUMMON_DELAY = 500;
 const TELEGRAM_SUMMON_TIMEOUT = 30000;
 // Regularly checks every second for unresolved queries
 setInterval(() => {
-	//logger.warn(LastInlineRequest,'\n',to_be_removed)
+	//console.warn(LastInlineRequest,'\n',to_be_removed)
 	for(let from_id in LastInlineRequest) {
 		let elapsed_time = new Date().getTime() - LastInlineRequest[from_id]['time_ms'];
 		if(elapsed_time > INLINE_SUMMON_DELAY && elapsed_time < TELEGRAM_SUMMON_TIMEOUT && LastInlineRequest[from_id]['status'] === 'unprocessed') {
 			LastInlineRequest[from_id]['status'] = 'pending';
 			// safe to reply
-			logger.warn('inline_query: ', LastInlineRequest[from_id]['query']);
+			console.warn('inline_query: ', LastInlineRequest[from_id]['query']);
 
 			bot_util.isValidBraceSummon(LastInlineRequest[from_id]['query']).then((query) => {
-				logger.log('Summon: {', query, '}');
+				console.log('Summon: {', query, '}');
 				console.time('execution time');
 
 				Searcher.searchAllAnime(query).then(result => {
 					//boo yah
 					bot_util.buildInlineQueryResultArticleFromAnime(result).then(composedMessage => {
-						bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [composedMessage]).catch((err) => {logger.error('answerInlineQuery failed to send: ',err)});
+						bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [composedMessage]).catch((err) => {console.error('answerInlineQuery failed to send: ',err)});
 						LastInlineRequest[from_id]['status'] = 'done';
 						to_be_removed.push(from_id);
 						console.timeEnd('execution time');
@@ -289,10 +288,10 @@ setInterval(() => {
 				}).catch(err => {
 					//well that sucks
 					if(err === 'can\'t findBestMatchForAnimeArray if there are no titles') {
-						logger.warn('q: {'+query+'} => '+bot_util.filled_x)
+						console.warn('q: {'+query+'} => '+bot_util.filled_x)
 					}
 					else {
-						logger.error('failed to search with Searcher: ', err);
+						console.error('failed to search with Searcher: ', err);
 					}
 					LastInlineRequest[from_id]['status'] = 'done';
 					to_be_removed.push(from_id);
@@ -301,13 +300,13 @@ setInterval(() => {
 			}).catch(()=>{});
 			bot_util.isValidLTGTSummon(LastInlineRequest[from_id]['query']).then((query) => {
 
-			    logger.log('Summon: <', query, '>');
+			    console.log('Summon: <', query, '>');
 			    console.time('execution time');
 			    
 			    Searcher.searchAllManga(query, 'Manga').then(result => {
 					//boo yah
 					bot_util.buildInlineQueryResultArticleFromAnime(result).then(composedMessage => {
-						bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [composedMessage]).catch((err) => {logger.error('answerInlineQuery failed to send: ',err)});
+						bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [composedMessage]).catch((err) => {console.error('answerInlineQuery failed to send: ',err)});
 						LastInlineRequest[from_id]['status'] = 'done';
 						to_be_removed.push(from_id);
 						console.timeEnd('execution time');
@@ -315,10 +314,10 @@ setInterval(() => {
 				}).catch(err => {
 					//well that sucks
 					if(err === 'can\'t findBestMatchForAnimeArray if there are no titles') {
-						logger.warn('q: <'+query+'> => '+bot_util.filled_x)
+						console.warn('q: <'+query+'> => '+bot_util.filled_x)
 					}
 					else {
-						logger.error('failed to search with Searcher: ', err);
+						console.error('failed to search with Searcher: ', err);
 					}
 					LastInlineRequest[from_id]['status'] = 'done';
 					to_be_removed.push(from_id);
@@ -326,13 +325,13 @@ setInterval(() => {
 				});
 			}).catch(()=>{});
 			bot_util.isValidReverseBracketSummon(LastInlineRequest[from_id]['query']).then((query) => {
-			    logger.log('Summon: ]', query, '[');
+			    console.log('Summon: ]', query, '[');
 			    console.time('execution time');
 				
 				Searcher.searchAllManga(query, 'LN').then(result => {
 					//boo yah
 					bot_util.buildInlineQueryResultArticleFromAnime(result).then(composedMessage => {
-						bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [composedMessage]).catch((err) => {logger.error('answerInlineQuery failed to send: ',err)});
+						bot.telegram.answerInlineQuery(LastInlineRequest[from_id]['query_id'], [composedMessage]).catch((err) => {console.error('answerInlineQuery failed to send: ',err)});
 						LastInlineRequest[from_id]['status'] = 'done';
 						to_be_removed.push(from_id);
 						console.timeEnd('execution time');
@@ -340,10 +339,10 @@ setInterval(() => {
 				}).catch(err => {
 					//well that sucks
 					if(errr === 'can\'t findBestMatchForAnimeArray if there are no titles') {
-						logger.warn('q: ]'+query+'[ => '+bot_util.filled_x)
+						console.warn('q: ]'+query+'[ => '+bot_util.filled_x)
 					}
 					else {
-						logger.error('failed to search with Searcher: ', err);
+						console.error('failed to search with Searcher: ', err);
 					}
 					LastInlineRequest[from_id]['status'] = 'done';
 					to_be_removed.push(from_id);
@@ -353,14 +352,14 @@ setInterval(() => {
 		}
 		if(elapsed_time > TELEGRAM_SUMMON_TIMEOUT) {
 			//stores the user ids of users who cant have their request fullfilled anymore
-			logger.warn('to_be_removed '+from_id+' due to timeout')
+			console.warn('to_be_removed '+from_id+' due to timeout')
 			to_be_removed.push(from_id);
 		}
 	}
 	for(let i = to_be_removed.length-1; i >= 0; i--) {
 		//removes the request info of users who cant have their request fullfilled anymore
-		//logger.log(LastInlineRequest,'\n',to_be_removed);
-		logger.warn('removing ',to_be_removed[i]);
+		//console.log(LastInlineRequest,'\n',to_be_removed);
+		console.warn('removing ',to_be_removed[i]);
 		delete LastInlineRequest[to_be_removed[i]];
 		to_be_removed.splice(i,1);
 
@@ -377,7 +376,7 @@ bot.on('inline_query', (context) => {
 		LastInlineRequest[from_id] = {};
 	}
 	else {
-		//logger.warn('updated query from ',from_id,': ',query);
+		//console.warn('updated query from ',from_id,': ',query);
 	}
 	LastInlineRequest[from_id]['time_ms'] = time_ms;
 	LastInlineRequest[from_id]['query'] = query;
@@ -385,58 +384,58 @@ bot.on('inline_query', (context) => {
 	LastInlineRequest[from_id]['status'] = 'unprocessed'; // unprocessed || pending || done
 });
 
-logger.log('Bot active. Performing startup checks.');
+console.log('Bot active. Performing startup checks.');
 
-logger.warn('Is our Telegram token valid?');
+console.warn('Is our Telegram token valid?');
 bot.telegram.getMe().then((r) => {
 	//doesn't matter who we are, we're good
-	logger.success('Telegram token valid for @',r.username);
+	console.success('Telegram token valid for @',r.username);
 	BOT_USERNAME = r.username;
 	bot.startPolling();
 }).catch((r) => {
-	logger.error('Telegram bot failed to start polling:\n',r);
+	console.error('Telegram bot failed to start polling:\n',r);
 	process.exit();
 });
 
 
 // Dont even try MyAnimeList: https://github.com/erengy/taiga/issues/588
-/*logger.warn('Is our MAL authentication valid?');
+/*console.warn('Is our MAL authentication valid?');
 MAL.verifyAuth().then((r) => {
-	logger.success('MAL authenticated. ');
+	console.success('MAL authenticated. ');
 }).catch((r) => {
-	logger.error('MAL failed to authenticate: ', r.message);
+	console.error('MAL failed to authenticate: ', r.message);
 	//MAL API may go down indefinitely
 	//process.exit();
 });
 */
 
-logger.warn('Is our Kitsu connection valid?');
+console.warn('Is our Kitsu connection valid?');
 kitsu.get('anime/1', {}).then((response) => {
     if (response.data.slug === 'cowboy-bebop') {
-		logger.success('Kitsu connection good.');
+		console.success('Kitsu connection good.');
 	}
 	else {
-		logger.error('Kitsu failed to get a good connection.');
+		console.error('Kitsu failed to get a good connection.');
 		process.exit();
 	}
 }).catch((err) => {
-	logger.error('Kitsu failed to get a good connection: ', err);
+	console.error('Kitsu failed to get a good connection: ', err);
 });
 
-logger.warn('Is our Anilist connection valid?');
+console.warn('Is our Anilist connection valid?');
 ANILIST.get('anime/1').then(data => {
     if (data.id === 1) {
-		logger.success('Anilist connection good.');
+		console.success('Anilist connection good.');
 	}
 	else {
-		logger.error('Anilist failed to get a good connection.');
+		console.error('Anilist failed to get a good connection.');
 		process.exit();
 	}
 }).catch(error => {
     console.log(error);
 });
 
-logger.warn('Is synonyms.db operational?');
+console.warn('Is synonyms.db operational?');
 const sqlite3 = require('sqlite3').verbose();
 let loc = path.dirname(require.main.filename) + '/synonyms.db';
 var db = new sqlite3.Database(loc, sqlite3.OPEN_READONLY);
@@ -444,12 +443,12 @@ try {
 	db.serialize(() => {
 		setTimeout(() => {
 			//delay so the startup messages look better
-			logger.success('Synonyms.db seems operational.');
+			console.success('Synonyms.db seems operational.');
 		},1000);
 	});
 	db.close();
 }
 catch(err) {
-	logger.error('Error serializing synonyms.db: ',err);
+	console.error('Error serializing synonyms.db: ',err);
 	process.exit();
 }

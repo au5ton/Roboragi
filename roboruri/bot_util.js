@@ -1,7 +1,6 @@
 // util.js
 
-const logger = require('au5ton-logger');
-logger.setOption('prefix_date',true);
+require('au5ton-logger')({prefix_date: true});
 const probe = require('probe-image-size');
 const prettyMs = require('pretty-ms');
 const DataSource = require('./enums').DataSource;
@@ -304,7 +303,7 @@ _.getBestImage = (images) => {
 					response.error = false;
 					resolve(response);
 				}).catch(err => {
-					logger.error(err);
+					console.error(err);
 					resolve({error: true});
 				})
 			}));
@@ -327,7 +326,7 @@ _.getBestImage = (images) => {
 				resolve(best_img);
 			}
 		}).catch(err => {
-			logger.error(err)
+			console.error(err)
 			resolve('error: getBestImage '+err);
 		});
 	});
@@ -340,7 +339,7 @@ _.buildHyperlinksForAnime = (anime) => {
 		return (val !== undefined);
 	};
 
-	//logger.log(anime);
+	//console.log(anime);
 
 	for(let e in DataSource) {
 		if(DataSource[e] === DataSource.MAL && exists(anime.hyperlinks.dict[DataSource[e]])) {
@@ -369,7 +368,7 @@ _.buildGenresForAnime = (anime) => {
 		return (val !== undefined);
 	};
 
-	//logger.log(anime);
+	//console.log(anime);
 	for(let i in anime.genres.array) {
 		message += '<i>'+anime.genres.array[i]+'</i>, ';
 	}

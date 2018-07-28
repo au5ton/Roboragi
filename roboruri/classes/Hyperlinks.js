@@ -1,6 +1,6 @@
 // Hyperlinks.js
 
-const logger = require('au5ton-logger');
+require('au5ton-logger')({prefix_date: true});
 
 const DataSource = require('../enums').DataSource;
 
@@ -21,7 +21,7 @@ const non_def = (val) => {
 class Hyperlinks {
     constructor(dict) {
         if(!non_empty(dict)) {
-            //logger.error('If you want to create an \"empty\" Hyperlinks instance, provide an empty Dictionary as a parameter.');
+            //console.error('If you want to create an \"empty\" Hyperlinks instance, provide an empty Dictionary as a parameter.');
             return
         }
         if(non_empty(dict) && typeof dict === 'object') {
@@ -66,7 +66,7 @@ class Hyperlinks {
                 just_dicts.push(arguments[i].dict)
             }
             else {
-                //logger.warn('Hyperlinks.consolidate() supplied with non-Hyperlinks instance: ', arguments[i])
+                //console.warn('Hyperlinks.consolidate() supplied with non-Hyperlinks instance: ', arguments[i])
             }
         }
         //Then re-wraps the resulting combined dictionary
@@ -88,7 +88,7 @@ class Hyperlinks {
 // dict2[DataSource.MAL] = 'http://world.hello'
 //
 // let hyper = Hyperlinks.consolidate(new Hyperlinks(dict),new Hyperlinks({}))
-//logger.log(hyper)
-//logger.log(hyper.dict[DataSource.MAL])
+//console.log(hyper)
+//console.log(hyper.dict[DataSource.MAL])
 
 module.exports = Hyperlinks

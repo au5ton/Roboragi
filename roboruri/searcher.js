@@ -1,7 +1,7 @@
 // searcher.js
 
 const _ = {};
-const logger = require('au5ton-logger');
+require('au5ton-logger')({prefix_date: true});
 const stringSimilarity = require('string-similarity');
 const querystring = require('querystring');
 const NodeCache = require('node-cache');
@@ -11,13 +11,13 @@ const matchingCache = new NodeCache({ //3 hour check period, make that cache las
 const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
 let loc = path.dirname(require.main.filename) + '/synonyms.db';
-logger.log('Synonym DB: ', loc);
+console.log('Synonym DB: ', loc);
 var db;
 try {
 	db = new sqlite3.Database(loc, sqlite3.OPEN_READONLY);
 }
 catch(err) {
-	logger.warn('db won\'t be available, couldn\'t find .db file at ',loc);
+	console.warn('db won\'t be available, couldn\'t find .db file at ',loc);
 	db = null;
 }
 
@@ -50,12 +50,12 @@ _.searchAllAnime = (query, query_format) => {
 		_.matchFromCache('{'+query+'}').then((result) => {
 			resolve(result);
 		}).catch((err) => {
-			logger.warn('cache empty: ', err);
+			console.warn('cache empty: ', err);
 			//nothing in cache
 			_.matchAnimeFromDatabase(query).then((result) => {
 				resolve(result);
 			}).catch((err) => {
-				logger.warn('database empty: ', err);
+				console.warn('database empty: ', err);
 				//nothing in database
 				_.searchAnimes(query).then((result) => {
 					resolve(result)
@@ -84,12 +84,12 @@ _.searchAllManga = (query, MangaOrLN) => {
 		_.matchFromCache(queryf).then((result) => {
 			resolve(result)
 		}).catch((err) => {
-			logger.warn('cache empty: ', err);
+			console.warn('cache empty: ', err);
 			//nothing in cache
 			_.matchMangaFromDatabase(query, MangaOrLN).then((result) => {
 				resolve(result);
 			}).catch((err) => {
-				logger.warn('database empty: ', err);
+				console.warn('database empty: ', err);
 				//nothing in database
 				_.searchManga(query, MangaOrLN).then((result) => {
 					resolve(result);
@@ -102,7 +102,7 @@ _.searchAllManga = (query, MangaOrLN) => {
 }
 
 _.searchAnimes = (query, query_format) => {
-	//logger.log('searchAnimes() with \'', query, '\'');
+	//console.log('searchAnimes() with \'', query, '\'');
 	return new Promise((resolve, reject) => {
 		var promises = [];
 		/*
@@ -123,7 +123,7 @@ _.searchAnimes = (query, query_format) => {
 			MAL.searchAnimes(query).then((results) => {
 				resolve(new Resolved(DataSource.MAL, results));
 			}).catch((err) => {
-				logger.ind().log('mal error caught');
+				console.ind().log('mal error caught');
 				//"resolving an error is a good idea" -Austin, August 4, 2017
 				resolve(new Rejected(DataSource.MAL, err));
 			});
@@ -138,7 +138,7 @@ _.searchAnimes = (query, query_format) => {
 			ANILIST.get('anime/search/' + encodeURIComponent(query.replace(new RegExp('/', 'g'), ''))).then((results) => {
 				resolve(new Resolved(DataSource.ANILIST, results));
 			}).catch((err) => {
-				logger.ind().log('anilist error caught');
+				console.ind().log('anilist error caught');
 				//"resolving an error is a good idea" -Austin, August 4, 2017
 				resolve(new Rejected(DataSource.ANILIST, err));
 			});
@@ -152,7 +152,7 @@ _.searchAnimes = (query, query_format) => {
 			}).then((response) => {
 				resolve(new Resolved(DataSource.KITSU, response));
 			}).catch((err) => {
-				logger.ind().log('kitsu error caught');
+				console.ind().log('kitsu error caught');
 				//"resolving an error is a good idea" -Austin, August 4, 2017
 				resolve(new Rejected(DataSource.KITSU, err)); //something needs to be done around here
 			});
@@ -162,7 +162,7 @@ _.searchAnimes = (query, query_format) => {
 			//Removes all instances of Rejected (catch the "resolved" errors)
 			for(let i in ResolvedArray) {
 				if(ResolvedArray[i] instanceof Rejected) {
-					logger.ind().error(ResolvedArray[i]['DataSource'],' error caught: ',ResolvedArray[i]['data'])
+					console.ind().error(ResolvedArray[i]['DataSource'],' error caught: ',ResolvedArray[i]['data'])
 					ResolvedArray.splice(i,1);
 				}
 			}
@@ -208,7 +208,7 @@ _.searchAnimes = (query, query_format) => {
 						for (let c in ResolvedArray[r].data) {
 							//ResolvedArray[r].data[c] is the object
 							let a_result = ResolvedArray[r].data[c];
-							//logger.log(a_result);
+							//console.log(a_result);
 							let temp_dict = {};
 							temp_dict[ResolvedArray[r].DataSource] = 'https://myanimelist.net/anime/' + a_result['id'];
 							let img_dict = {};
@@ -233,7 +233,7 @@ _.searchAnimes = (query, query_format) => {
 						}
 					} else {
 						//mal returned no results
-						logger.warn('mal returned no results');
+						console.warn('mal returned no results');
 					}
 				} else if (ResolvedArray[r].DataSource === DataSource.ANILIST) {
 					//confirm there were results
@@ -241,7 +241,7 @@ _.searchAnimes = (query, query_format) => {
 						for (let c in ResolvedArray[r].data) {
 							//ResolvedArray[r].data[c] is the object
 							let a_result = ResolvedArray[r].data[c];
-							//logger.log(a_result);
+							//console.log(a_result);
 							let temp_dict = {};
 							temp_dict[ResolvedArray[r].DataSource] = 'https://anilist.co/anime/' + a_result['id'] + '/';
 							let img_dict = {};
@@ -270,7 +270,7 @@ _.searchAnimes = (query, query_format) => {
 						}
 					} else {
 						//anilist returned no results or an error
-						logger.warn('anilist returned no results');
+						console.warn('anilist returned no results');
 					}
 				} else if (ResolvedArray[r].DataSource === DataSource.KITSU) {
 					//confirm there were results (kitsu makes this so easy)
@@ -278,7 +278,7 @@ _.searchAnimes = (query, query_format) => {
 						for (let c in ResolvedArray[r].data.data) {
 							//ResolvedArray[r].data[c] is the object
 							let a_result = ResolvedArray[r].data.data[c];
-							//logger.log(a_result);
+							//console.log(a_result);
 							let temp_dict = {};
 							temp_dict[ResolvedArray[r].DataSource] = 'https://kitsu.io/anime/' + a_result['id'] + '/';
 							let img_dict = {};
@@ -291,11 +291,11 @@ _.searchAnimes = (query, query_format) => {
 								synonyms_try = synonyms_try.concat([a_result['canonicalTitle']]);
 							}
 
-							// logger.log('title: ',a_result['title']);
-							// logger.log('en: ', a_result['titles']['en']);
-							// logger.log('en_us: ', a_result['titles']['en_us']);
-							// logger.log('OR: ', a_result['titles']['en'] || a_result['titles']['en_us']);
-							// logger.log('ALL:', a_result['titles']);
+							// console.log('title: ',a_result['title']);
+							// console.log('en: ', a_result['titles']['en']);
+							// console.log('en_us: ', a_result['titles']['en_us']);
+							// console.log('OR: ', a_result['titles']['en'] || a_result['titles']['en_us']);
+							// console.log('ALL:', a_result['titles']);
 
 							let some_anime = new Anime({
 								KITSU_ID: a_result['id'],
@@ -316,12 +316,12 @@ _.searchAnimes = (query, query_format) => {
 								synonyms: new Synonyms(synonyms_try), //maybe this'll be good enough, please work ^
 								original_query: query
 							});
-							//logger.log(some_anime);
+							//console.log(some_anime);
 							anime_arrays[ResolvedArray[r].DataSource].push(some_anime);
 						}
 					} else {
 						//anilist returned no results or an error
-						logger.warn('kitsu returned no results');
+						console.warn('kitsu returned no results');
 					}
 				}
 			}
@@ -341,34 +341,34 @@ _.searchAnimes = (query, query_format) => {
 			Consolidate the best match across DataSources
 
 			*/
-			//logger.log(anime_arrays);
-			//logger.ind().log('anime_arrays');
+			//console.log(anime_arrays);
+			//console.ind().log('anime_arrays');
 			//`r` should be the DataSource because anime_arrays is a dict
-			//logger.warn('best_match before populating:',best_match);
+			//console.warn('best_match before populating:',best_match);
 			let sufficient_results = false;
 			for (let r in anime_arrays) {
-				//logger.ind().warn(r,' results:');
+				//console.ind().warn(r,' results:');
 				if (anime_arrays[r].length === 0 || anime_arrays[r] === null || anime_arrays[r] === undefined) {
-					//logger.ind().warn(r, ' has no results to offer');
+					//console.ind().warn(r, ' has no results to offer');
 				} else {
 					best_match[r] = _.findBestMatchForAnimeArray(query, anime_arrays[r]);
-					//logger.ind(1).success('Picked ANIMEOBJ:',best_match[r]);
+					//console.ind(1).success('Picked ANIMEOBJ:',best_match[r]);
 					sufficient_results = true;
 				}
 			}
 			if (!sufficient_results) {
 				reject('insufficient results, has no results to offer');
 			}
-			//logger.warn('best_match AFTER populating:',best_match);
+			//console.warn('best_match AFTER populating:',best_match);
 
 			//clear some space
-			//logger.nl(2);
-			//logger.error('------------------------------------');
-			//logger.nl(1);
-			//logger.log('VERY BEST CANDIDATES for query: {',query,'}');
+			//console.nl(2);
+			//console.error('------------------------------------');
+			//console.nl(1);
+			//console.log('VERY BEST CANDIDATES for query: {',query,'}');
 			// for(let r in best_match) {
-			//     logger.warn(r)
-			//     logger.log(best_match[r].flattened.all_titles);
+			//     console.warn(r)
+			//     console.log(best_match[r].flattened.all_titles);
 			// }
 
 			/*
@@ -452,9 +452,9 @@ _.searchAnimes = (query, query_format) => {
 						//media_type is standardized, so it is safe to confirm that a show and movie aren't being mushed together
 						very_best_match = Anime.consolidate(very_best_match, best_match[r]);
 					} else {
-						logger.warn('`', best_match[r].flattened.title_romaji, '` ('+r+') was NOT CONSOLIDATED with `', SuperART['bestMatch']['target'], '`');
-						logger.warn('why? title match: ',SuperART['bestMatch']['target'].toLowerCase().trim() === best_match[r].flattened.title_romaji.toLowerCase().trim(), ', media_type match: ',SuperARTMediaType === best_match[r].flattened.media_type);
-						logger.warn(best_match[r].flattened.media_type, ' versus ', SuperARTMediaType);
+						console.warn('`', best_match[r].flattened.title_romaji, '` ('+r+') was NOT CONSOLIDATED with `', SuperART['bestMatch']['target'], '`');
+						console.warn('why? title match: ',SuperART['bestMatch']['target'].toLowerCase().trim() === best_match[r].flattened.title_romaji.toLowerCase().trim(), ', media_type match: ',SuperARTMediaType === best_match[r].flattened.media_type);
+						console.warn(best_match[r].flattened.media_type, ' versus ', SuperARTMediaType);
 					}
 				} else {
 					//this is confirmed by the previous loop not to happen
@@ -462,12 +462,12 @@ _.searchAnimes = (query, query_format) => {
 				}
 			}
 
-			//logger.nl(1);
-			//logger.error('------------------------------------');
-			//logger.nl(2);
+			//console.nl(1);
+			//console.error('------------------------------------');
+			//console.nl(2);
 
 			//very_best_match is an anime object, now we have to populate a couple of last-minute things
-			//logger.log(very_best_match.status)
+			//console.log(very_best_match.status)
 			if(very_best_match.status === 'Currently Airing' && very_best_match.flattened.ANILIST_ID !== null) {
 				//grab some info
 				ANILIST.get('anime/'+very_best_match.ANILIST_ID).then((results) => {
@@ -477,7 +477,7 @@ _.searchAnimes = (query, query_format) => {
 						very_best_match.next_episode_number = results['airing']['next_episode'];
 						very_best_match.next_episode_countdown = results['airing']['countdown'];
 
-						logger.log('search: {' + query + '} => ' + very_best_match.flattened.title);
+						console.log('search: {' + query + '} => ' + very_best_match.flattened.title);
 
 						//issue #51: dont cache the query if its currently airing, info subject to change (especially airtime)
 						//matchingCache.set('{'+query.toLowerCase()+'}', very_best_match.flattened);
@@ -486,8 +486,8 @@ _.searchAnimes = (query, query_format) => {
 						resolve(very_best_match.flattened);
 					}
 				}).catch((err) => {
-					logger.warn('failed to append airing info: ', err);
-					logger.log('search: {' + query + '} => ' + very_best_match.flattened.title);
+					console.warn('failed to append airing info: ', err);
+					console.log('search: {' + query + '} => ' + very_best_match.flattened.title);
 
 					//issue #51: dont cache the query if its currently airing, info subject to change (especially airtime)
 					//matchingCache.set('{'+query.toLowerCase()+'}', very_best_match.flattened);
@@ -497,7 +497,7 @@ _.searchAnimes = (query, query_format) => {
 				});
 			}
 			else {
-				logger.log('search: {' + query + '} => ' + very_best_match.flattened.title);
+				console.log('search: {' + query + '} => ' + very_best_match.flattened.title);
 				matchingCache.set('{'+query.toLowerCase()+'}', very_best_match.flattened);
 				//THIS IS WHAT IT ALL BOILS DOWN TO
 				resolve(very_best_match.flattened);
@@ -514,7 +514,7 @@ _.searchManga = (query, MangaOrLN) => {
 	if(MangaOrLN !== 'Manga' && MangaOrLN !== 'LN') {
 		throw 'supply MangaOrLN, no ifs ands or buts! supplied: '+MangaOrLN;
 	}
-	//logger.log('searchAnimes() with \'', query, '\'');
+	//console.log('searchAnimes() with \'', query, '\'');
 	return new Promise((resolve, reject) => {
 		var promises = [];
 
@@ -524,7 +524,7 @@ _.searchManga = (query, MangaOrLN) => {
 			MAL.searchMangas(query).then((results) => {
 				resolve(new Resolved(DataSource.MAL, results));
 			}).catch((err) => {
-				logger.ind().log('mal error caught');
+				console.ind().log('mal error caught');
 				//"resolving an error is still a good idea" -Austin, July 5, 2018
 				resolve(new Rejected(DataSource.MAL, err));
 			});
@@ -536,7 +536,7 @@ _.searchManga = (query, MangaOrLN) => {
 			ANILIST.get('manga/search/' + encodeURIComponent(query.replace(new RegExp('/', 'g'), ''))).then((results) => {
 				resolve(new Resolved(DataSource.ANILIST, results));
 			}).catch((err) => {
-				logger.ind().log('anilist error caught');
+				console.ind().log('anilist error caught');
 				//"resolving an error is still a good idea" -Austin, July 5, 2018
 				resolve(new Rejected(DataSource.ANILIST, err));
 			});
@@ -551,7 +551,7 @@ _.searchManga = (query, MangaOrLN) => {
 				}).then((response) => {
 					resolve(new Resolved(DataSource.KITSU, response));
 				}).catch((err) => {
-					logger.ind().log('kitsu error caught');
+					console.ind().log('kitsu error caught');
 					//"resolving an error is still a good idea" -Austin, July 5, 2018
 					resolve(new Rejected(DataSource.KITSU, err));
 				});
@@ -565,7 +565,7 @@ _.searchManga = (query, MangaOrLN) => {
 				}).then((response) => {
 					resolve(new Resolved(DataSource.KITSU, response));
 				}).catch((err) => {
-					logger.ind().log('kitsu error caught');
+					console.ind().log('kitsu error caught');
 					//"resolving an error is still a good idea" -Austin, July 5, 2018
 					resolve(new Rejected(DataSource.KITSU, err));
 				});
@@ -576,7 +576,7 @@ _.searchManga = (query, MangaOrLN) => {
 			//Removes all instances of Rejected (catch the "resolved" errors)
 			for(let i in ResolvedArray) {
 				if(ResolvedArray[i] instanceof Rejected) {
-					logger.ind().error(ResolvedArray[i]['DataSource'],' error caught: ',ResolvedArray[i]['data'])
+					console.ind().error(ResolvedArray[i]['DataSource'],' error caught: ',ResolvedArray[i]['data'])
 					ResolvedArray.splice(i,1);
 				}
 			}
@@ -627,7 +627,7 @@ _.searchManga = (query, MangaOrLN) => {
 						}
 					} else {
 						//mal returned no results
-						logger.warn('mal returned no results');
+						console.warn('mal returned no results');
 					}
 				} else if (ResolvedArray[r].DataSource === DataSource.ANILIST) {
 					//confirm there were results
@@ -662,7 +662,7 @@ _.searchManga = (query, MangaOrLN) => {
 						}
 					} else {
 						//anilist returned no results or an error
-						logger.warn('anilist returned no results');
+						console.warn('anilist returned no results');
 					}
 				} else if (ResolvedArray[r].DataSource === DataSource.KITSU) {
 					//confirm there were results (kitsu makes this so easy)
@@ -701,35 +701,35 @@ _.searchManga = (query, MangaOrLN) => {
 								synonyms: new Synonyms(synonyms_try), //maybe this'll be good enough, please work ^
 								original_query: query
 							});
-							//logger.log(a_result['subtype']);
+							//console.log(a_result['subtype']);
 							anime_arrays[ResolvedArray[r].DataSource].push(some_anime);
 						}
 					} else {
 						//anilist returned no results or an error
-						logger.warn('kitsu returned no results');
+						console.warn('kitsu returned no results');
 					}
 				}
 			}
 
-			//logger.log(anime_arrays);
-			//logger.ind().log('anime_arrays');
+			//console.log(anime_arrays);
+			//console.ind().log('anime_arrays');
 			//`r` should be the DataSource because anime_arrays is a dict
-			//logger.warn('best_match before populating:',best_match);
+			//console.warn('best_match before populating:',best_match);
 			let sufficient_results = false;
 			for (let r in anime_arrays) {
-				//logger.ind().warn(r,' results:');
+				//console.ind().warn(r,' results:');
 				if (anime_arrays[r].length === 0 || anime_arrays[r] === null || anime_arrays[r] === undefined) {
-					//logger.ind().warn(r, ' has no results to offer');
+					//console.ind().warn(r, ' has no results to offer');
 				} else {
 					best_match[r] = _.findBestMatchForAnimeArray(query, anime_arrays[r]);
-					//logger.ind(1).success('Picked ANIMEOBJ:',best_match[r]);
+					//console.ind(1).success('Picked ANIMEOBJ:',best_match[r]);
 					sufficient_results = true;
 				}
 			}
 			if (!sufficient_results) {
 				reject('insufficient results, has no results to offer');
 			}
-			//logger.warn('best_match AFTER populating:',best_match);
+			//console.warn('best_match AFTER populating:',best_match);
 
 			let SuperART; //Super Assumed Real Title (format = romaji)
 			let topRomaji = [];
@@ -764,9 +764,9 @@ _.searchManga = (query, MangaOrLN) => {
 					if (SuperART['bestMatch']['target'].toLowerCase().trim() === best_match[r].flattened.title_romaji.toLowerCase().trim() && SuperARTMediaType === best_match[r].flattened.media_type) {
 						very_best_match = Anime.consolidate(very_best_match, best_match[r]);
 					} else {
-						logger.warn('`', best_match[r].flattened.title_romaji, '` ('+r+') was NOT CONSOLIDATED with `', SuperART['bestMatch']['target'], '`');
-						logger.warn('why? title match: ',SuperART['bestMatch']['target'].toLowerCase().trim() === best_match[r].flattened.title_romaji.toLowerCase().trim(), ', media_type match: ',SuperARTMediaType === best_match[r].flattened.media_type);
-						logger.warn(best_match[r].flattened.media_type, ' versus ', SuperARTMediaType);
+						console.warn('`', best_match[r].flattened.title_romaji, '` ('+r+') was NOT CONSOLIDATED with `', SuperART['bestMatch']['target'], '`');
+						console.warn('why? title match: ',SuperART['bestMatch']['target'].toLowerCase().trim() === best_match[r].flattened.title_romaji.toLowerCase().trim(), ', media_type match: ',SuperARTMediaType === best_match[r].flattened.media_type);
+						console.warn(best_match[r].flattened.media_type, ' versus ', SuperARTMediaType);
 					}
 				} else {
 					//this is confirmed by the previous loop not to happen
@@ -775,11 +775,11 @@ _.searchManga = (query, MangaOrLN) => {
 			}
 
 			if(MangaOrLN === 'Manga') {
-				logger.log('search: <' + query + '> => ' + very_best_match.flattened.title);
+				console.log('search: <' + query + '> => ' + very_best_match.flattened.title);
 				matchingCache.set('<'+query+'>', very_best_match.flattened);
 			}
 			else if(MangaOrLN === 'LN') {
-				logger.log('search: ]' + query + '[ => ' + very_best_match.flattened.title);
+				console.log('search: ]' + query + '[ => ' + very_best_match.flattened.title);
 				matchingCache.set(']'+query+'[', very_best_match.flattened);
 			}
 			//THIS IS WHAT IT ALL BOILS DOWN TO
@@ -804,21 +804,21 @@ _.findBestMatchForAnimeArray = (query, animes) => {
 	let just_titles_japanese = [];
 	let just_synonyms = [];
 	for (let i in animes) {
-		//logger.ind(1).log(i,' index');
+		//console.ind(1).log(i,' index');
 		if (animes[i].flattened['title_romaji'] !== null) {
-			//logger.ind(2).log('r:`',animes[i]['title_romaji'],'`');
+			//console.ind(2).log('r:`',animes[i]['title_romaji'],'`');
 			just_titles_romaji.push(animes[i]['title_romaji']);
 		}
 		if (animes[i].flattened['title_english'] !== null) {
-			//logger.ind(2).log('e:`',animes[i]['title_romaji'],'`');
+			//console.ind(2).log('e:`',animes[i]['title_romaji'],'`');
 			just_titles_english.push(animes[i]['title_english']);
 		}
 		if (animes[i].flattened['title_japanese'] !== null) {
-			//logger.ind(2).log('j:`',animes[i]['title_romaji'],'`');
+			//console.ind(2).log('j:`',animes[i]['title_romaji'],'`');
 			just_titles_japanese.push(animes[i]['title_japanese']);
 		}
 		if (animes[i].flattened['synonyms'] !== null) {
-			//logger.ind(2).log('syn:`',animes[i]['synonyms'].array,'`');
+			//console.ind(2).log('syn:`',animes[i]['synonyms'].array,'`');
 			just_synonyms = just_synonyms.concat(animes[i]['synonyms'].array);
 		}
 	}
@@ -831,24 +831,24 @@ _.findBestMatchForAnimeArray = (query, animes) => {
 	let bmr = null;
 	if (just_titles_romaji.length > 0) {
 		bmr = stringSimilarity.findBestMatch(query, just_titles_romaji);
-		//logger.ind(2).log('bmr:',bmr);
+		//console.ind(2).log('bmr:',bmr);
 	}
 	//best match english
 	let bme = null;
 	if (just_titles_english.length > 0) {
 		bme = stringSimilarity.findBestMatch(query, just_titles_english);
-		//logger.ind(2).log('bme:',bme);
+		//console.ind(2).log('bme:',bme);
 	}
 	//best match japanese
 	let bmj = null;
 	if (just_titles_japanese.length > 0) {
 		bmj = stringSimilarity.findBestMatch(query, just_titles_japanese);
-		//logger.ind(2).log('bmj:',bmj);
+		//console.ind(2).log('bmj:',bmj);
 	}
 	let bms = null;
 	if (just_synonyms.length > 0) {
 		bms = stringSimilarity.findBestMatch(query, just_synonyms);
-		//logger.ind(2).log('bms:',bms);
+		//console.ind(2).log('bms:',bms);
 	}
 	let art; //assumed real title
 	let art_format; //english, romaji, japanese
@@ -891,27 +891,27 @@ _.findBestMatchForAnimeArray = (query, animes) => {
 		bms['bestMatch']['rating'] = -1.0;
 	}
 
-	// logger.ind(2).warn('ratings:');
-	// logger.ind(3).log('bmr',bmr['bestMatch']['rating']);
-	// logger.ind(3).log('bme',bme['bestMatch']['rating']);
-	// logger.ind(3).log('bmj',bmj['bestMatch']['rating']);
-	// logger.ind(3).log('bms',bms['bestMatch']['rating']);
+	// console.ind(2).warn('ratings:');
+	// console.ind(3).log('bmr',bmr['bestMatch']['rating']);
+	// console.ind(3).log('bme',bme['bestMatch']['rating']);
+	// console.ind(3).log('bmj',bmj['bestMatch']['rating']);
+	// console.ind(3).log('bms',bms['bestMatch']['rating']);
 
 	if (bme['bestMatch']['rating'] >= bmr['bestMatch']['rating'] && bme['bestMatch']['rating'] >= bmj['bestMatch']['rating'] && bme['bestMatch']['rating'] >= bms['bestMatch']['rating']) {
 		//english got the best rating
 		art = bme['bestMatch']['target'];
 		art_format = 'english';
-		//logger.ind(2).success('Picked ART with ',art_format,' (',bme['bestMatch']['rating'],'):',art);
+		//console.ind(2).success('Picked ART with ',art_format,' (',bme['bestMatch']['rating'],'):',art);
 	} else if (bmr['bestMatch']['rating'] >= bme['bestMatch']['rating'] && bmr['bestMatch']['rating'] >= bmj['bestMatch']['rating'] && bmr['bestMatch']['rating'] >= bms['bestMatch']['rating']) {
 		//romaji got the best rating
 		art = bmr['bestMatch']['target'];
 		art_format = 'romaji';
-		//logger.ind(2).success('Picked ART with ',art_format,' (',bmr['bestMatch']['rating'],'):',art);
+		//console.ind(2).success('Picked ART with ',art_format,' (',bmr['bestMatch']['rating'],'):',art);
 	} else if (bmj['bestMatch']['rating'] >= bmr['bestMatch']['rating'] && bmj['bestMatch']['rating'] >= bme['bestMatch']['rating'] && bmj['bestMatch']['rating'] >= bms['bestMatch']['rating']) {
 		//japanese got the best rating
 		art = bmj['bestMatch']['target'];
 		art_format = 'japanese';
-		//logger.ind(2).success('Picked ART with ',art_format,' (',bmj['bestMatch']['rating'],'):',art);
+		//console.ind(2).success('Picked ART with ',art_format,' (',bmj['bestMatch']['rating'],'):',art);
 	} else if (bms['bestMatch']['rating'] >= bmr['bestMatch']['rating'] && bms['bestMatch']['rating'] >= bme['bestMatch']['rating'] && bms['bestMatch']['rating'] >= bmj['bestMatch']['rating']) {
 		//japanese got the best rating
 		art = bms['bestMatch']['target'];
@@ -979,7 +979,7 @@ _.matchAnimeFromDatabase = (query) => {
 					//grab info about the anime
 					let dbLinks = JSON.parse(row.dbLinks);
 					var promises = [];
-					//logger.log(dbLinks);
+					//console.log(dbLinks);
 
 					/*
 					Start an asynchonous snatching of all info from multiple anime services
@@ -992,7 +992,7 @@ _.matchAnimeFromDatabase = (query) => {
 							MAL.searchAnimes(dbLinks['mal'][0]).then((results) => {
 								resolve(new Resolved(DataSource.MAL, results));
 							}).catch((err) => {
-								logger.ind().log('mal error caught');
+								console.ind().log('mal error caught');
 								reject(new Rejected(DataSource.MAL, err));
 							});
 						}));*/
@@ -1006,7 +1006,7 @@ _.matchAnimeFromDatabase = (query) => {
 							ANILIST.get('anime/' + dbLinks['ani']).then((results) => {
 								resolve(new Resolved(DataSource.ANILIST, results));
 							}).catch((err) => {
-								logger.ind().log('anilist error caught');
+								console.ind().log('anilist error caught');
 								reject(new Rejected(DataSource.ANILIST, err));
 							});
 						}));
@@ -1021,7 +1021,7 @@ _.matchAnimeFromDatabase = (query) => {
 							}).then((response) => {
 								resolve(new Resolved(DataSource.KITSU, response));
 							}).catch((err) => {
-								logger.ind().log('kitsu error caught');
+								console.ind().log('kitsu error caught');
 								reject(new Rejected(DataSource.KITSU, err));
 							});
 						}));
@@ -1041,7 +1041,7 @@ _.matchAnimeFromDatabase = (query) => {
 										//ResolvedArray[r].data[c] is the object
 										let a_result = ResolvedArray[r].data[c];
 										if(String(a_result['id']) === String(dbLinks['mal'][1])) {
-											//logger.log('found a MAL result with the intended id');
+											//console.log('found a MAL result with the intended id');
 											let temp_dict = {};
 											temp_dict[ResolvedArray[r].DataSource] = 'https://myanimelist.net/anime/' + a_result['id'];
 											let img_dict = {};
@@ -1067,7 +1067,7 @@ _.matchAnimeFromDatabase = (query) => {
 									}
 								} else {
 									//mal returned no results
-									logger.warn('mal returned no results');
+									console.warn('mal returned no results');
 								}
 							} else if (ResolvedArray[r].DataSource === DataSource.ANILIST) {
 								//confirm there were results
@@ -1100,7 +1100,7 @@ _.matchAnimeFromDatabase = (query) => {
 
 								} else {
 									//anilist returned no results or an error
-									logger.warn('anilist returned no results');
+									console.warn('anilist returned no results');
 								}
 							} else if (ResolvedArray[r].DataSource === DataSource.KITSU) {
 								//confirm there were results (kitsu makes this so easy)
@@ -1121,11 +1121,11 @@ _.matchAnimeFromDatabase = (query) => {
 										let img_dict = {};
 										img_dict[ResolvedArray[r].DataSource] = a_result['posterImage']['original'];
 
-										// logger.log('title: ',a_result['title']);
-										// logger.log('en: ', a_result['titles']['en']);
-										// logger.log('en_us: ', a_result['titles']['en_us']);
-										// logger.log('OR: ', a_result['titles']['en'] || a_result['titles']['en_us']);
-										// logger.log('ALL:', a_result['titles']);
+										// console.log('title: ',a_result['title']);
+										// console.log('en: ', a_result['titles']['en']);
+										// console.log('en_us: ', a_result['titles']['en_us']);
+										// console.log('OR: ', a_result['titles']['en'] || a_result['titles']['en_us']);
+										// console.log('ALL:', a_result['titles']);
 
 										let some_anime = new Anime({
 											title_romaji: a_result['titles']['en_jp'] || a_result['titles']['ja_jp'] || a_result['titles']['en'] || a_result['titles']['en_us'], //just fuckin put a title there, consider the title_romaji the canonical title. no telling what this will do for Kitsu recognition.
@@ -1149,19 +1149,19 @@ _.matchAnimeFromDatabase = (query) => {
 									}
 								} else {
 									//anilist returned no results or an error
-									logger.warn('kitsu returned no results');
+									console.warn('kitsu returned no results');
 								}
 							}
 						}
 
 						//the_anime is the correct anime, no sorting matching bullshit left to do :D
-						logger.log('database: {' + query + '} => ' + the_anime.flattened.title);
+						console.log('database: {' + query + '} => ' + the_anime.flattened.title);
 						matchingCache.set(query.toLowerCase(), the_anime.flattened);
 						//THIS IS WHAT IT ALL BOILS DOWN TO
 						resolve(the_anime.flattened);
 					}).catch((Rejected) => {
 						//err occured
-						logger.error('what the hell, why is this? :\n', Rejected); //???
+						console.error('what the hell, why is this? :\n', Rejected); //???
 						reject(Rejected)
 					});
 				}
@@ -1193,7 +1193,7 @@ _.matchMangaFromDatabase = (query, MangaOrLN) => {
 					//grab info about the anime
 					let dbLinks = JSON.parse(row.dbLinks);
 					var promises = [];
-					//logger.log('dbLinks: ', dbLinks);
+					//console.log('dbLinks: ', dbLinks);
 
 					/*
 					Start an asynchonous snatching of all info from multiple anime services
@@ -1206,7 +1206,7 @@ _.matchMangaFromDatabase = (query, MangaOrLN) => {
 							MAL.searchMangas(dbLinks['mal'][0]).then((results) => {
 								resolve(new Resolved(DataSource.MAL, results));
 							}).catch((err) => {
-								logger.ind().log('mal error caught');
+								console.ind().log('mal error caught');
 								reject(new Rejected(DataSource.MAL, err));
 							});
 						}));*/
@@ -1220,7 +1220,7 @@ _.matchMangaFromDatabase = (query, MangaOrLN) => {
 							ANILIST.get('manga/' + dbLinks['ani']).then((results) => {
 								resolve(new Resolved(DataSource.ANILIST, results));
 							}).catch((err) => {
-								logger.ind().log('anilist error caught');
+								console.ind().log('anilist error caught');
 								reject(new Rejected(DataSource.ANILIST, err));
 							});
 						}));
@@ -1233,10 +1233,10 @@ _.matchMangaFromDatabase = (query, MangaOrLN) => {
 									slug: dbLinks['hb']
 								}
 							}).then((response) => {
-								logger.log(response);
+								console.log(response);
 								resolve(new Resolved(DataSource.KITSU, response));
 							}).catch((err) => {
-								logger.ind().log('kitsu error caught');
+								console.ind().log('kitsu error caught');
 								reject(new Rejected(DataSource.KITSU, err));
 							});
 						}));
@@ -1261,20 +1261,20 @@ _.matchMangaFromDatabase = (query, MangaOrLN) => {
 										//ResolvedArray[r].data[c] is the object
 										let a_result = ResolvedArray[r].data[c];
 										if(String(a_result['id']) === String(dbLinks['mal'][1])) {
-											//logger.log('found a MAL result with the intended id');
+											//console.log('found a MAL result with the intended id');
 											let temp_dict = {};
 											temp_dict[ResolvedArray[r].DataSource] = 'https://myanimelist.net/manga/' + a_result['id'];
 											if(!(dbLinks['mu'] === undefined || dbLinks['mu'] === '')) {
-												//logger.warn('mu good: ',dbLinks['mu']);
+												//console.warn('mu good: ',dbLinks['mu']);
 												temp_dict[DataSource.MANGAUPDATES] = 'https://www.mangaupdates.com/series.html?id=' + dbLinks['mu'];
 											}
 											if(!(dbLinks['ap'] === undefined || dbLinks['ap'] === '')) {
-												//logger.warn('ap good',dbLinks['ap']);
+												//console.warn('ap good',dbLinks['ap']);
 												temp_dict[DataSource.ANIMEPLANET] = 'https://www.anime-planet.com/manga/' + dbLinks['ap'];
 											}
 											let img_dict = {};
 											img_dict[ResolvedArray[r].DataSource] = a_result['image'];
-											//logger.log(ResolvedArray[r].DataSource,' ',a_result['volumes'],' | ',a_result['chapters']);
+											//console.log(ResolvedArray[r].DataSource,' ',a_result['volumes'],' | ',a_result['chapters']);
 											the_manga = Anime.consolidate(new Anime({
 												title_romaji: a_result['title'],
 												title_english: a_result['english'],
@@ -1292,25 +1292,25 @@ _.matchMangaFromDatabase = (query, MangaOrLN) => {
 												synonyms: new Synonyms(a_result['synonyms'])
 											}), the_manga);
 										}
-										//logger.log(String(a_result['id']) === String(dbLinks['mal'][1]));
+										//console.log(String(a_result['id']) === String(dbLinks['mal'][1]));
 									}
 								} else {
 									//mal returned no results
-									logger.warn('mal returned no results');
+									console.warn('mal returned no results');
 								}
 							} else if (ResolvedArray[r].DataSource === DataSource.ANILIST) {
 								//confirm there were results
 								if (typeof ResolvedArray[r].data['error'] !== 'object') {
 									let a_result = ResolvedArray[r].data;
-									//logger.log(ResolvedArray[r].DataSource,' ',a_result['volumes'],' | ',a_result['chapters']);
+									//console.log(ResolvedArray[r].DataSource,' ',a_result['volumes'],' | ',a_result['chapters']);
 									let temp_dict = {};
 									temp_dict[ResolvedArray[r].DataSource] = 'https://anilist.co/manga/' + a_result['id'] + '/';
 									if(!(dbLinks['mu'] === undefined || dbLinks['mu'] === '')) {
-										//logger.warn('mu good: ',dbLinks['mu']);
+										//console.warn('mu good: ',dbLinks['mu']);
 										temp_dict[DataSource.MANGAUPDATES] = 'https://www.mangaupdates.com/series.html?id=' + dbLinks['mu'];
 									}
 									if(!(dbLinks['ap'] === undefined || dbLinks['ap'] === '')) {
-										//logger.warn('ap good',dbLinks['ap']);
+										//console.warn('ap good',dbLinks['ap']);
 										temp_dict[DataSource.ANIMEPLANET] = 'https://www.anime-planet.com/manga/' + dbLinks['ap'];
 									}
 									let img_dict = {};
@@ -1338,7 +1338,7 @@ _.matchMangaFromDatabase = (query, MangaOrLN) => {
 
 								} else {
 									//anilist returned no results or an error
-									logger.warn('anilist returned no results');
+									console.warn('anilist returned no results');
 								}
 							} else if (ResolvedArray[r].DataSource === DataSource.KITSU) {
 								//confirm there were results (kitsu makes this so easy)
@@ -1346,16 +1346,16 @@ _.matchMangaFromDatabase = (query, MangaOrLN) => {
 									for (let c in ResolvedArray[r].data.data) {
 										//ResolvedArray[r].data[c] is the object
 										let a_result = ResolvedArray[r].data.data[c];
-										//logger.log(ResolvedArray[r].DataSource,' ',a_result['volumes'],' | ',a_result['chapters']);
-										//logger.log(a_result);
+										//console.log(ResolvedArray[r].DataSource,' ',a_result['volumes'],' | ',a_result['chapters']);
+										//console.log(a_result);
 										let temp_dict = {};
 										temp_dict[ResolvedArray[r].DataSource] = 'https://kitsu.io/manga/' + a_result['id'] + '/';
 										if(!(dbLinks['mu'] === undefined || dbLinks['mu'] === '')) {
-											//logger.warn('mu good: ',dbLinks['mu']);
+											//console.warn('mu good: ',dbLinks['mu']);
 											temp_dict[DataSource.MANGAUPDATES] = 'https://www.mangaupdates.com/series.html?id=' + dbLinks['mu'];
 										}
 										if(!(dbLinks['ap'] === undefined || dbLinks['ap'] === '')) {
-											//logger.warn('ap good',dbLinks['ap']);
+											//console.warn('ap good',dbLinks['ap']);
 											temp_dict[DataSource.ANIMEPLANET] = 'https://www.anime-planet.com/manga/' + dbLinks['ap'];
 										}
 										let synonyms_try = a_result['abbreviatedTitles'];
@@ -1390,25 +1390,25 @@ _.matchMangaFromDatabase = (query, MangaOrLN) => {
 									}
 								} else {
 									//anilist returned no results or an error
-									logger.warn('kitsu returned no results');
+									console.warn('kitsu returned no results');
 								}
 							}
 						}
 
 						//the_anime is the correct anime, no sorting matching bullshit left to do :D
 						if(MangaOrLN === 'Manga') {
-							logger.log('database: <' + query + '> => ' + the_manga.flattened.title);
+							console.log('database: <' + query + '> => ' + the_manga.flattened.title);
 							matchingCache.set('<'+query.toLowerCase()+'>', the_manga.flattened);
 						}
 						else if(MangaOrLN === 'LN') {
-							logger.log('database: ]' + query + '[ => ' + the_manga.flattened.title);
+							console.log('database: ]' + query + '[ => ' + the_manga.flattened.title);
 							matchingCache.set(']'+query.toLowerCase()+'[', the_manga.flattened);
 						}
 						//THIS IS WHAT IT ALL BOILS DOWN TO
 						resolve(the_manga.flattened);
 					}).catch((Rejected) => {
 						//err occured
-						logger.error('what the hell, why is this? :\n', Rejected); //???
+						console.error('what the hell, why is this? :\n', Rejected); //???
 						reject(Rejected)
 					});
 				}
@@ -1431,7 +1431,7 @@ _.matchFromCache = (query) => {
 		if (value === undefined) {
 			reject('nothing cached for this query');
 		} else {
-			logger.log('cache: ' + query + ' => ' + value.title);
+			console.log('cache: ' + query + ' => ' + value.title);
 			resolve(value);
 		}
 	});

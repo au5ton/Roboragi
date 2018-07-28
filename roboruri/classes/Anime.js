@@ -1,7 +1,6 @@
 // Anime.js
 
-const logger = require('au5ton-logger');
-
+require('au5ton-logger')({prefix_date: true});
 const DataSource = require('../enums').DataSource;
 const Hyperlinks = require('./Hyperlinks');
 const Synonyms = require('./Synonyms');
@@ -190,7 +189,7 @@ class Anime {
             }
         }
         else {
-            logger.warn('Anime.title invoked without being flattened first');
+            console.warn('Anime.title invoked without being flattened first');
             return undefined
         }
     }
@@ -246,7 +245,7 @@ class Anime {
             }
         }
         else {
-            logger.warn('Anime.format invoked without being flattened first');
+            console.warn('Anime.format invoked without being flattened first');
             return undefined
         }
     }
@@ -326,7 +325,7 @@ class Anime {
                 temp_images = Hyperlinks.consolidate(temp_images,arguments[i].images);
             }
             else {
-                //logger.warn('Anime.consolidate() supplied with non-Anime instance: ', arguments[i])
+                //console.warn('Anime.consolidate() supplied with non-Anime instance: ', arguments[i])
             }
         }
         let copy = Object.assign.apply(this, [new Anime()].concat(Array.from(arguments)))
