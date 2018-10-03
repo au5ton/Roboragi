@@ -4,7 +4,7 @@
   "description": "telegram bot for myanimelist",
   "main": "bot.js",
   "author": "",
-  "license": "GNU",
+  "license": "MIT",
   "dependencies": {
     "au5ton-logger": "^2.1.0",
     "dotenv": "^4.0.0",
@@ -23,7 +23,7 @@
   },
   "scripts": {
     "test": "mocha",
-    "lint": "./node_modules/.bin/eslint bot.js"
+    "lint": "./node_modules/.bin/eslint bot.js roboruri/**.js"
   },
   "devDependencies": {
     "eslint": "^5.6.1",

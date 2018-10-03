@@ -1,5 +1,7 @@
 ![roboruri](img/roboruri.png)
 
+[![CircleCI](https://circleci.com/gh/au5ton/Roboruri.svg?style=svg)](https://circleci.com/gh/au5ton/Roboruri) [![codebeat badge](https://codebeat.co/badges/e01673a6-ab15-44db-a030-970f38c86351)](https://codebeat.co/projects/github-com-au5ton-roboruri-master) 
+
 # Roboruri
 
 Roboruri is a Telegram bot (based off of [/u/Roboragi](https://www.reddit.com/user/Roboragi/)) which creates anime and manga links from MyAnimeList, Anilist, and Kitsu when requested. To credit the author of /u/Roboragi for all their assistance in the development, this project is a fork of it and is prominently visible.

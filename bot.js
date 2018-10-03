@@ -1,5 +1,5 @@
 require('dotenv').config(); //get the environment variables described in .env
-const Telegraf = require('telegraf')
+var Telegraf = require('telegraf')
 require('au5ton-logger')({prefix_date: true});
 const util = require('util');
 const path = require('path');
