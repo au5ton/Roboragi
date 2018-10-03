@@ -1,3 +1,5 @@
+// Experiment with code before replacing in the project
+
 require('dotenv').config(); //get the environment variables described in .env
 const popura = require('popura');
 const MAL = popura(process.env.MAL_USER, process.env.MAL_PASSWORD);
